@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>弹簧连接体</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_spring_cart',
+  title: '弹簧连接体',
+  sub: "两辆小车用弹簧连在一起，初始速度不同 → 一起振动",
+  params: ["sprV0","sprPeriod","sprKR","sprGap","sprSize"],
+  integrate: true,
+  note: "质心匀速前进，两车相对质心做简谐振动。",
+formula: String.raw`T=2\pi\sqrt{\dfrac{m}{k}}\quad(\text{相对运动})`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.5,
+});
+</script>
+</body>
+</html>

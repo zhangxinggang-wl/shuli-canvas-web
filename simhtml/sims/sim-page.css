@@ -1,0 +1,176 @@
+/* 物理仿真页 · 深色主题（与「斜面滑块」演示同一套皮肤）
+ * 复用 kit.css 的控件骨架，这里只换配色与字体。
+ * 字体策略：全部文字走楷体；数学符号走 KaTeX 的字体（Latin 与数字自动落到
+ * KaTeX_Main / KaTeX_Math，中文回落到楷体），斜体变量由画布端自己加 italic。
+ */
+:root {
+  --ink: #e6edf7;
+  --ink-2: #9fb0c8;
+  --line: #22304a;
+  --panel: #0f172a;
+  --panel-2: #101a2b;
+  --accent: #38bdf8;
+  --accent-2: #e4572e;
+  --kai: "KaiTi", "STKaiti", "KaiTi_GB2312", "楷体", "FangSong", serif;
+  --font: "KaTeX_Main", "KaiTi", "STKaiti", "KaiTi_GB2312", "楷体", serif;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0b1220;
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body { display: flex; flex-direction: column; }
+
+#bar {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 14px 8px;
+  background: linear-gradient(180deg, #121d33 0%, #0e1728 100%);
+  border-bottom: 1px solid #1b2740;
+}
+#bar b {
+  font-size: 15px;
+  font-weight: 600;
+  color: #dbeafe;
+  letter-spacing: .5px;
+  font-family: var(--kai);
+}
+#bar span { font-size: 12px; color: #7f93ad; font-family: var(--kai); }
+
+#host { flex: 1 1 auto; min-height: 0; display: flex; }
+
+/* ---- 仿真骨架（覆盖 kit.css 的浅色默认值） ---- */
+.gw-sim {
+  background: #0d1526;
+  color: #dbe7f7;
+  font-family: var(--font);
+}
+.gw-sim-stage { background: #0d1526; }
+.gw-sim-panel {
+  width: 258px;
+  background: #0f172a;
+  border-left: 1px solid #1e2b45;
+  color: #cfe0f5;
+  scrollbar-width: thin;
+}
+.gw-sim-panel::-webkit-scrollbar-thumb { background: #2a3a55; }
+
+.gw-group {
+  background: #12203a;
+  border: 1px solid #21304a;
+  border-radius: 12px;
+  padding: 11px;
+}
+.gw-group-t {
+  color: #8fb4d8;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .6px;
+  font-family: var(--kai);
+}
+
+.gw-btn {
+  background: #17263f;
+  border: 1px solid #2a3a55;
+  color: #dbe7f7;
+  border-radius: 9px;
+  font-family: var(--font);
+}
+.gw-btn:hover { border-color: var(--accent); color: #eaf4ff; }
+.gw-btn.primary { background: #1d6ecb; border-color: #2f86e8; color: #fff; }
+
+.gw-seg { background: #16233c; border-radius: 10px; }
+.gw-seg button { color: #9fb0c8; font-family: var(--kai); }
+.gw-seg button.on { background: #1f3352; color: #eaf4ff; box-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
+
+.gw-toggle { color: #cfe0f5; font-family: var(--kai); }
+.gw-toggle i { background: #33465f; }
+.gw-toggle input:checked + i { background: #2f86e8; }
+.gw-toggle i::after { background: #eaf4ff; }
+
+.gw-slider { color: #cfe0f5; }
+.gw-sl-top { font-size: 13px; font-family: var(--font); }
+.gw-sl-val { color: var(--accent); font-family: var(--font); font-weight: 600; }
+.gw-slider input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #1d4ed8, #38bdf8);
+}
+.gw-slider input[type=range]::-webkit-slider-thumb {
+  background: #0f172a;
+  border: 3px solid #38bdf8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+
+.gw-readout { color: #a8bcd6; font-family: var(--font); }
+.gw-readout b { color: #f2f7ff; }
+
+.gw-row > * { min-width: 0; }
+
+/* KaTeX 字体在这里只用于字形，不需要它的排版规则 */
+.katex { font-size: 1em; }
+
+/* 原生 select：默认白底，深色皮肤里必须单独覆盖 */
+.gw-sim-panel select {
+  background: #16233c;
+  color: #e6f1ff;
+  border: 1px solid #2a3a55;
+  border-radius: 9px;
+  padding: 7px 9px;
+  font-family: var(--kai);
+  font-size: 13px;
+  min-height: 34px;
+  outline: none;
+}
+.gw-sim-panel select option { background: #16233c; color: #e6f1ff; }
+.gw-sim-panel input[type=text], .gw-sim-panel textarea {
+  background: #16233c; color: #e6f1ff; border: 1px solid #2a3a55; border-radius: 8px;
+}
+/* ===== 纯黑高对比（2026-10 统一）：画布由 kit.css 的 invert 滤镜压成黑底，
+   这里只改页面与参数面板，保证白字/亮青滑块在黑底上足够醒目。 ===== */
+:root {
+  --ink: #ffffff;
+  --ink-2: #dbe7f7;
+  --line: #4a5f80;
+  --panel: #000000;
+  --panel-2: #000000;
+  --accent: #2ee6c5;
+}
+html, body { background: #000 !important; color: #fff !important; }
+#bar { background: #000 !important; border-bottom: 1px solid #3f5575 !important; }
+#bar b { color: #fff !important; font-size: 16px !important; }
+#bar span { color: #cfe0f5 !important; font-size: 13px !important; }
+.gw-sim, .gw-sim-stage { background: #000 !important; color: #fff !important; }
+.gw-sim-panel {
+  width: 290px !important; background: #000 !important; color: #fff !important;
+  border-left: 2px solid #3f5575 !important; font-size: 14px;
+}
+.gw-group { background: #080808 !important; border: 1.5px solid #3f5575 !important; }
+.gw-group-t { color: #8ff3e2 !important; font-size: 14px !important; }
+.gw-btn { background: #111 !important; border: 1.5px solid #4a5f80 !important; color: #fff !important; }
+.gw-btn.primary { background: #0f9d8a !important; border-color: #2ee6c5 !important; color: #fff !important; }
+.gw-seg { background: #111 !important; }
+.gw-seg button { color: #dbe7f7 !important; }
+.gw-seg button.on { background: #0f9d8a !important; color: #fff !important; }
+.gw-toggle, .gw-slider, .gw-readout { color: #fff !important; }
+.gw-sim .mv { font-style: italic; font-family: "Cambria Math", "Times New Roman", serif; }
+.gw-sim .unit { font-style: normal; color: #a9bdd6; font-weight: 500; }
+.gw-slider input[type=range]::-webkit-slider-runnable-track {
+  height: 8px !important; background: #3f5575 !important;
+}
+.gw-slider input[type=range]::-webkit-slider-thumb {
+  width: 28px !important; height: 28px !important; margin-top: -10px !important;
+  background: #fff !important; border: 3px solid #2ee6c5 !important;
+  box-shadow: 0 0 0 1px #2ee6c5, 0 0 10px rgba(46, 230, 197, .55) !important;
+}
+.gw-sim-panel select, .gw-sim-panel input[type=text], .gw-sim-panel textarea {
+  background: #111 !important; color: #fff !important; border-color: #4a5f80 !important;
+}

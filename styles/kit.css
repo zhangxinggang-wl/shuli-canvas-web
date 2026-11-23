@@ -1,0 +1,144 @@
+/* 数理无限画布 · 控件与仿真通用样式 */
+:root {
+  --ink: #1b2433;
+  --ink-2: #5b6576;
+  --line: #e3e7ee;
+  --panel: #ffffff;
+  --panel-2: #f5f7fa;
+  /* 1.1.15：仿真/图形右侧调参面板的底色也吃「面板透明度」—— 旧值是写死的不透明色，
+     老师拖滑杆时这块毫无反应（就是反馈里说的「调参面板透明度没生效」）。 */
+  --panel-2a: rgba(245, 247, 250, var(--panel-alpha, 0.95));
+  --accent: #0f9d8a;      /* 青 */
+  --accent-2: #e4572e;    /* 朱 */
+  --accent-3: #3366ff;    /* 蓝 */
+  --gold: #f2a541;
+  --radius: 14px;
+  --font: "HarmonyOS Sans SC", "MiSans", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+
+.gw-sim { display: flex; width: 100%; height: 100%; background: #fff; color: var(--ink); font-family: var(--font); font-size: 14px; overflow: hidden; user-select: none; }
+.gw-sim-stage { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.gw-sim-stage > canvas { position: absolute; left: 0; top: 0; touch-action: none; }
+.gw-sim-panel { width: 250px; flex: none; padding: 12px; border-left: 1px solid var(--line); background: var(--panel-2a, var(--panel-2)); overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.gw-sim-panel::-webkit-scrollbar { width: 6px; }
+.gw-sim-panel::-webkit-scrollbar-thumb { background: #c9d0db; border-radius: 3px; }
+
+.gw-group { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--menu-tile, #fff); border-radius: 10px; border: 1px solid var(--line); }
+.gw-group-t { font-weight: 600; font-size: 13px; color: var(--ink-2); letter-spacing: .5px; }
+.gw-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.gw-row > * { flex: 1; }
+
+.gw-slider { display: flex; flex-direction: column; gap: 4px; }
+.gw-sl-top { display: flex; justify-content: space-between; font-size: 13px; }
+.gw-sl-val { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
+.gw-sl-val b { font-weight: 700; }
+.gw-sl-val .unit, .gw-readout .unit { font-style: normal; color: #8aa0b8; font-weight: 500; }
+.mv { font-style: italic; font-family: "Cambria Math", "Times New Roman", serif; }
+.gw-slider input[type=range] { -webkit-appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; }
+.gw-slider input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: #3f5575; }
+.gw-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 8px rgba(15,157,138,.35); }
+
+.gw-btn { font: inherit; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--menu-tile, #fff); color: var(--ink); cursor: pointer; min-height: 38px; white-space: nowrap; }
+.gw-btn:hover { border-color: var(--accent); }
+.gw-btn:active { transform: translateY(1px); }
+.gw-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg, #fff); }
+.gw-btn.danger { color: var(--accent-2); }
+
+.gw-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; min-height: 30px; position: relative; }
+/* 1.5.6（P1）：原来 input 是 display:none —— 鼠标点标签点得动，但键盘 Tab 永远跳不到开关，
+   空格/回车也就无从切换。改成「视觉隐藏但留在焦点序列里」：1px 透明、绝对定位、不占布局，
+   外观仍由后面的 i 画。原生 checkbox、change 事件与 get()/set() 接口一律不动。 */
+.gw-toggle input { position: absolute; left: 0; top: 50%; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; opacity: 0; transform: translateY(-50%); pointer-events: none; }
+/* 焦点环画在开关本体上：:focus-visible 只在键盘/辅助技术聚焦时出现，鼠标点击不闪 */
+.gw-toggle input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gw-toggle i { width: 38px; height: 22px; border-radius: 11px; background: #cfd6e0; position: relative; flex: none; transition: .2s; }
+.gw-toggle i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.gw-toggle input:checked + i { background: var(--accent); }
+.gw-toggle input:checked + i::after { left: 19px; }
+/* 触屏：开关本身 22px 高，但整行可点区域按 44px 给（设置页一行一个开关，纵向不挤） */
+@media (pointer: coarse) { .gw-toggle { min-height: 44px; } }
+
+.gw-select, .gw-textin { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.gw-select select, .gw-textin input { font: inherit; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--menu-tile, #fff); color: var(--ink); min-height: 36px; }
+.gw-textin input:focus, .gw-select select:focus { outline: 2px solid rgba(15,157,138,.35); border-color: var(--accent); }
+
+.gw-seg { display: flex; background: var(--menu-seg, #e9edf2); border-radius: 9px; padding: 3px; gap: 2px; }
+.gw-seg button { flex: 1; font: inherit; font-size: 13px; border: 0; background: transparent; padding: 7px 4px; border-radius: 7px; cursor: pointer; color: var(--ink-2); min-height: 32px; }
+.gw-seg button.on { background: var(--menu-tile, #fff); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.gw-readout { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; gap: 8px; }
+.gw-readout b { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; text-align: right; }
+
+#gw-toasts { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.gw-toast { background: rgba(27,36,51,.92); color: #fff; padding: 10px 18px; border-radius: 22px; font: 15px var(--font); box-shadow: 0 6px 24px rgba(0,0,0,.25); transition: .35s; }
+.gw-toast.out { opacity: 0; transform: translateY(-10px); }
+
+/* ===== 数学仿真 · 纯黑高对比参数面板（1.0.11） =====
+   教室里投影/大屏看的是「对比度 + 字大 + 线粗」，不是精致的浅色 UI。
+   面板可一键收起（.gw-sim-toggle），黑底白字、滑块与按钮都放大到手指/触控笔能点。 */
+.gw-sim {
+  position: relative; background: #000; color: #fff; font-size: 16px;
+  --ink: #ffffff; --ink-2: #d6dfec; --line: #3b475a; --panel-2: #000000;
+  --panel-2a: rgba(0, 0, 0, var(--panel-alpha, 0.95));
+  --accent: #2ee6c5; --accent-2: #ff6b6b;
+}
+.gw-sim.panel-hidden .gw-sim-panel { display: none; }
+.gw-sim-panel {
+  width: 300px; padding: 46px 14px 16px; gap: 12px;
+  /* 1.1.15：这里的 #000 是「面板透明度」在仿真窗口里完全没反应的原因（后写的规则盖掉了
+     上面那条 --panel-2a）。仿真底是纯黑，所以透出来的仍是黑，但「面板透明度」100% 时
+     黑板能透上来一点，与设置里那根滑杆一致。 */
+  background: var(--panel-2a, #000); border-left: 2px solid #2f3a4a;
+}
+.gw-sim-panel::-webkit-scrollbar-thumb { background: #4a586d; }
+.gw-sim-toggle {
+  position: absolute; right: 12px; top: 10px; z-index: 6;
+  min-height: 36px; padding: 6px 12px; border-radius: 9px; cursor: pointer;
+  font: 600 15px var(--font); color: #fff;
+  background: rgba(0, 0, 0, .82); border: 1.5px solid #2ee6c5;
+}
+.gw-sim-toggle:hover { background: #123c38; }
+.gw-sim .gw-group { background: #0b0b0b; border: 1.5px solid #3b475a; color: #fff; padding: 12px; }
+.gw-sim .gw-group-t { color: #8ff3e2; font-size: 15px; letter-spacing: .6px; }
+.gw-sim .gw-row > * { flex: 1; }
+.gw-sim .gw-slider { gap: 6px; }
+.gw-sim .gw-sl-top { font-size: 15px; color: #eef4ff; }
+.gw-sim .gw-sl-val { color: #46f2d4; font-size: 16px; }
+.gw-sim .gw-slider input[type=range] { height: 34px; }
+.gw-sim .gw-slider input[type=range]::-webkit-slider-runnable-track { height: 8px; background: #3f5575; }
+.gw-sim .gw-slider input[type=range]::-webkit-slider-thumb {
+  width: 28px; height: 28px; margin-top: -10px; background: #fff; border: 3px solid #2ee6c5;
+  box-shadow: 0 0 0 1px #2ee6c5, 0 0 10px rgba(46, 230, 197, .55);
+}
+.gw-sim .gw-btn {
+  min-height: 42px; background: #131820; color: #fff; border: 1.5px solid #4a586d;
+  font-size: 15px; border-radius: 10px;
+}
+.gw-sim .gw-btn:hover { border-color: #2ee6c5; background: #18222c; }
+.gw-sim .gw-btn.primary { background: #0f9d8a; border-color: #0f9d8a; color: #fff; }
+.gw-sim .gw-btn.danger { color: #ff8080; }
+.gw-sim .gw-toggle { font-size: 15px; color: #eef4ff; min-height: 36px; }
+.gw-sim .gw-toggle i { background: #4a586d; }
+.gw-sim .gw-select, .gw-sim .gw-textin { font-size: 15px; color: #eef4ff; }
+.gw-sim .gw-select select, .gw-sim .gw-textin input {
+  min-height: 42px; background: #131820; color: #fff; border: 1.5px solid #4a586d;
+}
+/* 函数/参数面板里有直接写 <input type="text|number"> 的，没套 .gw-textin；一并压成黑底白字。 */
+.gw-sim input[type="text"], .gw-sim input[type="number"], .gw-sim textarea, .gw-sim select {
+  background: #131820; color: #fff; border: 1.5px solid #4a586d; border-radius: 8px;
+}
+.gw-sim input::placeholder, .gw-sim textarea::placeholder { color: #93a6c0; }
+/* 个别仿真给范围输入框写了白底内联样式；在面板里统一压回黑底。 */
+.gw-sim-panel input:not([type="range"]):not([type="checkbox"]) {
+  background: #131820 !important; color: #fff !important; border: 1px solid #4a586d !important;
+}
+.gw-sim .gw-seg { background: #1a2230; padding: 4px; }
+.gw-sim .gw-seg button { font-size: 15px; min-height: 38px; color: #b9c6d8; }
+.gw-sim .gw-seg button.on { background: #e8f6ff; color: #06121f; }
+.gw-sim .gw-readout { font-size: 15px; color: #d6dfec; }
+.gw-sim .gw-readout b { color: #46f2d4; }
+
+
+/* 反相滤镜只给画布内的学科仿真对象用，见 app.css 的 .obj .sim-root 规则。
+   独立课件页（src/simhtml/sims/*.html）已经由 sim-shell.js 把白底映射成深底，再反相会变白。 */
+

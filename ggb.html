@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>GeoGebra</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; font-family: "Microsoft YaHei", sans-serif; }
+  #ggb { width: 100%; height: 100%; }
+  #msg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #5b6576; font-size: 15px; text-align: center; padding: 20px; }
+  #msg b { color: #1b2433; font-size: 17px; }
+  #msg .diag { max-width: 92%; white-space: pre-wrap; word-break: break-all; font-size: 12px; line-height: 1.7; color: #6b7382; }
+  .spin { width: 34px; height: 34px; border: 3px solid #d7dde6; border-top-color: #0f9d8a; border-radius: 50%; animation: s 0.8s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="ggb"></div>
+<div id="msg"><div class="spin"></div><span>正在加载 GeoGebra…</span></div>
+<script>
+(function () {
+  let api = null, cfg = null, saveTimer = 0;
+  const msg = document.getElementById('msg');
+  const fail = (t) => {
+    msg.innerHTML = '<b>GeoGebra 离线包加载失败</b><span class="diag"></span><span>程序已内置 GeoGebra 离线包，不需要联网；若仍失败，可在 设置 → GeoGebra 离线包 里改选自己的 <code>GeoGebra/HTML5/5.0/web3d</code> 文件夹，或重启程序让内置包重新解压。</span>';
+    msg.querySelector('.diag').textContent = t;
+  };
+
+  // 内核初始化在 GWT 分片里跑，异常不会冒到父窗口（跨 origin 也读不到 console）。
+  // 把错误/未处理拒绝转成消息，父窗口的探针与「设置 → GeoGebra 诊断」才有据可查。
+  addEventListener('error', (e) => {
+    try {
+      parent.postMessage({ type: 'ggb-error', message: String(e.message || (e.target && e.target.src) || ''),
+        src: String(e.filename || ''), line: e.lineno || 0,
+        stack: e.error && e.error.stack ? String(e.error.stack).slice(0, 600) : '' }, '*');
+    } catch (err) {}
+  }, true);
+  addEventListener('unhandledrejection', (e) => {
+    try {
+      const r = e.reason;
+      parent.postMessage({ type: 'ggb-error', message: 'unhandledrejection: ' + String((r && r.message) || r),
+        src: '', line: 0, stack: r && r.stack ? String(r.stack).slice(0, 600) : '' }, '*');
+    } catch (err) {}
+  });
+
+  // GWT 的 loadExternalRefs 只等 <link> 的 onload，而 GeoGebra 的 web3d 部署并不带
+  // simple-bundle / bundle / keyboard-styles / fonts / greek-font 这几支样式表。
+  // 404 时内核启动流程会永久挂起：画板空白、appletOnLoad 不触发，插入的 .ggb 与新建画板
+  // 都停在「离线包较大，仍在加载…」。桌面端由主进程静态服务兜底、网页/安卓由离线包里的
+  // 空占位兜底；自定义离线包可能两样都没有，这里统一把加载失败的样式表换成空 data: URL，
+  // 保证 onload 一定触发（样式本身由 GWT 分片内联注入，不依赖这些文件）。
+  function guardStylesheets() {
+    const fix = (l) => {
+      if (!l || l.__gwCssGuard) return;
+      l.__gwCssGuard = 1;
+      l.addEventListener('error', () => { if (!/^data:/.test(l.href)) l.href = 'data:text/css,'; });
+    };
+    try { for (const l of document.querySelectorAll('link[rel~="stylesheet"]')) fix(l); } catch (err) {}
+    if (!window.MutationObserver) return;
+    try {
+      const mo = new MutationObserver((recs) => {
+        for (const r of recs) for (const n of r.addedNodes) {
+          if (n.tagName === 'LINK' && /stylesheet/i.test(n.rel || '')) fix(n);
+        }
+      });
+      mo.observe(document.head, { childList: true, subtree: true });
+      setTimeout(() => mo.disconnect(), 120000);
+    } catch (err) {}
+  }
+  guardStylesheets();
+
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('无法加载 ' + src)); document.head.append(s); });
+  }
+  window.addEventListener('message', async (e) => {
+    if (!e.data || e.data.type !== 'init' || cfg) return;
+    cfg = e.data;
+    try {
+      // 2.0.7：父窗口给出候选 codebase（自定义 → 内置 → 网页/安卓相对目录），
+      // 逐个试 deployggb.js，谁先成功就用谁。任何情况下都不回退到 geogebra.org 的 CDN。
+      const list = (cfg.codebases && cfg.codebases.length ? cfg.codebases : [cfg.codebase || 'ggb/GeoGebra/HTML5/5.0/web3d/'])
+        .filter(Boolean).map((b) => b.replace(/\/?$/, '/'));
+      let base = null;
+      const tried = [];
+      for (const b of list) {
+        const url = b + '../../../deployggb.js';
+        try { await loadScript(url); base = b; break; }
+        catch (err) { tried.push('× ' + url); }
+      }
+      if (!base) {
+        return fail('以下地址都取不到 deployggb.js：\n' + tried.join('\n') +
+          (cfg.error ? '\n主进程报告：' + cfg.error : '') +
+          '\n请检查 设置 → GeoGebra 离线包，或重启程序让内置包重新解压。');
+      }
+      if (typeof window.GGBApplet !== 'function') return fail('deployggb.js 已加载但 GGBApplet 未定义：\n' + base + '../../../deployggb.js');
+      const params = {
+        appName: cfg.app === 'classic' ? 'classic' : cfg.app,
+        width: innerWidth, height: innerHeight,
+        language: 'zh_CN',
+        showToolBar: true, showAlgebraInput: true, showMenuBar: cfg.app === 'classic',
+        enableRightClick: true, enableShiftDragZoom: true, showResetIcon: false,
+        borderColor: '#ffffff', scaleContainerClass: null, autoHeight: false,
+        appletOnLoad(a) {
+          api = a; msg.remove();
+          // 带上构造里的对象数：插入本机 .ggb 时 >0，新建空白画板为 0。
+          // 桌面端 iframe 跨域读不到 DOM，这条消息是「文件内容真的被载入」的唯一可验证凭据。
+          let objects = -1;
+          try { objects = a.getObjectNumber ? a.getObjectNumber() : -1; } catch (err) {}
+          parent.postMessage({ type: 'ggb-loaded', objects }, '*');   // 跨 origin 时父窗口也能知道已就绪
+          const onChange = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => parent.postMessage({ type: 'ggb-state', base64: api.getBase64() }, '*'), 800); };
+          a.registerUpdateListener(onChange); a.registerAddListener(onChange); a.registerRemoveListener(onChange);
+        },
+      };
+      if (cfg.base64) params.ggbBase64 = cfg.base64;
+      else if (cfg.materialId) params.material_id = cfg.materialId;
+      // 2.0.7：GWT 分片（*.cache.js）首行是 `$wnd.web3d.__sendStats(...)`，
+      // $wnd 取 window.parent 或分片所在的隐藏 iframe。引导对象 web3d 只定义在
+      // ggb.html 这一层；分片若在别的 window 取到同名占位对象就会崩在 __sendStats，
+      // appletOnLoad 永不触发。这里把完整引导对象广播到所有可能执行分片的 window。
+      const exposeGwt = () => {
+        const w3d = window.web3d;
+        if (!w3d || typeof w3d.__sendStats !== 'function') return false;
+        const targets = [];
+        try { if (parent !== window) targets.push(parent); } catch (err) {}
+        try { if (top !== window && top !== parent) targets.push(top); } catch (err) {}
+        const sub = document.getElementById('web3d');
+        if (sub && sub.contentWindow) targets.push(sub.contentWindow);
+        for (const t of targets) { try { t.web3d = w3d; } catch (err) {} }
+        return true;
+      };
+      const syncTimer = setInterval(exposeGwt, 10);
+      setTimeout(() => clearInterval(syncTimer), 120000);
+      try { new MutationObserver(exposeGwt).observe(document.body, { childList: true, subtree: true }); } catch (err) {}
+      // 2.0.7 决定性修复：预加载本地 web3d.nocache.js。
+      // deployggb 动态注入 script 后靠 script.onload 调 scriptLoaded()；嵌入式宿主里
+      // 这个 onload 没生效，article 永远没被挂起（真机：模块已就绪、无异常、canvas 恒为 0）。
+      // 预加载后不再调用 setHTML5Codebase，deployggb 走「web3d 已加载」分支同步执行
+      // scriptLoaded()；moduleBase 由下面这个本地 script 的 src 推导，分片仍全走本地。
+      await loadScript(base + 'web3d.nocache.js');
+      exposeGwt();
+      // 2.0.7 修复续：GWT 分片在 GWT 自建的隐藏 iframe 里执行，$wnd 指向那个 window。
+      // deployggb 的 inject 若早于分片就绪，会把 applet 排进 html5AppletsToProcess 并把
+      // renderGGBElementReady 定义在 ggb.html 这一层；分片却去调隐藏 iframe 上的同名函数，
+      // 队列永远不被消费 —— 真机现象：moduleBase 是本地、web3d.succeeded=true、
+      // renderGGBElement 已是 function，但 article 不渲染、canvas 恒为 0、appletOnLoad 不触发，
+      // 插入 .ggb 与新建画板都卡在「离线包较大，仍在加载…」。
+      // 先等内核入口出现在「本 window」再 inject，让 injectHTML5Applet 直接走同步渲染分支。
+      let kernelReady = typeof window.renderGGBElement === 'function';
+      for (let i = 0; i < 300 && !kernelReady; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+        exposeGwt();                       // 分片可能刚把引导对象挂到子 window，继续广播
+        kernelReady = typeof window.renderGGBElement === 'function';
+      }
+      const applet = new GGBApplet(params, true);
+      // 不调用 setHTML5Codebase：保持 html5OverwrittenCodebase 为 null
+      applet.inject('ggb');
+      // 兜底：极端时序下仍走了排队分支时，主动消费队列。renderGGBElementReady 内部
+      // 会把 html5AppletsToProcess 置 null，重复调用是安全的，不会重复渲染画板。
+      const queueTimer = setInterval(() => {
+        if (api) { clearInterval(queueTimer); return; }
+        if (typeof window.renderGGBElement === 'function' && typeof window.renderGGBElementReady === 'function') {
+          try { window.renderGGBElementReady(); } catch (err) {}
+        }
+      }, 300);
+      setTimeout(() => clearInterval(queueTimer), 120000);
+      // .diag 出现 = 已经 fail 过，别让后面的定时器把错误原因覆盖掉。
+      const diag = () => !!msg.querySelector('.diag');
+      setTimeout(() => { if (!api && !diag() && msg.isConnected) msg.lastChild.textContent = '离线包较大，仍在加载…'; }, 10000);
+      // GWT 分片加载失败不会触发 script.onerror，旧版只会永远转圈；超时后给出可定位的诊断。
+      setTimeout(() => {
+        if (api || diag() || !msg.isConnected) return;
+        fail('GeoGebra 内核 60 秒仍未启动。\n已用离线包：' + base +
+          '\nmoduleBase：' + ((window.web3d && window.web3d.__moduleBase) || '未知') +
+          '\n已加载脚本：' + [...document.scripts].map((s) => s.src).filter(Boolean).join('\n') +
+          '\n请确认该目录下存在 web3d.nocache.js 及其 cache.js 分片。');
+      }, 60000);
+    } catch (err) { fail(err.message); }
+  });
+  let rt = 0;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (api && api.setSize) api.setSize(innerWidth, innerHeight); }, 120); });
+  parent.postMessage({ type: 'ggb-ready' }, '*');
+  // 2.0.7：桌面端 iframe 在 http://127.0.0.1、父窗口在 app://gewu，跨域读不到 DOM。
+  // 定时把内部状态报给父窗口，出问题时老师/探针能直接看到卡在哪一步；成功后停。
+  let diagT = setInterval(() => {
+    try {
+      parent.postMessage({ type: 'ggb-diag',
+        msg: msg.isConnected ? msg.innerText.slice(0, 220) : '(msg 已移除 = 成功)',
+        api: !!api, canvas: document.querySelectorAll('canvas').length,
+        protocol: location.protocol,
+        scripts: [...document.scripts].map((s) => s.src).filter(Boolean).slice(0, 8),
+        renderGGBElement: typeof window.renderGGBElement,
+        ready: typeof window.renderGGBElementReady,
+        web3d: typeof window.web3d,
+        moduleBase: (window.web3d && window.web3d.__moduleBase) || null,
+        succeeded: !!(window.web3d && window.web3d.succeeded),
+        kernelReady: typeof window.renderGGBElement === 'function',
+        appletDivs: document.querySelectorAll('.appletParameters').length,
+        iframes: document.querySelectorAll('iframe').length }, '*');
+    } catch (err) {}
+    if (api) clearInterval(diagT);
+  }, 2000);
+  setTimeout(() => clearInterval(diagT), 120000);
+})();
+</script>
+</body>
+</html>

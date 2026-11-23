@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>四类卫星</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_satellites',
+  title: '四类卫星',
+  sub: "近地、同步、极地、椭圆四类轨道的运行快慢对比",
+  params: ["satAlt","satSpeed"],
+  integrate: true,
+  note: "轨道半径越大周期越长；同步卫星的角速度与地球自转相同。",
+formula: String.raw`T=2\pi\sqrt{\dfrac{r^3}{GM}}`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.8,
+});
+</script>
+</body>
+</html>

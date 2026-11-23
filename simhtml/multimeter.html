@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>万用表表盘 · A-V-Ω · 可调参</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{overflow:hidden;background:
+      radial-gradient(1100px 700px at 18% 12%, rgba(56,189,248,.22), transparent 60%),
+      radial-gradient(900px 640px at 82% 88%, rgba(129,140,248,.20), transparent 62%),
+      linear-gradient(160deg,#060c18 0%,#0a1428 45%,#0b1020 100%);
+    color:#e6edf7;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;
+    background-image:linear-gradient(rgba(245,190,120,.035) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(245,190,120,.035) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(circle at 50% 45%,#000 55%,transparent 100%);
+    -webkit-mask-image:radial-gradient(circle at 50% 45%,#000 55%,transparent 100%)}
+  body.nobg{background:transparent}
+  body.nobg::before{display:none}
+  canvas{position:fixed;inset:0;display:block;width:100%;height:100%;z-index:1;touch-action:none;cursor:crosshair}
+
+  .panel{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:5;
+    display:flex;flex-direction:column;gap:10px;padding:14px 18px;
+    width:max-content;max-width:calc(100vw - 20px);
+    background:rgba(16,26,44,.82);border:1px solid rgba(245,190,120,.16);
+    border-radius:20px;box-shadow:0 12px 40px rgba(0,8,24,.55);backdrop-filter:blur(12px)}
+  .row{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .fl{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#8fa3c0}
+  .fl b{color:#e6edf7;font-family:ui-monospace,monospace;font-weight:600}
+  input[type=range]{-webkit-appearance:none;width:132px;height:10px;border-radius:999px;
+    background:linear-gradient(90deg,#f59e0b,#22d3ee);opacity:.85;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+    border-radius:50%;background:#fff;border:2px solid #f59e0b;box-shadow:0 0 0 3px rgba(245,190,120,.18)}
+  .sw{display:flex;gap:6px;flex-wrap:wrap}
+  .dot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;padding:0}
+  .dot.on{border-color:#fff;box-shadow:0 0 0 2px rgba(245,190,120,.5)}
+  .dashbtn{padding:4px 10px;border-radius:999px;border:1px solid rgba(245,190,120,.22);
+    background:rgba(24,36,60,.92);color:#8fa3c0;font-size:12px;cursor:pointer}
+  .dashbtn.on{border-color:#f59e0b;color:#f59e0b}
+  .rd{min-width:246px}
+  .rd b{font-size:12.5px;letter-spacing:.2px}
+  @media (max-width:820px){.panel{padding:12px 14px;gap:8px}.row{gap:12px 14px}input[type=range]{width:100px}
+    .rd{min-width:0}.rd b{font-size:11.5px}.fl{font-size:11px}.field{gap:4px}}
+  @media (max-width:560px){.panel{padding:10px 12px;bottom:12px;border-radius:16px}
+    input[type=range]{width:86px}.dot{width:16px;height:16px}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="panel" id="panel">
+  <div class="row">
+    <div class="field" style="min-width:168px">
+      <div class="fl"><span>指针位置</span><b id="vT">0.0</b></div>
+      <input id="sT" type="range" min="0" max="1000" step="1" value="0">
+    </div>
+    <div class="field">
+      <div class="fl"><span>表盘张角</span><b id="vH">37°</b></div>
+      <input id="sH" type="range" min="16" max="37" step="1" value="37">
+    </div>
+    <div class="field">
+      <div class="fl"><span>字号</span><b id="vF">70%</b></div>
+      <input id="sF" type="range" min="70" max="140" step="1" value="70">
+    </div>
+    <div class="field rd">
+      <div class="fl"><span>指针读数</span><b id="vR">—</b></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <div class="fl"><span>线宽</span><b id="vW">1.5</b></div>
+      <input id="sW" type="range" min="15" max="100" step="1" value="15">
+    </div>
+    <div class="field">
+      <div class="fl"><span>边框色</span></div>
+      <div class="sw" id="csw"></div>
+    </div>
+    <div class="field">
+      <div class="fl"><span>线型</span></div>
+      <div class="sw">
+        <button class="dashbtn on" data-d="0">实线</button>
+        <button class="dashbtn" data-d="1">虚线</button>
+        <button class="dashbtn" data-d="2">点划线</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= 参数与常量 ================= */
+var Q=new URLSearchParams(location.search);
+var noUI=(Q.get('ui')==='0');
+
+var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+var panel=document.getElementById('panel');
+if(noUI) panel.style.display='none';
+if(Q.get('bg')==='0') document.body.classList.add('nobg');
+
+var SANS='system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+var NUM='"Times New Roman",Georgia,"Songti SC",serif';
+
+var PAL=['#e6edf7','#f59e0b','#22d3ee','#43a047','#e53935','#1e88e5','#fbbf24','#a78bfa','#f472b6','#8fa3c0'];
+
+var S={ t:0.000, half:37, fsz:70, lw:1.5, col:'#e6edf7', dash:0 };
+
+/* 三条弧的半径（以最外弧为 1） */
+var R1=1.000, R2=0.948, R3=0.775;
+var ROWV=[0.892,0.852,0.812];      // 二号刻度三行文字半径
+var LABR=1.072;                    // 一号刻度标签基准半径
+
+/* ---- 欧姆挡定标：中值电阻 R中 = 15 Ω ----
+   表头电流 I = E/(R内+R)，偏角 ∝ I；满偏对应 R=0，零偏对应 R=∞。
+   故归一化位置 t = I/I满 = R中/(R中+R)，R = R中 时 t = 0.5（弧的正中）。
+   所有标签位置都由这一条式子算出，不手写、不拟合。 */
+var RMID=15;
+function tOfR(r){ return RMID/(RMID+r); }        // 电阻 → 弧上位置
+function rOfT(t){ return t<=0 ? Infinity : RMID*(1-t)/t; }   // 弧上位置 → 电阻
+
+/* 电阻刻度：数值 / 角向位置 t（由 tOfR 算出）/ 标签外移量 ro（错层摆放防重叠） */
+var OHM=[
+  {v:Infinity,l:'∞',  t:0,              ro:0.000},
+  {v:1000,    l:'1k', t:tOfR(1000),     ro:0.034},   // 左端极密：1k 外移一层，免得压住 ∞ 与 500
+  {v:500,     l:'500',t:tOfR(500),      ro:0.000},
+  {v:200,     l:'200',t:tOfR(200),      ro:0.000},
+  {v:100,     l:'100',t:tOfR(100),      ro:0.000},
+  {v:50,      l:'50', t:tOfR(50),       ro:0.000},
+  {v:40,      l:'40', t:tOfR(40),       ro:0.000},
+  {v:30,      l:'30', t:tOfR(30),       ro:0.000},
+  {v:20,      l:'20', t:tOfR(20),       ro:0.000},
+  {v:15,      l:'15', t:tOfR(15),       ro:0.000},   // = 0.5，中值电阻正在弧心
+  {v:10,      l:'10', t:tOfR(10),       ro:0.000},
+  {v:5,       l:'5',  t:tOfR(5),        ro:0.000},
+  {v:0,       l:'0',  t:1,              ro:0.000}
+];
+
+var W=0,H=0,R=1,cx=0,cy=0,PLATE=null;
+var REC=false, EXT=null;
+
+/* ================= 小工具 ================= */
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+/* 两个 #rrggbb 的近似距离（用于判"线色与指针撞色"） */
+function colDist(a,b){
+  var x=parseInt(a.slice(1),16), y=parseInt(b.slice(1),16);
+  var dr=((x>>16)&255)-((y>>16)&255), dg=((x>>8)&255)-((y>>8)&255), db=(x&255)-(y&255);
+  return Math.sqrt(dr*dr+dg*dg+db*db);
+}
+function rec(x,y){
+  if(!REC||!EXT) return;
+  if(x<EXT[0])EXT[0]=x; if(y<EXT[1])EXT[1]=y;
+  if(x>EXT[2])EXT[2]=x; if(y>EXT[3])EXT[3]=y;
+}
+function P(r,ad){
+  var a=ad*Math.PI/180;
+  var x=R*r*Math.cos(a), y=-R*r*Math.sin(a);
+  rec(x,y); return [x,y];
+}
+function polar(r,ad){                       // 不记录（辅助点）
+  var a=ad*Math.PI/180;
+  return [R*r*Math.cos(a), -R*r*Math.sin(a)];
+}
+function tg(r,ad,ext,dir){                  // 沿切向延长
+  var p=polar(r,ad), a=ad*Math.PI/180;
+  return [p[0]-Math.sin(a)*ext*R*dir, p[1]-Math.cos(a)*ext*R*dir];
+}
+function dashArr(w){
+  if(S.dash===1) return [w*2.6,w*2.2];
+  if(S.dash===2) return [w*6,w*2.6,w*1,w*2.6];
+  return [];
+}
+function line(x0,y0,x1,y1,w){
+  rec(x0,y0); rec(x1,y1);
+  if(REC) return;
+  ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
+  ctx.lineWidth=w; ctx.strokeStyle=S.col; ctx.setLineDash([]); ctx.stroke();
+}
+function tick(r0,r1,ad,w){
+  var a=P(r0,ad), b=P(r1,ad);
+  if(REC) return;
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]);
+  ctx.lineWidth=w; ctx.strokeStyle=S.col; ctx.stroke();
+}
+function arc(r,a0,a1,w){
+  P(r,a0); P(r,a1);
+  if(REC) return;
+  ctx.beginPath(); ctx.arc(0,0,R*r,-a0*Math.PI/180,-a1*Math.PI/180,false);
+  ctx.lineWidth=w; ctx.strokeStyle=S.col; ctx.setLineDash(dashArr(w));
+  ctx.stroke(); ctx.setLineDash([]);
+}
+function recBox(x,y,w,h,rot){
+  if(!REC) return;
+  var c=Math.abs(Math.cos(rot)), s=Math.abs(Math.sin(rot));
+  var hw=(w*c+h*s)/2, hh=(w*s+h*c)/2;
+  rec(x-hw,y-hh); rec(x+hw,y+hh);
+}
+/* 沿弧排的刻度数字 */
+function tag(txt,r,ad,fs,rot){
+  var p=P(r,ad);
+  var ro=(rot===undefined)?(90-ad):rot;
+  ctx.font=fs+'px '+NUM; ctx.textAlign='center'; ctx.textBaseline='middle';
+  var w=ctx.measureText(txt).width;
+  recBox(p[0],p[1],w,fs,ro*Math.PI/180);
+  if(REC) return;
+  ctx.save(); ctx.translate(p[0],p[1]); ctx.rotate(ro*Math.PI/180);
+  ctx.fillStyle=S.col; ctx.fillText(txt,0,0);
+  ctx.restore();
+}
+/* 绝对位置文字 */
+function ta(txt,x,y,fs,align){
+  ctx.font=fs+'px '+NUM; ctx.textAlign=align||'center'; ctx.textBaseline='middle';
+  var w=ctx.measureText(txt).width;
+  var x0=(align==='left')?x:((align==='right')?x-w:x-w/2);
+  if(REC){ rec(x0,y-fs*0.55); rec(x0+w,y+fs*0.55); return; }
+  ctx.fillStyle=S.col; ctx.fillText(txt,x,y);
+}
+/* 直流符号：一根短线 */
+function symDC(x,y,hw,w){
+  line(x-hw,y,x+hw,y,w);
+}
+function symAC(x,y,hw,w){
+  if(REC){ rec(x-hw,y-hw*0.6); rec(x+hw,y+hw*0.6); return; }
+  ctx.beginPath();
+  ctx.moveTo(x-hw,y);
+  ctx.bezierCurveTo(x-hw*0.33,y-hw*1.1, x+hw*0.33,y+hw*1.1, x+hw,y);
+  ctx.lineWidth=w; ctx.strokeStyle=S.col; ctx.setLineDash([]); ctx.stroke();
+}
+
+/* ================= 读数（与刻度同一公式，插值误差为零） ================= */
+function ohmFromT(t){ return rOfT(t); }
+function fmtOhm(t){
+  if(t<=0.003) return '∞';
+  var v=ohmFromT(t);
+  if(v<0.6) return '0';
+  if(v>=1000) return (v/1000).toFixed(1)+'k';
+  if(v>=100)  return String(Math.round(v));
+  if(v>=10)   return v.toFixed(0);
+  return v.toFixed(1);
+}
+
+/* 按角度间隔自动收缩字号，保证刻度数字不重叠
+   offDeg：首列标签为让开指针而顺弧偏移的角度，会吃掉第一段可用间距
+   两项 ro 不同且径向拉开到一个行高以上＝真正错层，切向再近也不会撞；
+   拉不开（小屏 / 大字号）就仍按同层处理 */
+function roOf(o){ return (o&&o.ro!==undefined)?o.ro:0; }
+function layered(a,b,fs){ return Math.abs(roOf(a)-roOf(b))*R >= fs; }
+function fitFont(items,r,spanDeg,fs0,offDeg,fsMin){
+  var fs=fs0,guard=0,i,gap,w,j,lo=Math.max(7,fsMin||0);
+  while(guard++<12){
+    ctx.font=fs+'px '+NUM;
+    var ok=true;
+    for(i=1;i<items.length;i++){
+      j=i-1;
+      while(j>=0&&layered(items[j],items[i],fs)) j--;   /* 跳过错层项，回溯到最近的同层邻居 */
+      if(j<0) continue;                                 /* 前面全被错层隔开 */
+      gap=Math.abs(items[i].t-items[j].t)*spanDeg*Math.PI/180*R*r;
+      if(j===0&&offDeg) gap-=offDeg*Math.PI/180*R*r;
+      w=(ctx.measureText(items[i].l).width+ctx.measureText(items[j].l).width)/2;
+      if(w>gap*0.86){ ok=false; break; }
+    }
+    if(ok||fs<lo) break;
+    fs*=0.9;
+  }
+  return fs;
+}
+
+/* ================= 绘制 ================= */
+function scene(){
+  var A0=90+S.half, A1=90-S.half, SP=A0-A1;
+  var s=S.fsz/100;
+  var lw=Math.max(1.4, S.lw*R/800);
+  var f1=Math.max(9,  R*0.038*s);
+  var f2=Math.max(8,  R*0.034*s);
+  f2=Math.min(f2, R*0.044);            /* 三行数字不得互相压住 */
+  var f3=Math.max(8,  R*0.041*s);
+  var fB=Math.max(11, R*0.069*s);
+  fB=Math.min(fB, 0.26*Math.sin(S.half*Math.PI/180)*R);   /* 铭牌不宽过盘面 */
+
+  ctx.lineCap='round'; ctx.lineJoin='round'; ctx.setLineDash([]);
+
+  /* 首列数字让开指针所在的那条半径：偏移量随列间距收缩，窄张角下才不会推进相邻列 */
+  var off0=Math.min(2.6, Math.max(1.2, (SP/5)*0.24));
+
+  var it2=[],it3=[],k2;
+  for(k2=0;k2<=5;k2++){ it2.push({t:k2/5,l:'250'}); it3.push({t:k2/5,l:(k2*0.5).toFixed(1)}); }
+  f1=fitFont(OHM,LABR,SP,f1,0,R*0.019);
+  f2=fitFont(it2,ROWV[2],SP,f2,off0);
+  f3=fitFont(it3,R3-0.078,SP,f3,off0);
+
+  /* ---------- 一号弧：Ω ---------- */
+  arc(R1,A0,A1,lw);
+
+  var tl=[],i,j;
+  for(i=0;i<OHM.length;i++) tl.push({t:OHM[i].t,lv:2,k:i});
+  for(i=1;i<OHM.length;i++){
+    var ta0=OHM[i-1].t, tb0=OHM[i].t, dt=tb0-ta0;
+    var n=clamp(Math.round(dt/0.016),1,4);
+    for(j=1;j<n;j++) tl.push({t:ta0+dt*j/n,lv:(n===4&&j===2)?1:0,k:-1});
+  }
+  tl.sort(function(a,b){return a.t-b.t;});
+  for(i=0;i<tl.length;i++){
+    var it=tl[i], ad=A0-it.t*SP;
+    var len=(it.lv===2)?0.050:(it.lv===1?0.033:0.020);
+    if(it.k>=0) len=Math.max(len, LABR+OHM[it.k].ro-0.026-R1);
+    tick(R1,R1+len,ad,lw*(it.lv===2?1.2:(it.lv===1?1:0.82)));
+  }
+  /* Ω 标签：字号已收敛到可读下限；极窄张角或小屏下仍排不开的，就只留刻度线不印数 */
+  var drawn=[];
+  for(i=0;i<OHM.length;i++){
+    var ad1=A0-OHM[i].t*SP, rr1=LABR+OHM[i].ro;
+    ctx.font=f1+'px '+NUM;
+    var wi=ctx.measureText(OHM[i].l).width, okDraw=true;
+    for(var k=drawn.length-1;k>=0;k--){
+      var d2=drawn[k];
+      if(layered(OHM[d2],OHM[i],f1)) continue;          /* 径向错开，互不干扰 */
+      var gapPx=Math.abs(OHM[i].t-OHM[d2].t)*SP*Math.PI/180*R*LABR;
+      if((wi+ctx.measureText(OHM[d2].l).width)/2>gapPx-2){ okDraw=false; }   /* 与最近同层项撞了 */
+      break;
+    }
+    if(!okDraw) continue;
+    drawn.push(i);
+    tag(OHM[i].l, rr1, ad1, f1, 90-ad1);
+  }
+
+  /* ---------- 二号弧：V（三行） ---------- */
+  arc(R2,A0,A1,lw);
+  for(i=0;i<=20;i++){
+    var tv=i/20, lv2=(i%4===0)?2:((i%2===0)?1:0), ad2=A0-tv*SP;
+    tick(R2,R2-(lv2===2?0.040:(lv2===1?0.030:0.017)),ad2,lw*(lv2===2?1.2:(lv2===1?1:0.82)));
+  }
+  for(i=0;i<=5;i++){
+    var ad3=A0-(i/5)*SP-(i===0?off0:0);      /* 首个 0 避开指针所在的那条半径 */
+    tag(String(i*50),ROWV[0],ad3,f2,90-ad3);
+    tag(String(i*10),ROWV[1],ad3,f2,90-ad3);
+    tag(String(i*2), ROWV[2],ad3,f2,90-ad3);
+  }
+
+  /* ---------- 三号弧：A / V~ ---------- */
+  arc(R3,A0,A1,lw);
+  for(i=0;i<=20;i++){
+    var tv3=i/20, lv3=(i%4===0)?2:((i%2===0)?1:0), ad4=A0-tv3*SP;
+    tick(R3,R3-(lv3===2?0.038:(lv3===1?0.028:0.016)),ad4,lw*(lv3===2?1.2:(lv3===1?1:0.82)));
+  }
+  for(i=0;i<=5;i++){
+    var ad5=A0-(i/5)*SP-(i===0?off0:0);
+    tag(String(i*0.5), R3-0.078, ad5, f3, 90-ad5);
+  }
+
+  /* ---------- 端口符号：贴在端口外侧，不接引线 ---------- */
+  var p2=polar(R2,A0), p3=polar(R3,A0), p1r=polar(R1,A1);
+
+  symDC(p2[0]-0.078*R, p2[1]-0.034*R, 0.022*R, lw);   /* 中弧左端：直流（一根短线） */
+  symAC(p2[0]-0.078*R, p2[1]+0.030*R, 0.026*R, lw);   /* 中弧左端：交流 */
+  ta('V', p3[0]-0.072*R, p3[1]-0.010*R, f3, 'center');/* 内弧左端：V */
+  symAC(p3[0]-0.072*R, p3[1]+0.052*R, 0.024*R, lw);   /* 内弧左端：~ */
+  ta('Ω', p1r[0]+0.052*R, p1r[1]+0.010*R, f3, 'center'); /* 外弧右端：Ω */
+
+  /* ---------- 盘面铭牌 ---------- */
+  var yAV=(0.697-(f3+fB)*0.62/R-0.024)*R;
+  ta('A — V — Ω', 0, -yAV, fB, 'center');
+
+  /* ---------- 指针（与电流表参考件同款：细杆 + 实心三角箭头，橙黄） ---------- */
+  var pcol='#f59e0b';
+  if(colDist(S.col,pcol)<70) pcol='#e53935';   /* 线色与指针同色时改用警示红，避免看不见 */
+  var adp=A0-S.t*SP, ap=adp*Math.PI/180;
+  var ux=Math.cos(ap), uy=-Math.sin(ap);
+  var rTail=R3*0.955, rTip=R1+0.004;
+  var q0=[ux*rTail*R, uy*rTail*R], q1=[ux*rTip*R, uy*rTip*R];
+  var al=0.040*R, hw=0.0090*R;
+  var bx=q1[0]-ux*al, by=q1[1]-uy*al;
+  rec(q0[0],q0[1]); rec(q1[0],q1[1]);
+  rec(bx-uy*hw,by+ux*hw); rec(bx+uy*hw,by-ux*hw);
+  if(REC) return;
+  ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(q0[0],q0[1]); ctx.lineTo(q1[0],q1[1]);
+  ctx.lineWidth=Math.max(2,lw*0.62); ctx.strokeStyle=pcol; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(q1[0],q1[1]);
+  ctx.lineTo(bx-uy*hw, by+ux*hw);
+  ctx.lineTo(bx+uy*hw, by-ux*hw);
+  ctx.closePath(); ctx.fillStyle=pcol; ctx.fill();
+}
+
+/* ================= 布局 ================= */
+function layout(){
+  var pv=panel.getBoundingClientRect().height;
+  var availH=H-((noUI||pv<4)?10:pv+30);
+  var availW=W-20;
+  if(availW<40||availH<40) return;
+
+  /* 以 R=800 为基准测量内容包围盒 */
+  R=800; cx=0; cy=0;
+  REC=true; EXT=[1e9,1e9,-1e9,-1e9]; scene(); REC=false;
+  var bw=EXT[2]-EXT[0], bh=EXT[3]-EXT[1];
+  var pad=0.028*R;
+  var k=Math.min(availW/(bw+2*pad), availH/(bh+2*pad));
+  R=Math.max(60,R*k);
+
+  /* 用真实 R 再测一次，得到精确包围盒 */
+  cx=0; cy=0;
+  REC=true; EXT=[1e9,1e9,-1e9,-1e9]; scene(); REC=false;
+  bw=EXT[2]-EXT[0]; bh=EXT[3]-EXT[1];
+  pad=0.052*R;
+
+  cx=W/2-(EXT[0]+EXT[2])/2;
+  cy=6+(availH-(bh+2*pad))/2-EXT[1]+pad;
+  PLATE=[EXT[0]-pad,EXT[1]-pad,EXT[2]+pad,EXT[3]+pad];
+}
+
+function render(){
+  if(!W) return;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  layout();
+  ctx.save(); ctx.translate(cx,cy);
+  scene();
+  ctx.restore();
+}
+
+/* ================= 状态同步 ================= */
+function syncRead(){
+  var t=S.t;
+  var o=fmtOhm(t), v250=(250*t), v25=(2.5*t);
+  document.getElementById('vR').textContent=
+    'Ω '+o+' ｜ 250 档 '+v250.toFixed(0)+' ｜ 2.5 档 '+v25.toFixed(2);
+  document.getElementById('vT').textContent=(t*100).toFixed(1);
+  var sl=document.getElementById('sT');
+  var sv=String(Math.round(t*1000));
+  if(sl.value!==sv) sl.value=sv;
+}
+function setT(v,draw){
+  S.t=clamp(v,0,1);
+  syncRead();
+  if(draw!==false) render();
+}
+
+/* ================= 交互 ================= */
+var drag=false;
+function aim(e){
+  var b=cv.getBoundingClientRect();
+  var x=(e.clientX-b.left)-cx, y=(e.clientY-b.top)-cy;
+  if(Math.hypot(x,y)<R*0.25) return;
+  var ad=Math.atan2(-y,x)*180/Math.PI;
+  var A0=90+S.half, A1=90-S.half;
+  setT((A0-ad)/(A0-A1));
+}
+function inPlate(e){
+  if(!PLATE) return true;
+  var b=cv.getBoundingClientRect();
+  var x=e.clientX-b.left, y=e.clientY-b.top, m=26;
+  return x>PLATE[0]+cx-m && x<PLATE[2]+cx+m && y>PLATE[1]+cy-m && y<PLATE[3]+cy+m;
+}
+cv.addEventListener('pointerdown',function(e){
+  if(!inPlate(e)) return;
+  drag=true;
+  if(cv.setPointerCapture){ try{cv.setPointerCapture(e.pointerId);}catch(_){} }
+  cv.style.cursor='grabbing'; aim(e);
+});
+cv.addEventListener('pointermove',function(e){ if(drag) aim(e); });
+function endDrag(){ drag=false; cv.style.cursor='crosshair'; }
+cv.addEventListener('pointerup',endDrag);
+cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('lostpointercapture',endDrag);
+window.addEventListener('wheel',function(e){
+  e.preventDefault();
+  var st=(e.shiftKey?0.2:1)/200;
+  setT(S.t-(e.deltaY>0?1:-1)*st);
+},{passive:false});
+window.addEventListener('keydown',function(e){
+  var st=(e.shiftKey?0.2:1)/200;
+  if(e.key==='ArrowLeft'){ setT(S.t-st); e.preventDefault(); }
+  else if(e.key==='ArrowRight'){ setT(S.t+st); e.preventDefault(); }
+});
+
+/* ================= 面板 ================= */
+(function buildPanel(){
+  var box=document.getElementById('csw');
+  PAL.forEach(function(c,i){
+    var d=document.createElement('button');
+    d.className='dot'+(i===0?' on':'');
+    d.style.background=c; d.title=c; d.setAttribute('aria-label',c);
+    d.onclick=function(){
+      S.col=c;
+      Array.prototype.forEach.call(box.children,function(b){b.classList.remove('on');});
+      d.classList.add('on'); render();
+    };
+    box.appendChild(d);
+  });
+  var db=document.querySelectorAll('.dashbtn');
+  for(var i=0;i<db.length;i++){
+    db[i].onclick=function(){
+      S.dash=parseInt(this.getAttribute('data-d'),10);
+      for(var k=0;k<db.length;k++) db[k].classList.remove('on');
+      this.classList.add('on'); render();
+    };
+  }
+})();
+
+var elT=document.getElementById('sT'), elH=document.getElementById('sH'),
+    elF=document.getElementById('sF'), elW=document.getElementById('sW');
+
+elT.addEventListener('input',function(){ setT(parseFloat(elT.value)/1000); });
+elH.addEventListener('input',function(){
+  S.half=parseInt(elH.value,10);
+  document.getElementById('vH').textContent=S.half+'°'; render();
+});
+elF.addEventListener('input',function(){
+  S.fsz=parseInt(elF.value,10);
+  document.getElementById('vF').textContent=S.fsz+'%'; render();
+});
+elW.addEventListener('input',function(){
+  S.lw=parseInt(elW.value,10)/10;
+  document.getElementById('vW').textContent=S.lw.toFixed(1); render();
+});
+
+/* ================= 启动 ================= */
+var DPR=1;
+function boot(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=cv.clientWidth; H=cv.clientHeight;
+  if(W<4||H<4) return;
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  render();
+  syncRead();
+}
+var raf=0;
+function fit(){ cancelAnimationFrame(raf); raf=requestAnimationFrame(boot); }
+
+function qnum(k,lo,hi,dflt){
+  var v=parseFloat(Q.get(k));
+  return isFinite(v)?clamp(v,lo,hi):dflt;
+}
+S.t   =qnum('t',0,1,S.t);
+S.half=qnum('half',16,37,S.half);
+S.fsz =qnum('fs',70,140,S.fsz);
+S.lw  =qnum('w',1.5,10,S.lw);
+S.dash=Math.round(qnum('dash',0,2,S.dash));
+var qc=Q.get('c'); if(qc&&/^#[0-9a-fA-F]{6}$/.test(qc)) S.col=qc;
+
+elT.value=String(Math.round(S.t*1000));
+elH.value=String(S.half); document.getElementById('vH').textContent=S.half+'°';
+elF.value=String(S.fsz);  document.getElementById('vF').textContent=S.fsz+'%';
+elW.value=String(Math.round(S.lw*10)); document.getElementById('vW').textContent=S.lw.toFixed(1);
+(function(){
+  var db=document.querySelectorAll('.dashbtn');
+  for(var i=0;i<db.length;i++)
+    db[i].classList.toggle('on', parseInt(db[i].getAttribute('data-d'),10)===S.dash);
+  var dots=document.getElementById('csw').children;
+  for(var k=0;k<dots.length;k++)
+    dots[k].classList.toggle('on', dots[k].title.toLowerCase()===S.col.toLowerCase());
+})();
+
+boot(); fit();
+window.addEventListener('resize',fit);
+if(window.ResizeObserver) new ResizeObserver(fit).observe(document.documentElement);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fit);
+})();
+</script>
+</body>
+</html>

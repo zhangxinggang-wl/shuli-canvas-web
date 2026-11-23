@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>光滑圆环 · 小球</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_ring_ball',
+  title: '光滑圆环 · 小球',
+  sub: "小球在竖直光滑圆环内滑动，能量守恒，越接近底部越快",
+  params: ["ringTheta0","ringK","ringLen","ringPeriod"],
+  integrate: true,
+  note: "初始角度决定它能否越过最高点；轨迹拖着残影看得更清楚。",
+formula: String.raw`\tfrac12mv^2+mgR(1-\cos\theta)=\text{const}`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.7,
+});
+</script>
+</body>
+</html>

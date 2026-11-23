@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>带电粒子加速偏转 · 荧光屏演示</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<script defer src="../vendor/katex/katex.min.js"></script>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#000000;color:#dfe7f5;
+    font-family:"KaiTi","楷体","STKaiti","Kaiti SC",serif}
+  #app{display:flex;height:100vh;width:100vw}
+  #stage{flex:1;position:relative;min-width:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #panel{width:330px;flex:none;background:rgba(11,17,29,.94);border-left:1px solid #1b2740;
+    padding:18px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:15px;
+    font-family:"KaiTi","楷体","STKaiti","Kaiti SC",serif}
+  #panel h1{font-size:16px;margin:0 0 2px;letter-spacing:.5px;color:#9fc7ff;font-weight:600}
+  #panel .sub{font-size:12px;color:#5b6d8c;margin-top:-10px;line-height:1.6}
+  .row{display:flex;flex-direction:column;gap:7px}
+  .row label{font-size:13px;color:#93a7c6;display:flex;justify-content:space-between;
+    align-items:center;gap:8px}
+  .lbl{white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+  [data-tex]{font-style:normal}
+  .katex{font-size:1.03em}
+  .val{font-variant-numeric:tabular-nums;color:#63e6c0;font-weight:600;font-size:13px;
+    white-space:nowrap}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;
+    background:#1e2a44;outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+    background:linear-gradient(180deg,#7fd4ff,#2b8bd6);border:1px solid #a8e4ff;cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:1px solid #a8e4ff;
+    background:linear-gradient(180deg,#7fd4ff,#2b8bd6);cursor:pointer}
+  .readout{background:#0a1220;border:1px solid #1b2740;border-radius:9px;padding:11px 12px;
+    font-size:13px;line-height:2.0;font-variant-numeric:tabular-nums;color:#8aa0c0;
+    display:flex;flex-direction:column;gap:2px}
+  .readout .warn{color:#ff8f6b;font-size:12.5px}
+  .btns{display:flex;gap:9px}
+  button{flex:1;padding:9px 0;border-radius:8px;border:1px solid #24405f;background:#122036;
+    color:#9fc7ff;font-size:13px;cursor:pointer;transition:.15s;
+    font-family:"KaiTi","楷体","STKaiti","Kaiti SC",serif}
+  button:hover{background:#1a2c49;border-color:#35618f}
+  button.on{background:#123a3a;border-color:#2e8f80;color:#63e6c0}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;color:#93a7c6;cursor:pointer;user-select:none}
+  .chk input{accent-color:#2b8bd6;width:15px;height:15px;cursor:pointer}
+  @media(max-width:820px){
+    #app{flex-direction:column}
+    #panel{width:100%;height:46%;border-left:none;border-top:1px solid #1b2740;
+      display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;align-content:start}
+    #panel h1,#panel .sub,.btns,.readout{grid-column:1/-1}
+  }
+</style>
+<link rel="stylesheet" href="dark-fix.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="panel">
+    <h1>带电粒子加速 · 偏转演示</h1>
+    <div class="sub">加速电压使粒子获得速度，偏转电压使其产生横向位移，最终打在荧光屏上发光。</div>
+
+    <div class="row">
+      <label>
+        <span class="lbl">加速电压 <i data-tex="U_1" data-fb="U₁"></i></span>
+        <span class="val" id="vU1"></span>
+      </label>
+      <input type="range" id="sU1" min="100" max="1600" step="10" value="800">
+    </div>
+    <div class="row">
+      <label>
+        <span class="lbl">偏转电压 <i data-tex="U_2" data-fb="U₂"></i></span>
+        <span class="val" id="vU2"></span>
+      </label>
+      <input type="range" id="sU2" min="-500" max="500" step="5" value="110">
+    </div>
+    <div class="row">
+      <label>
+        <span class="lbl">偏转板长度 <i data-tex="L" data-fb="L"></i></span>
+        <span class="val" id="vL"></span>
+      </label>
+      <input type="range" id="sL" min="30" max="100" step="1" value="68">
+    </div>
+    <div class="row">
+      <label>
+        <span class="lbl">偏转板间距 <i data-tex="d" data-fb="d"></i></span>
+        <span class="val" id="vG"></span>
+      </label>
+      <input type="range" id="sG" min="12" max="48" step="1" value="26">
+    </div>
+    <div class="row">
+      <label>
+        <span class="lbl">漂移区长度 <i data-tex="D" data-fb="D"></i></span>
+        <span class="val" id="vD"></span>
+      </label>
+      <input type="range" id="sD" min="10" max="80" step="1" value="32">
+    </div>
+
+    <div class="btns">
+      <button id="btnPause" class="on">⏸ 暂停</button>
+      <button id="btnReset">↻ 重置</button>
+    </div>
+
+    <div class="readout">
+      <div><span id="rV"></span></div>
+      <div><span id="rTheta"></span></div>
+      <div><span id="rY"></span></div>
+      <div id="rWarn" class="warn" style="display:none">⚠ 粒子打在偏转板上</div>
+    </div>
+
+    <label class="chk"><input type="checkbox" id="cbField" checked> 显示电场线</label>
+    <label class="chk"><input type="checkbox" id="cbPath" checked> 显示预测轨迹</label>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ==================== LaTeX 渲染 ==================== */
+function setMath(el, tex, fallback) {
+  if (!el) return;
+  if (window.katex) {
+    try {
+      katex.render(tex, el, { throwOnError: false, displayMode: false });
+      return;
+    } catch (e) { /* fallthrough */ }
+  }
+  el.textContent = fallback != null ? fallback : tex;
+}
+
+/* ==================== 主程序 ==================== */
+function boot() {
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const stage = document.getElementById('stage');
+
+  let W = 900, H = 600, DPR = 1;
+
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = Math.max(r.width, 100);
+    H = Math.max(r.height, 100);
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  new ResizeObserver(resize).observe(stage);
+
+  /* ==================== 参数与物理 ==================== */
+  const QM = 1.7588e11;      // 比荷 q/m (C/kg)
+  const D1 = 0.016;          // 加速区长度 (m)
+  const GAP = 0.008;         // 加速区出口到偏转板入口 (m)
+
+  const X_ACC0 = 0;          // 加速区起点 (mm)
+  const X_ACC1 = 16;         // 加速区终点 (mm)
+  const X_PLATE0 = 24;       // 偏转板入口 (mm)
+
+  const state = {
+    U1: 800, U2: 110, L: 68, d: 26, D: 32,
+    showField: true, showPath: true
+  };
+
+  let sim = null;
+  let T_REF = 1;
+
+  function computeSim() {
+    const U1 = state.U1, U2 = state.U2;
+    const Lm = state.L / 1000;
+    const dm = state.d / 1000;
+    const Dm = state.D / 1000;
+
+    const v1 = Math.sqrt(2 * QM * U1);
+    const a1 = v1 * v1 / (2 * D1);
+    const t1 = v1 / a1;
+
+    const a2 = QM * U2 / dm;
+    const tc = Lm / v1;
+
+    let tHit = Infinity;
+    if (Math.abs(a2) > 1e-6) {
+      tHit = Math.sqrt(dm / Math.abs(a2));
+    }
+    const hit = tHit < tc;
+    const t3 = hit ? tHit : tc;
+
+    const yExit = 0.5 * a2 * t3 * t3;
+    const vy = a2 * t3;
+    const t4 = hit ? 0 : Dm / v1;
+    const yScreen = yExit + vy * t4;
+
+    const t2 = GAP / v1;
+    const Tstop = t1 + t2 + t3 + t4;
+    const Tfull = t1 + t2 + tc + Dm / v1;
+
+    return { v1, a1, t1, a2, t2, tc, t3, t4, tHit, hit,
+             yExit, vy, yScreen, Tstop, Tfull, Lm, dm, Dm };
+  }
+
+  function posAt(tRaw) {
+    const s = sim;
+    const t = Math.min(tRaw, s.Tstop);
+    const tEnd1 = s.t1;
+    const tEnd2 = s.t1 + s.t2;
+    const tEnd3 = s.t1 + s.t2 + s.t3;
+
+    if (t <= tEnd1) {
+      const dx = 0.5 * s.a1 * t * t;
+      return { x: X_ACC0 + dx * 1000, y: 0 };
+    }
+    if (t <= tEnd2) {
+      const tau = t - tEnd1;
+      return { x: X_ACC1 + s.v1 * tau * 1000, y: 0 };
+    }
+    if (t <= tEnd3) {
+      const tau = t - tEnd2;
+      return { x: X_PLATE0 + s.v1 * tau * 1000,
+               y: 0.5 * s.a2 * tau * tau * 1000 };
+    }
+    const tau = t - tEnd3;
+    return { x: X_PLATE0 + s.v1 * s.t3 * 1000 + s.v1 * tau * 1000,
+             y: s.yExit * 1000 + s.vy * tau * 1000 };
+  }
+
+  /* ==================== 视图变换 ==================== */
+  const view = { scale: 6, ox: 0, oy: 0, yHalf: 30 };
+
+  function W2S(x, y) {
+    return [view.ox + x * view.scale, view.oy - y * view.scale];
+  }
+
+  function updateView() {
+    const sc = sim;
+    const yNeed = Math.max(
+      state.d / 2 + 8,
+      Math.abs(sc.yScreen) * 1000 + 10,
+      28
+    );
+    const yHalf = Math.min(yNeed, 110);
+
+    const worldLeft = -12;
+    const worldRight = X_PLATE0 + state.L + state.D + 11;
+    const worldW = worldRight - worldLeft;
+
+    const pad = 26;
+    const availW = Math.max(W - pad * 2, 60);
+    const availH = Math.max(H - pad * 2, 60);
+
+    const scale = Math.min(availW / worldW, availH / (2 * yHalf));
+
+    view.scale = scale;
+    view.ox = pad + (availW - worldW * scale) / 2 - worldLeft * scale;
+    view.oy = H / 2;
+    view.yHalf = yHalf;
+  }
+
+  /* ==================== 绘图工具 ==================== */
+  function kaiFont(size) {
+    return `${size}px "KaiTi","楷体","STKaiti","Kaiti SC",serif`;
+  }
+
+  /* 标准普通箭头：箭杆 + 两条对称翼线（开口式，非实心三角形、非半箭头） */
+  function arrow(x1, y1, x2, y2, size) {
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    const wing = 0.46;   // 翼片张角
+
+    // 箭杆
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // 两条对称翼线
+    ctx.beginPath();
+    ctx.moveTo(x2 - size * Math.cos(ang - wing), y2 - size * Math.sin(ang - wing));
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x2 - size * Math.cos(ang + wing), y2 - size * Math.sin(ang + wing));
+    ctx.stroke();
+  }
+
+  /* ==================== 各部件绘制 ==================== */
+  function drawBackground() {
+    if (window.__gwSimBackground) { ctx.clearRect(0, 0, W, H); return; }
+    const g = ctx.createRadialGradient(W * 0.44, H * 0.5, 0, W * 0.44, H * 0.5, Math.max(W, H) * 0.8);
+    g.addColorStop(0, '#000000');
+    g.addColorStop(1, '#000000');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(90,140,220,0.045)';
+    ctx.lineWidth = 1;
+    const step = 42;
+    ctx.beginPath();
+    for (let x = 0; x < W; x += step) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); }
+    for (let y = 0; y < H; y += step) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
+    ctx.stroke();
+  }
+
+  function drawAccelerator() {
+    const sc = view.scale;
+    const [x0, cy] = W2S(X_ACC0, 0);
+    const [x1] = W2S(X_ACC1, 0);
+    const hh = (state.d / 2) * sc;
+
+    const grad = ctx.createLinearGradient(x0, 0, x1, 0);
+    grad.addColorStop(0, 'rgba(255,150,60,0.14)');
+    grad.addColorStop(1, 'rgba(90,170,255,0.18)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x0, cy - hh, x1 - x0, hh * 2);
+
+    ctx.strokeStyle = 'rgba(130,165,215,0.28)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, cy - hh); ctx.lineTo(x1, cy - hh);
+    ctx.moveTo(x0, cy + hh); ctx.lineTo(x1, cy + hh);
+    ctx.stroke();
+
+    // 阴极
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(x0 - 2.5, cy - hh, 5, hh * 2);
+
+    // 阳极（中间带孔）
+    const hole = Math.max(4, 3 * sc);
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillRect(x1 - 2.5, cy - hh, 5, hh - hole);
+    ctx.fillRect(x1 - 2.5, cy + hole, 5, hh - hole);
+
+    // 加速区电场线：标准箭头
+    if (state.showField) {
+      ctx.strokeStyle = 'rgba(130,200,255,0.6)';
+      ctx.lineWidth = 1.8;
+      for (let k = -2; k <= 2; k++) {
+        const yy = cy + k * hh * 0.4;
+        arrow(x0 + 9, yy, x1 - 9, yy, 10);
+      }
+    }
+
+    ctx.font = kaiFont(Math.max(10, Math.min(13, sc * 2)));
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(150,180,215,0.75)';
+    ctx.fillText('加速区', (x0 + x1) / 2, cy - hh - 7);
+  }
+
+  function drawDeflector() {
+    const sc = view.scale;
+    const L = state.L, d = state.d;
+    const [x0, yTop] = W2S(X_PLATE0, d / 2);
+    const [x1] = W2S(X_PLATE0 + L, d / 2);
+    const [, yBot] = W2S(0, -d / 2);
+
+    ctx.fillStyle = 'rgba(120,140,200,0.055)';
+    ctx.fillRect(x0, yTop, x1 - x0, yBot - yTop);
+
+    const up = state.U2 > 0;
+
+    // 偏转板电场线：标准箭头
+    if (state.showField && Math.abs(state.U2) > 2) {
+      ctx.strokeStyle = 'rgba(160,210,255,0.68)';
+      ctx.lineWidth = 1.9;
+      const n = 8;
+      for (let i = 0; i <= n; i++) {
+        const xx = x0 + (x1 - x0) * i / n;
+        if (up) arrow(xx, yBot - 7, xx, yTop + 7, 13);
+        else    arrow(xx, yTop + 7, xx, yBot - 7, 13);
+      }
+    }
+
+    // 极板
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(4.5, 2.0 * sc);
+    ctx.strokeStyle = '#7d8ea8';
+    ctx.beginPath(); ctx.moveTo(x0, yTop); ctx.lineTo(x1, yTop); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0, yBot); ctx.lineTo(x1, yBot); ctx.stroke();
+
+    // 标签（不显示极性）
+    const mx = (x0 + x1) / 2;
+    ctx.font = kaiFont(Math.max(10, Math.min(13, sc * 2)));
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(150,180,215,0.75)';
+    ctx.fillText('偏转板', mx, yTop - 16);
+  }
+
+  /* 荧光屏：一条竖直线 */
+  function drawScreen() {
+    const sc = view.scale;
+    const [sx] = W2S(X_PLATE0 + state.L + state.D, 0);
+    const yH = view.yHalf * 0.95;
+    const [, sy0] = W2S(0, yH);
+    const [, sy1] = W2S(0, -yH);
+
+    ctx.strokeStyle = 'rgba(80,255,190,0.85)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy0);
+    ctx.lineTo(sx, sy1);
+    ctx.stroke();
+
+    ctx.font = kaiFont(Math.max(10, Math.min(13, sc * 2)));
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(120,235,200,0.85)';
+    ctx.fillText('荧光屏', sx, sy0 - 8);
+  }
+
+  function drawSpot(strength) {
+    if (strength <= 0.01 || sim.hit) return;
+    const [sx] = W2S(X_PLATE0 + state.L + state.D, 0);
+    const [ , sy] = W2S(0, sim.yScreen * 1000);
+    const r = Math.max(10, view.scale * 5);
+
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+    g.addColorStop(0, `rgba(190,255,235,${0.95 * strength})`);
+    g.addColorStop(0.28, `rgba(90,255,200,${0.55 * strength})`);
+    g.addColorStop(0.62, `rgba(40,200,160,${0.18 * strength})`);
+    g.addColorStop(1, 'rgba(20,120,100,0)');
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = `rgba(230,255,250,${strength})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, Math.max(1.6, view.scale * 0.8), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawPath(curT) {
+    const s = sim;
+    const N = 260;
+
+    if (state.showPath) {
+      ctx.beginPath();
+      let started = false;
+      for (let i = 0; i <= N; i++) {
+        const p = posAt(s.Tstop * i / N);
+        const [px, py] = W2S(p.x, p.y);
+        if (!started) { ctx.moveTo(px, py); started = true; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'rgba(110,190,255,0.16)';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([4, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    const iMax = Math.max(1, Math.floor(N * Math.min(curT / s.Tstop, 1)));
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i <= iMax; i++) {
+      const p = posAt(s.Tstop * i / N);
+      const [px, py] = W2S(p.x, p.y);
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.strokeStyle = 'rgba(90,200,255,0.16)';
+    ctx.lineWidth = 7;
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(140,225,255,0.85)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  function drawParticle(curT) {
+    const p = posAt(curT);
+    const [px, py] = W2S(p.x, p.y);
+    const r = Math.max(3.2, view.scale * 1.15);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    const g = ctx.createRadialGradient(px, py, 0, px, py, r * 4.2);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.2, 'rgba(160,235,255,0.7)');
+    g.addColorStop(0.55, 'rgba(60,170,255,0.22)');
+    g.addColorStop(1, 'rgba(30,90,200,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(px, py, r * 4.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(px, py, r * 0.62, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawHitSpark(curT) {
+    if (!sim.hit) return;
+    const p = posAt(sim.Tstop);
+    const [px, py] = W2S(p.x, p.y);
+    const flick = 0.55 + 0.45 * Math.sin(performance.now() / 60);
+    const a = Math.min(1, 0.35 + flick);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 22);
+    g.addColorStop(0, `rgba(255,240,180,${a})`);
+    g.addColorStop(0.4, `rgba(255,150,60,${0.5 * a})`);
+    g.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(px, py, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* ==================== 主循环 ==================== */
+  let phase = 0;
+  let hold = 0;
+  let paused = false;
+  let duration = 3000;
+  let lastTs = 0;
+
+  const rV = document.getElementById('rV');
+  const rTheta = document.getElementById('rTheta');
+  const rY = document.getElementById('rY');
+  const rWarn = document.getElementById('rWarn');
+
+  function recompute() {
+    sim = computeSim();
+    duration = Math.max(700, Math.min(6500, 3000 * (sim.Tstop / T_REF)));
+    updateReadout();
+  }
+
+  function updateReadout() {
+    const s = sim;
+    const yMm = s.yScreen * 1000;
+    const theta = Math.atan(s.vy / s.v1) * 180 / Math.PI;
+
+    setMath(rV,
+      `v = ${(s.v1 / 1e6).toFixed(2)} \\times 10^{6}\\ \\mathrm{m/s}`,
+      `v = ${(s.v1 / 1e6).toFixed(2)}×10⁶ m/s`);
+
+    setMath(rTheta,
+      `\\theta = ${theta.toFixed(1)}^{\\circ}`,
+      `θ = ${theta.toFixed(1)}°`);
+
+    setMath(rY,
+      `y = ${yMm.toFixed(1)}\\ \\mathrm{mm}`,
+      `y = ${yMm.toFixed(1)} mm`);
+
+    rWarn.style.display = s.hit ? 'block' : 'none';
+  }
+
+  function loop(ts) {
+    if (!lastTs) lastTs = ts;
+    let dt = ts - lastTs;
+    lastTs = ts;
+    if (dt > 60) dt = 60;
+
+    if (!paused) {
+      if (hold > 0) {
+        hold -= dt;
+        if (hold <= 0) { phase = 0; hold = 0; }
+      } else {
+        phase += dt / duration;
+        if (phase >= 1) { phase = 1; hold = 520; }
+      }
+    }
+
+    updateView();
+    const curT = phase * sim.Tstop;
+
+    drawBackground();
+    drawScreen();
+
+    let spot = 0;
+    if (!sim.hit) {
+      const px = posAt(curT).x;
+      const sxm = X_PLATE0 + state.L + state.D;
+      const dist = sxm - px;
+      spot = Math.max(0, Math.min(1, 1 - dist / Math.max(12, state.D * 0.85)));
+    }
+
+    drawSpot(spot);
+    drawDeflector();
+    drawAccelerator();
+    drawPath(curT);
+    drawHitSpark(curT);
+    drawParticle(curT);
+
+    requestAnimationFrame(loop);
+  }
+
+  /* ==================== 交互绑定 ==================== */
+  function bindSlider(id, key, fmtTex, fmtFallback) {
+    const el = document.getElementById(id);
+    const out = document.getElementById('v' + id.slice(1));
+    const apply = () => {
+      state[key] = parseFloat(el.value);
+      setMath(out, fmtTex(state[key]), fmtFallback(state[key]));
+      recompute();
+    };
+    el.addEventListener('input', apply);
+    apply();
+  }
+
+  bindSlider('sU1', 'U1',
+    v => `${v}\\ \\mathrm{V}`, v => `${v} V`);
+  bindSlider('sU2', 'U2',
+    v => `${v}\\ \\mathrm{V}`, v => `${v} V`);
+  bindSlider('sL', 'L',
+    v => `${v}\\ \\mathrm{mm}`, v => `${v} mm`);
+  bindSlider('sG', 'd',
+    v => `${v}\\ \\mathrm{mm}`, v => `${v} mm`);
+  bindSlider('sD', 'D',
+    v => `${v}\\ \\mathrm{mm}`, v => `${v} mm`);
+
+  document.getElementById('cbField').addEventListener('change', e => {
+    state.showField = e.target.checked;
+  });
+  document.getElementById('cbPath').addEventListener('change', e => {
+    state.showPath = e.target.checked;
+  });
+
+  const btnPause = document.getElementById('btnPause');
+  btnPause.addEventListener('click', () => {
+    paused = !paused;
+    btnPause.textContent = paused ? '▶ 继续' : '⏸ 暂停';
+    btnPause.classList.toggle('on', !paused);
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    phase = 0; hold = 0; lastTs = 0;
+  });
+
+  /* ==================== 静态公式渲染 ==================== */
+  document.querySelectorAll('[data-tex]').forEach(el => {
+    setMath(el, el.dataset.tex, el.dataset.fb || '');
+  });
+
+  /* ==================== 启动 ==================== */
+  resize();
+  sim = computeSim();
+  T_REF = sim.Tstop;
+  recompute();
+  phase = 0;
+  requestAnimationFrame(loop);
+}
+
+/* ==================== 等待 DOM 与 KaTeX ==================== */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})();
+</script>
+<script src="panel-toggle.js" defer></script>
+</body>
+</html>

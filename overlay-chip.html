@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>批注切换</title>
+<style>
+  /* 1.1.14 批注层「一键切换」悬浮键。
+     单独一个小窗口（由主进程开：无边框 + 透明 + 置顶 + 永不穿透），
+     因为它必须做到一件透明批注层本身做不到的事：**鼠标模式下还能被点到**。
+     所以样式全部内联，不依赖 app.css —— 这个页面是独立窗口，只带自己的 preload。 */
+  html, body {
+    margin: 0; height: 100%; background: transparent; overflow: hidden;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+    font: 600 12px/1.2 "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: #16203a; cursor: pointer;
+  }
+  #chip {
+    position: absolute; inset: 8px; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: radial-gradient(circle at 34% 26%, #ffffff 0%, #f4f7fc 46%, #e2e9f4 100%);
+    box-shadow: 0 10px 24px rgba(12, 20, 38, .30), 0 0 0 1px rgba(20, 32, 54, .12),
+                0 0 0 4px rgba(255, 255, 255, .55) inset;
+    opacity: .9; transition: opacity .12s ease, transform .12s ease, background .16s ease;
+  }
+  body:hover #chip { opacity: 1; }
+  body[data-down="1"] #chip { transform: scale(.94); opacity: 1; }
+  #chip .ic { width: 30px; height: 30px; display: block; }
+  #chip .ic svg { width: 30px; height: 30px; display: block; }
+  #chip .tx { font-size: 12px; letter-spacing: .3px; }
+  #chip .dot {
+    position: absolute; right: 20px; top: 18px; width: 9px; height: 9px; border-radius: 50%;
+    background: #6ee7a8; box-shadow: 0 0 0 2px #fff, 0 0 8px #6ee7a8;
+  }
+  /* 鼠标模式（穿透）下老师什么都点不到，这个键是唯一入口 —— 换成醒目的橙红，跟批注态区分开 */
+  body[data-mode="pass"] #chip {
+    background: radial-gradient(circle at 34% 26%, #fff6f1 0%, #ffe7da 48%, #ffd3bd 100%);
+    box-shadow: 0 10px 26px rgba(140, 60, 20, .30), 0 0 0 1px rgba(228, 87, 46, .40),
+                0 0 0 4px rgba(255, 255, 255, .6) inset;
+  }
+  body[data-mode="pass"] #chip .dot { background: #e4572e; box-shadow: 0 0 0 2px #fff, 0 0 8px #e4572e; }
+</style>
+</head>
+<body data-mode="anno">
+  <div id="chip" role="button" aria-label="切换批注与桌面">
+    <span class="dot"></span>
+    <span class="ic" id="ic"></span>
+    <span class="tx" id="tx">切桌面</span>
+  </div>
+<script>
+(function () {
+  'use strict';
+  // 主进程的 preload 注入 window.gewu.chip；页面里没有它时（普通浏览器打开）整个键静默降级，
+  // 不抛错 —— 探针和「拿浏览器看样式」都靠这条。
+  var API = function () { return (window.gewu && window.gewu.chip) || null; };
+
+  var ICON = {
+    // 「切到桌面」：显示器 + 指针，一眼看出按下之后能操作下面的应用
+    desk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M9 20.5h6M12 16.5v4"/>' +
+      '<path d="M13.2 8.2l4 1.6-1.7.8-.8 1.7-1.5-4.1z" fill="currentColor" stroke="none"/></svg>',
+    // 「回到批注」：笔尖
+    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M4 20l1-4.4L16.6 4a1.7 1.7 0 012.4 0l1 1a1.7 1.7 0 010 2.4L8.4 19 4 20z"/>' +
+      '<path d="M14.8 5.8l3.4 3.4"/></svg>'
+  };
+
+  var ic = document.getElementById('ic');
+  var tx = document.getElementById('tx');
+  var mode = 'anno';
+  var down = false, downAt = 0, downX = 0, downY = 0, moved = 0, longTimer = null, longFired = false, dragging = false;
+
+  function paint(m) {
+    mode = m === 'pass' ? 'pass' : 'anno';
+    document.body.dataset.mode = mode;
+    var pass = mode === 'pass';
+    ic.innerHTML = pass ? ICON.pen : ICON.desk;
+    tx.textContent = pass ? '回批注' : '切桌面';
+    document.getElementById('chip').setAttribute('aria-label', pass ? '回到批注' : '切到桌面');
+  }
+
+  function clearLong() { if (longTimer) { clearTimeout(longTimer); longTimer = null; } }
+
+  document.body.addEventListener('pointerdown', function (e) {
+    if (!e.isPrimary) return;
+    down = true; dragging = false; moved = 0; longFired = false;
+    downAt = Date.now(); downX = e.screenX; downY = e.screenY;
+    document.body.dataset.down = '1';
+    try { document.body.setPointerCapture(e.pointerId); } catch (_) {}
+    clearLong();
+    // 长按 = 菜单（发到画布 / 存图 / 退出）；按满 800ms 才触发，短按永远是「切换」。
+    longTimer = setTimeout(function () {
+      longFired = true;
+      var A = API(); if (A && A.menu) A.menu();
+      document.body.dataset.down = '0';
+    }, 800);
+  });
+
+  document.body.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.screenX - downX, dy = e.screenY - downY;
+    moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+    if (moved > 6) {
+      dragging = true; clearLong();
+      var A = API(); if (A && A.move) A.move(dx, dy);
+    }
+  });
+
+  function up(e) {
+    if (!down) return;
+    down = false;
+    document.body.dataset.down = '0';
+    clearLong();
+    try { document.body.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (dragging || longFired || moved > 6) return;     // 拖过 / 长按菜单过 → 不算点击
+    var A = API();
+    if (A && A.toggle) A.toggle();
+  }
+  document.body.addEventListener('pointerup', up);
+  document.body.addEventListener('pointercancel', function (e) {
+    down = false; dragging = false; clearLong(); document.body.dataset.down = '0';
+    try { document.body.releasePointerCapture(e.pointerId); } catch (_) {}
+  });
+  // 右键（有鼠标的老师）：直接给菜单，省得记长按
+  document.body.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    var A = API(); if (A && A.menu) A.menu();
+  });
+
+  if (window.gewu && window.gewu.on) {
+    window.gewu.on('chip-mode', function (m) { paint(m); });
+  }
+  // 探针钩子：主进程不在时也能验界面与事件（window.__chipPaint('pass')）
+  window.__chipPaint = paint;
+  window.__chipMode = function () { return mode; };
+  paint('anno');
+})();
+</script>
+</body>
+</html>

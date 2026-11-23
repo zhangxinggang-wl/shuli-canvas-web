@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>数理无限画布</title>
+<link rel="icon" href="build/icon.png">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="styles/kit.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body data-tool="pen">
+<script src="mobile-shim.js"></script>
+<div id="stage">
+  <canvas id="bg-canvas"></canvas>
+  <!-- R1：PPT 放映层。它按 DOM 顺序就在页面背景之上、对象层与墨迹层之下（z-index 2），
+       而且它**不参与 applyFastView 的四层 CSS 变换** —— 于是放映画面是屏幕空间的，
+       相机平移缩放都不会带走它，天然铺满视口。放映时笔迹照旧落在 #ink-canvas(3) 上面。 -->
+  <canvas id="slide-canvas"></canvas>
+  <div id="world"></div>
+  <canvas id="ink-canvas"></canvas>
+  <canvas id="ann-canvas"></canvas>
+  <canvas id="live-canvas"></canvas>
+  <div id="pen-pred" aria-hidden="true"></div>
+  <div id="erase-ring" aria-hidden="true"></div>
+  <div id="cur-dot" aria-hidden="true"></div>
+</div>
+<div id="capture"></div>
+<!-- 尺规层与书写层同级：z-index 6 > 5，尺规才不会被书写层挡住 -->
+<div id="geo-layer"></div>
+<div id="float-layer"></div>
+
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<!-- 化学式 \ce{...}（KaTeX mhchem 扩展，离线） -->
+<script src="vendor/katex/contrib/mhchem.min.js"></script>
+<script src="vendor/ruffle/ruffle.js"></script>
+<!-- 手机投屏的配对二维码（MIT，构建期由 copy-vendor.js 复制；运行期零 npm 依赖） -->
+<script src="vendor/qrcode/qrcode.js"></script>
+<script src="core/kit.js"></script>
+<script src="core/crashlog.js"></script>
+<script src="core/typo.js"></script>
+<script src="core/build-data.js"></script>
+<script src="core/build.js"></script>
+<script src="core/perf.js"></script>
+<script src="core/icons.js"></script>
+<script src="core/board.js"></script>
+<script src="core/pen.js"></script>
+<script src="core/ink-style.js"></script>
+<script src="core/ink-kernel.js"></script>
+<script src="core/ink-thread.js"></script>
+<!-- 单文件动画契约检查（L2）：C1–C10 的唯一实现，浏览器与 scripts/check-anim.js 共用一份（必须先于 objects.js） -->
+<script src="core/animlint.js"></script>
+<script src="core/objects.js"></script>
+<script src="core/stickers.js"></script>
+<script src="core/stencils.js"></script>
+<script src="core/papers.js"></script>
+<script src="core/papers-writing.js"></script>
+<script src="core/papers-plan.js"></script>
+<script src="core/papers-think.js"></script>
+<script src="core/ctpl-kit.js"></script>
+<script src="core/ctpl-lib.js"></script>
+<script src="core/minimap.js"></script>
+<script src="core/physshapes.js"></script>
+<!-- 1.3.11 自定义图形：lint 是纯函数（UMD，可被 Node 自检），shapeself 负责存储/校验/注册/界面 -->
+<script src="core/shapeself-lint.js"></script>
+<script src="core/shapeself.js"></script>
+<script src="core/physshapes-proj.js"></script>
+<script src="core/chemshapes.js"></script>
+<script src="core/bioshapes.js"></script>
+<script src="core/basicshapes.js"></script>
+<script src="core/phys-em-internal-data.js"></script>
+<script src="core/phys-em-internal.js"></script>
+<script src="core/phys-em.js"></script>
+<!-- 便携白板 PM 模型库（62 个模型）：原样迁入，依赖 physshapes.js 提供的 PB/GH -->
+<script src="core/phys-pm.js"></script>
+<!-- 便携白板扩展模型库（上游 pm_*.js 原样并入）：公共绘制工具 + 34 个模型模块。
+     必须在 phys-pm.js 之后 —— 那边会重置 window.__PM，且这里的 K 覆盖同名 helper 用新版。 -->
+<script src="core/phys-pm-common.js"></script>
+<script src="core/phys-pm-ext.js"></script>
+<script src="core/mathshapes.js"></script>
+<script src="core/input.js"></script>
+<script src="core/importer.js"></script>
+<script src="core/noteproto.js"></script>
+<!-- 手写公式（在线识别）：只依赖 GW.dialog / formula 对象，必须在 importer 之后 -->
+<script src="core/formula-ocr.js"></script>
+<!-- AI 中心（1.4.0）：所有 AI 能力的唯一入口（模型与密钥 / 免费网页版 / 框选动作） -->
+<script src="core/aictl.js"></script>
+<script src="core/aichat.js"></script>
+<!-- 手写公式（逐符号写板 · 离线）：字符模板库 + 二维符号切分，1.0.19 恢复 -->
+<script src="core/inkformula.js"></script>
+<!-- AI 选区引擎：把框选的笔迹认成规范图形 / 公式（原「AI 笔」的识别内核，1.4.0 起只由框选调用） -->
+<script src="core/ai-pen.js"></script>
+<!-- 项目空间：多页导入文件的单页视图 / 翻页 / 页面索引（不改渲染循环，靠 hiddenIds + visibility） -->
+<script src="core/space.js"></script>
+<!-- 板书转排版：复用 GW.ocr 的传输层，框选整块板书 → 云端 → text 对象 -->
+<script src="core/board2doc.js"></script>
+<!-- 新手引导（1.4.3）：首次安装、免费说明点掉之后自动走一遍 -->
+<script src="core/onboard.js"></script>
+<!-- 桌面画布（1.1.0）：新建一页，背景直接是实时桌面，画布上的工具全部可用 -->
+<script src="core/deskcanvas.js"></script>
+<!-- 手机投屏（2.2.0）：手机屏幕/摄像头 → 桌面画布上的临时视图层（不进 items、不进保存导出） -->
+<script src="core/phonecast.js"></script>
+<!-- 手机端投屏发送面板（2.2.1）：同一个菜单入口，手机扫码后选屏幕/摄像头，交给安卓原生采集 -->
+<script src="core/castphone.js"></script>
+<!-- 电脑当发送端（2.2.1）：本机屏幕 → 另一台电脑 / 安卓接收端；同一份配对协议，只是方向相反 -->
+<script src="core/pcsend.js"></script>
+<!-- AI 学习工具：出题 / 批改 / 摘要 / 讲解 / 讲义导出 / 函数画图 / 化学式（1.0.13） -->
+<script src="core/aistudy.js"></script>
+<!-- 局域网协同：平板当第二块屏幕，两端同一份板书、都能写（桌面起服务，平板用 ?k= 进） -->
+<script src="core/lansync.js"></script>
+<!-- 课堂增强（1.1.15）：回放 / 答题器 / 一节课容器（ClassIn 五条里的 R1/R3/R4） -->
+<script src="core/classroom.js"></script>
+<!-- 录课（1.1.18）：画面 + 系统声 + 麦克风 → WebM，边录边落盘（要在 classroom.js 之后，用同一个课堂工具格子） -->
+<script src="core/lessonrec.js"></script>
+<!-- AI 节点：把工作流做成画布上的一个项目，写提示词就地生成公式/题目/插图（1.3.0） -->
+<script src="core/ainodes.js"></script>
+<!-- 2.1.1：本机默认配置真值快照（111 项），必须在 storage.js 之前装载 -->
+<script src="core/factory-defaults.js"></script>
+<script src="core/storage.js"></script>
+<!-- 1.5.3（P2）：课件资源依赖检查 + 可携带课件包（assets/ + manifest.json + 相对引用 data.rel） -->
+<script src="core/deps.js"></script>
+<!-- 取样复用架（1.3.0 R7）：localStorage['gewu.shelf']，跨页/跨文件/重启共用；复制与截图都会进架 -->
+<script src="core/shelf.js"></script>
+<script src="core/geotools.js"></script>
+<script src="core/classtools.js"></script>
+<script src="core/resources.js"></script>
+<!-- 作者个人作品合集（1.1.17）：正文由 scripts/build-works-data.js 固化进 works-data.js，磁盘上没有可复制的课件 -->
+<!-- 两件 3D 作品共用的 three.js 只存一份在 works-engine.js，正文里留占位符，打开时填回去 -->
+<script src="core/works-engine.js"></script>
+<script src="core/works-data.js"></script>
+<script src="core/authorworks.js"></script>
+<!-- 动画上的批注层（R3）：笔迹归一化存在 o.data.ann，跟着对象缩放走 -->
+<script src="core/annot.js"></script>
+<!-- .gwanim 单文件动画包（L3）：zip(anim.html + meta.json + preview.png)，运行期零依赖 -->
+<script src="core/gwanim.js"></script>
+<!-- PPT 动画效果登记表（R4）：把 presetID/filter 翻译成 fade/fly/wipe/split/blinds/zoom 六个原语 -->
+<script src="core/pptx-fx.js"></script>
+<script src="core/pptx.js"></script>
+<!-- 单文件动画的沙箱预览 + 一键入库（L2）：sandbox="allow-scripts" 无 allow-same-origin，先看再入库 -->
+<script src="core/animpreview.js"></script>
+<!-- 1.3.2：有界磁场里的带电粒子（洛伦兹力 → 匀速圆周运动，出界走直线） -->
+<script src="core/lorentz.js"></script>
+<script src="core/export.js"></script>
+<script src="core/search.js"></script>
+<!-- 记忆卡（1.6.7）：卡片数据 + 盒子阶梯复习（纯逻辑，界面在 app.js 的 GW.showCards） -->
+<script src="core/cards.js"></script>
+<script src="core/perfcheck.js"></script>
+<!-- 透明批注层（1.1.14）：?overlay=1 时接管外壳 —— 全透明背景 + 四角/底栏/悬浮球全开 -->
+<script src="core/overlay.js"></script>
+<!-- 统一物理模型注册中心（阶段一）：目录/能力声明/旧记录反查/纯构造，不改旧注册表 -->
+<script src="core/physics-models.js"></script>
+<!-- 同页批量插入命令（阶段二）：菜单与 AI 共用 GW.physicsBatch.insert -->
+<script src="core/physics-batch.js"></script>
+<!-- SVG 网页试点状态桥与真实静态导出（阶段四） -->
+<script src="core/physics-adapter-web.js"></script>
+<!-- 2.0 万能插入（Ctrl+K）：图形 / 数学图形 / 仿真 / 本课件内容 一个入口 -->
+<script src="core/palette.js"></script>
+<!-- 2.0.9 图形面板「所见即所得」缩略图：走真实渲染管线（renderThumb → drawItem），
+     不另画图标。必须排在 physshapes / stencils / board 之后、app.js 之前。 -->
+<script src="core/shape-thumbs.js"></script>
+<!-- 内置仿真（SIMS 清单由 app.js 动态加载，缺失的文件会被跳过） -->
+<script src="core/app.js"></script>
+<script src="core/tpl-ui.js"></script>
+<script src="core/docui.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>仿真独立测试</title>
+<link rel="stylesheet" href="styles/kit.css">
+<style>
+  body { margin: 0; background: #dfe4ea; font-family: var(--font); }
+  #bar { padding: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  #bar button { padding: 6px 10px; }
+  #host { margin: 8px; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,.15); transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<!-- 用法：sim-test.html?sim=projectile[&scale=0.7]。新仿真文件需加入下方 SIM_FILES 列表 -->
+<div id="bar"></div>
+<div id="host"></div>
+<script src="core/kit.js"></script>
+<script>
+  const SIM_FILES = [
+    'sims/math-function.js', 'sims/math-solid.js', 'sims/math-conic.js', 'sims/math-trig.js', 'sims/math-prob.js', 'sims/math-vector.js',
+    'sims/phy-projectile.js', 'sims/phy-oscillator.js', 'sims/phy-wave.js', 'sims/phy-collision.js', 'sims/phy-orbit.js', 'sims/phy-incline.js', 'sims/phy-motion.js',
+    'sims/phy-efield.js', 'sims/phy-particle.js', 'sims/phy-optics.js', 'sims/phy-induction.js', 'sims/phy-flux.js', 'sims/phy-refraction.js', 'sims/phy-circuit.js', 'sims/phy-resbox.js',
+    // 2.0 新增
+    'sims/phy-gas.js', 'sims/phy-interference.js', 'sims/phy-photoelectric.js', 'sims/phy-capacitor.js', 'sims/phy-acgen.js', 'sims/phy-atom.js', 'sims/phy-decay.js',
+    'sims/math-derivative.js', 'sims/math-sequence.js', 'sims/math-complex.js',
+  ];
+  let pending = SIM_FILES.length;
+  SIM_FILES.forEach((f) => {
+    const s = document.createElement('script');
+    s.src = f;
+    s.onload = s.onerror = () => { if (--pending === 0) boot(); };
+    document.head.append(s);
+  });
+  function boot() {
+    const q = new URLSearchParams(location.search);
+    const bar = document.getElementById('bar');
+    Object.values(GW.sims).forEach((d) => {
+      const b = document.createElement('button');
+      b.textContent = d.name;
+      b.onclick = () => { location.search = '?sim=' + d.id; };
+      bar.append(b);
+    });
+    const def = GW.sims[q.get('sim')] || Object.values(GW.sims)[0];
+    if (!def) return;
+    const host = document.getElementById('host');
+    const scale = +(q.get('scale') || 1);
+    host.style.width = def.width + 'px';
+    host.style.height = def.height + 'px';
+    host.style.transform = 'scale(' + scale + ')';
+    GW.view.scale = scale;
+    const state = {};
+    window.inst = def.create({ root: host, state, save() { console.log('state', JSON.stringify(state)); } });
+    window.simState = state;
+  }
+</script>
+</body>
+</html>

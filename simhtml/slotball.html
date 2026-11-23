@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>半圆槽 · 小球</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_sliding_slot_ball',
+  title: '半圆槽 · 小球',
+  sub: "小球在光滑半圆槽里来回滑动，槽的半径与初角可调",
+  params: ["ssbTheta0","ssbK","ssbBallR","ssbPeriod"],
+  integrate: true,
+  note: "小球的速率随高度变化，最低点最快、两端瞬时静止。",
+formula: String.raw`v=\sqrt{2gR(\cos\theta-\cos\theta_0)}`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.7,
+});
+</script>
+</body>
+</html>

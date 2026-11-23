@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>合力与分力</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_force_compose',
+  title: '合力与分力',
+  sub: "直接拖动箭头端点：合力随两个分力实时变化",
+  params: ["fcF1","fcA1","fcF2","fcA2","fcM1","fcM2"],
+  static: true,
+  note: "拖拽模式：0 自由、1 只改方向（大小锁定）、2 只改大小（方向锁定）。",
+formula: String.raw`F=\sqrt{F_1^2+F_2^2+2F_1F_2\cos\theta}`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.6,
+});
+
+// 拖动端点改分力：三种模式与上游一致（0 自由 / 1 只改方向 / 2 只改大小）
+(function () {
+  var pick = null;
+  function hit(p, o) {
+    var h = o._fcHandles; if (!h) return 0;
+    if (Math.hypot(p.x - h.P1.x, p.y - h.P1.y) < 26) return 1;
+    if (Math.hypot(p.x - h.P2.x, p.y - h.P2.y) < 26) return 2;
+    return 0;
+  }
+  Sim.on('pointerdown', function (p, o) {
+    var w = hit(p, o);
+    if (!w) return false;
+    pick = w;
+    return true;
+  });
+  Sim.on('pointermove', function (p, o) {
+    if (!pick) return;
+    var h = o._fcHandles; if (!h) return;
+    var scale = o._fcScale || 100;
+    var dx = p.x - h.O.x, dy = h.O.y - p.y;
+    var mode = pick === 1 ? (o.fcM1 || 0) : (o.fcM2 || 0);
+    var fk = pick === 1 ? 'fcF1' : 'fcF2';
+    var ak = pick === 1 ? 'fcA1' : 'fcA2';
+    var a0 = (o[ak] || 0) * Math.PI / 180;
+    var nf, na;
+    if (mode === 1) { nf = o[fk]; na = Math.atan2(dy, dx); }
+    else if (mode === 2) { nf = Math.max(0.2, Math.min(2, (dx * Math.cos(a0) + dy * Math.sin(a0)) / scale)); na = a0; }
+    else { nf = Math.max(0.2, Math.min(2, Math.hypot(dx, dy) / scale)); na = Math.atan2(dy, dx); }
+    o[fk] = Math.round(nf * 100) / 100;
+    o[ak] = Math.round(na * 180 / Math.PI);
+    if (window.__sim && window.__sim.set) {
+      window.__sim.set(fk, o[fk]); window.__sim.set(ak, o[ak]);
+    }
+  });
+  Sim.on('pointerup', function () { pick = null; });
+})();
+</script>
+</body>
+</html>

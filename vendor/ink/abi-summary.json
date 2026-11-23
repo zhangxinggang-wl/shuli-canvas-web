@@ -1,0 +1,272 @@
+{
+ "generatedAt": "2026-11-14T07:52:50.151Z",
+ "source": "src/vendor/ink/abi.json",
+ "totals": {
+  "imports": 670,
+  "modules": 47,
+  "exports": 376,
+  "inkcanvasClasses": 40
+ },
+ "layers": [
+  {
+   "key": "runtime",
+   "title": "Swift 运行时（语言 ABI，必须逐位等价）",
+   "strategy": "仿写（纯 JS，可完整覆盖）",
+   "functions": 115,
+   "modules": [
+    {
+     "name": "bjs",
+     "fns": 77
+    },
+    {
+     "name": "javascript_kit",
+     "fns": 32
+    },
+    {
+     "name": "WASMAPIBridge",
+     "fns": 5
+    },
+    {
+     "name": "hack",
+     "fns": 1
+    }
+   ]
+  },
+  {
+   "key": "wasi",
+   "title": "WASI 系统调用（错误码与时钟语义）",
+   "strategy": "仿写（35 调用，其中 20 个只需返回 ENOSYS）",
+   "functions": 36,
+   "modules": [
+    {
+     "name": "wasi_snapshot_preview1",
+     "fns": 35
+    },
+    {
+     "name": "wasi",
+     "fns": 1
+    }
+   ]
+  },
+  {
+   "key": "ports",
+   "title": "应用端口（网络/监控/调度/配置）",
+   "strategy": "仿写为空实现 + 契约占位",
+   "functions": 63,
+   "modules": [
+    {
+     "name": "WASMInkCanvasLibrary",
+     "fns": 63
+    }
+   ]
+  },
+  {
+   "key": "dom",
+   "title": "桥接类 A：Canvas 2D / 路径 / 颜色",
+   "strategy": "仿写（薄封装，语义已在反编译胶水里可见）",
+   "functions": 116,
+   "modules": [
+    {
+     "name": "inkcanvas_context2d",
+     "fns": 80
+    },
+    {
+     "name": "inkcanvas_canvas",
+     "fns": 13
+    },
+    {
+     "name": "inkcanvas_path2d",
+     "fns": 13
+    },
+    {
+     "name": "inkcanvas_canvas_gradient",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_canvas_pattern",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_offscreen_canvas",
+     "fns": 7
+    },
+    {
+     "name": "inkcanvas_bitmaprenderer_context",
+     "fns": 1
+    }
+   ]
+  },
+  {
+   "key": "webgl",
+   "title": "桥接类 B：WebGL2（119 项，最大单块）",
+   "strategy": "仿写（直通 + 数据上传翻译）",
+   "functions": 122,
+   "modules": [
+    {
+     "name": "inkcanvas_webgl2_context",
+     "fns": 119
+    },
+    {
+     "name": "inkcanvas_webgl_context_event",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_webgl_lose_context_extension",
+     "fns": 2
+    }
+   ]
+  },
+  {
+   "key": "events",
+   "title": "桥接类 C：DOM 事件（78 个业务回调 + 指针/滚轮/窗口）",
+   "strategy": "仿写（事件对象映射 + 回调句柄）",
+   "functions": 136,
+   "modules": [
+    {
+     "name": "inkcanvas_events",
+     "fns": 78
+    },
+    {
+     "name": "inkcanvas_event",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_pointer_event",
+     "fns": 10
+    },
+    {
+     "name": "inkcanvas_mouse_event",
+     "fns": 4
+    },
+    {
+     "name": "inkcanvas_wheel_event",
+     "fns": 2
+    },
+    {
+     "name": "inkcanvas_window_event",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_document_event",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_dom_node",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_html_element",
+     "fns": 5
+    },
+    {
+     "name": "inkcanvas_window",
+     "fns": 7
+    },
+    {
+     "name": "inkcanvas_document",
+     "fns": 8
+    },
+    {
+     "name": "inkcanvas_location",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_url",
+     "fns": 2
+    },
+    {
+     "name": "inkcanvas_url_search_params",
+     "fns": 5
+    },
+    {
+     "name": "inkcanvas_blob",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_abort_controller",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_abort_signal",
+     "fns": 2
+    }
+   ]
+  },
+  {
+   "key": "media",
+   "title": "桥接类 D：图像 / 位图 / 字体",
+   "strategy": "仿写（createImageBitmap 异步语义是难点）",
+   "functions": 63,
+   "modules": [
+    {
+     "name": "inkcanvas_image_data",
+     "fns": 4
+    },
+    {
+     "name": "inkcanvas_image_bitmap",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_image_bitmap_options",
+     "fns": 13
+    },
+    {
+     "name": "inkcanvas_image_element",
+     "fns": 6
+    },
+    {
+     "name": "inkcanvas_element_image",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_global",
+     "fns": 2
+    },
+    {
+     "name": "inkcanvas_fontfaceset",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_cssstyledeclaration",
+     "fns": 31
+    }
+   ]
+  },
+  {
+   "key": "text",
+   "title": "桥接类 E：文本编辑与画布容器",
+   "strategy": "仿写（文本测量依赖真实字体，见风险表）",
+   "functions": 19,
+   "modules": [
+    {
+     "name": "inkcanvas_text_editor",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_interaction_container",
+     "fns": 12
+    },
+    {
+     "name": "inkcanvas_app",
+     "fns": 3
+    },
+    {
+     "name": "inkcanvas_logger",
+     "fns": 1
+    },
+    {
+     "name": "inkcanvas_performance",
+     "fns": 2
+    }
+   ]
+  }
+ ],
+ "unassigned": [],
+ "exportGroups": {
+  "内存/堆": 7,
+  "其它（内核业务导出）": 6,
+  "Swift↔JS 桥": 175,
+  "SQLite（25）": 177,
+  "DOM 回调入口": 11
+ }
+}

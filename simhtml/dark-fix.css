@@ -1,0 +1,37 @@
+/* 独立仿真页的纯黑高对比补丁（斜面/斜面飞出/电场/交变电场）。
+ * 这四页各自内联一套深蓝皮肤，这里只做「底色压到纯黑 + 字/线提亮」，
+ * 不改它们的排版；canvas 用对比度滤镜把原本偏灰的线条提亮。 */
+html, body { background: #000 !important; color: #fff !important; }
+#panel, .panel, aside#ui {
+  background: #000 !important;
+  border-color: #3f5575 !important;
+  color: #fff !important;
+  padding-top: 58px !important;
+}
+#panel h1, .panel h1, #ui h1 { color: #fff !important; font-size: 20px !important; }
+#panel .sub, .panel .sub, #ui .sub { color: #dbe7f7 !important; }
+.ctrl .row, .switch, .readout .item, .field > label, .chk, .rate-lab { color: #eaf2ff !important; }
+.ctrl .row b, .field > label b, .readout .item b { color: #2ee6c5 !important; }
+#note, .readout, .hint { color: #dbe7f7 !important; }
+input[type=range]::-webkit-slider-runnable-track { background: #3f5575 !important; }
+input[type=range]::-webkit-slider-thumb {
+  background: #fff !important; border: 3px solid #2ee6c5 !important;
+  box-shadow: 0 0 0 1px #2ee6c5, 0 0 10px rgba(46, 230, 197, .55) !important;
+}
+button { color: #fff !important; border-color: #4a5f80 !important; }
+button.primary, #release { background: #0f9d8a !important; border-color: #2ee6c5 !important; color: #fff !important; }
+canvas { filter: contrast(1.22) brightness(1.18) saturate(1.15); }
+
+/* 收起参数面板：四个独立页共用同一套按钮（panel-toggle.js 注入）。 */
+#panel-toggle {
+  position: fixed; right: 12px; top: 10px; z-index: 20;
+  min-width: 108px; height: 42px; padding: 0 14px;
+  border-radius: 10px; border: 1.5px solid #2ee6c5;
+  background: rgba(0, 0, 0, .9); color: #fff;
+  font: 600 15px "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  line-height: 1; cursor: pointer; white-space: nowrap;
+}
+#panel-toggle:hover { background: #123c38; }
+body.panel-hidden #panel,
+body.panel-hidden .panel,
+body.panel-hidden aside#ui { display: none !important; }

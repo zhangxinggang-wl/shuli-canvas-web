@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>类抛体运动</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_projectile2',
+  title: '类抛体运动',
+  sub: '恒力作用下的抛体：轨迹、当前速度与加速度都可看着调',
+  params: ['animV0', 'animTheta0', 'animAccel', 'animThetaA', 'animPeriod'],
+  period: 'animPeriod',
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s　|　v₀ = ' + o.animV0 + '　θ = ' + o.animTheta0 + '°',
+  note: '虚线是整条轨迹，实线走到当前时刻；绿色是速度、橙色是加速度。',
+formula: String.raw`x=v_0\cos\theta\,t+\tfrac12a_xt^2\qquad y=v_0\sin\theta\,t+\tfrac12a_yt^2`,
+  speed: 0.6,
+});
+</script>
+</body>
+</html>

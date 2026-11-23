@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>极致平滑·全动态牵引电路图（白板可拖拽版）</title>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        html, body { overscroll-behavior: none; }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            gap: 16px;
+            background-color: #f8f9fa;
+            font-family: sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .circuit-container {
+            background-color: white;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            /* 随白板大屏缩放：宽度同时受视口宽度、100vh 减去控制条/说明的高度 双重约束，
+               保证 1366×768、1280×720 这类笔记本/一体机也能一屏放下，8:5 比例不被压扁 */
+            width: max(280px, min(94vw, 1240px, calc((100vh - 240px) * 1.6)));
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            /* 关键：禁止浏览器把拖拽当成滚动/缩放，触摸拖动才不会被中断 */
+            touch-action: none;
+        }
+
+        /* 导线样式 */
+        .wire {
+            stroke: #222;
+            stroke-width: 4;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+            fill: none;
+            pointer-events: none;
+            transition: stroke 0.12s linear, stroke-width 0.12s linear;
+        }
+        /* 悬停提示（鼠标/触摸笔）与选中态 */
+        .wire-group:hover .wire { stroke: #0a84ff; }
+        .wire-group.sel .wire { stroke: #e63946; stroke-width: 5; }
+
+        /* 导线拖拽感应区（透明，覆盖 引线 + 曲线 全程） */
+        .wire-hit {
+            stroke: rgba(0,0,0,0);
+            stroke-width: 30;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            cursor: grab;
+            pointer-events: stroke;   /* 只按描边区域命中，不受透明影响 */
+            touch-action: none;
+        }
+        .wire-hit:active { cursor: grabbing; }
+
+        /* 形变抓手标记 */
+        .grip-handle {
+            fill: #fff;
+            stroke: #e63946;
+            stroke-width: 4;
+            pointer-events: none;
+        }
+
+        .component {
+            stroke: #222;
+            stroke-width: 4;
+            fill: white;
+        }
+        .component-group {
+            cursor: grab;
+            touch-action: none;
+        }
+        .component-group:active { cursor: grabbing; }
+
+        .node {
+            fill: #222;
+            cursor: grab;
+            touch-action: none;
+        }
+        .node.highlight { fill: #e63946; }
+        .label {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 36px;
+            fill: #222;
+            font-style: italic;
+            pointer-events: none;
+        }
+
+        /* 控制面板样式 */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 18px 30px;
+            background: white;
+            padding: 12px 26px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: min(94vw, 1240px);
+            box-sizing: border-box;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        input[type=range] {
+            width: 120px;
+            cursor: pointer;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background-color: #e63946;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .action-btn:hover { background-color: #d62828; }
+        .action-btn.ghost {
+            background-color: #fff;
+            color: #555;
+            border: 2px solid #ddd;
+        }
+        .action-btn.ghost:hover { background-color: #f1f3f5; color: #222; }
+
+        .help-text {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 900px;
+        }
+        .help-text b { color: #e63946; }
+    </style>
+</head>
+<body>
+
+<!-- 控制面板 -->
+<div class="controls">
+    <div class="control-group">
+        <label for="angle-R1">R1 旋转角度</label>
+        <input type="range" id="angle-R1" min="0" max="360" value="0" data-comp="R1">
+    </div>
+    <div class="control-group">
+        <label for="angle-R2">R2 旋转角度</label>
+        <input type="range" id="angle-R2" min="0" max="360" value="0" data-comp="R2">
+    </div>
+    <div class="control-group">
+        <label for="angle-R3">R3 旋转角度</label>
+        <input type="range" id="angle-R3" min="0" max="360" value="0" data-comp="R3">
+    </div>
+    <button id="reset-all-wires-btn" class="action-btn ghost">复原所有导线</button>
+    <button id="unmerge-all-btn" class="action-btn">一键断开所有结点</button>
+</div>
+
+<div class="circuit-container">
+    <svg id="circuit" width="800" height="500" viewBox="0 0 800 500">
+        <!-- 内容由 JS 动态生成 -->
+    </svg>
+</div>
+
+<div class="help-text">
+    <p>💡 <b>高阶玩法</b>：手指（或触摸笔/鼠标）按住任意导线、任意位置拖动，即可自由牵引形变；单击导线会高亮选中，双击导线恢复原状。</p>
+    <p>拖动结点/电阻自由移动 ｜ 滑块旋转电阻 ｜ 结点靠近自动合并（双击结点拆分）</p>
+</div>
+
+<script>
+    // 1. 数据模型初始化
+    const state = {
+        nodes: {
+            A: { x: 150, y: 200, label: 'A', isMergedInto: null },
+            B: { x: 400, y: 200, label: 'B', isMergedInto: null },
+            C: { x: 500, y: 350, label: 'C', isMergedInto: null },
+            D: { x: 650, y: 300, label: 'D', isMergedInto: null }
+        },
+        fixedPoints: {
+            P_IN: { x: 50, y: 200 },
+            P_OUT: { x: 750, y: 300 }
+        },
+        components: {
+            R1: { cx: 300, cy: 200, w: 120, h: 40, angle: 0, label: 'R1', labelOffset: {x: 0, y: -50} },
+            R3: { cx: 500, cy: 200, w: 120, h: 40, angle: 0, label: 'R3', labelOffset: {x: 0, y: -50} },
+            R2: { cx: 300, cy: 350, w: 120, h: 40, angle: 0, label: 'R2', labelOffset: {x: 0, y: 50} }
+        },
+        wires: [
+            { id1: 'P_IN', id2: 'A', grip: null },
+            { id1: 'A', id2: 'B', grip: null },
+            { id1: 'A', id2: 'R2_L', grip: null },
+            { id1: 'R1_L', id2: 'C', grip: null },
+            { id1: 'R1_R', id2: 'B', grip: null },
+            { id1: 'R2_R', id2: 'C', grip: null },
+            { id1: 'B', id2: 'R3_L', grip: null },
+            { id1: 'R3_R', id2: 'D', grip: null },
+            { id1: 'C', id2: 'D', grip: null },
+            { id1: 'D', id2: 'P_OUT', grip: null }
+        ]
+    };
+
+    const svg = document.getElementById('circuit');
+    const ns = 'http://www.w3.org/2000/svg';
+
+    // 兜底：个别白板老内核没有 Pointer Events，把 touch 翻译成 pointer 事件，
+    // 让下面的逻辑完全复用（现代浏览器不会进入这段）。
+    if (!window.PointerEvent) {
+        const synth = (type, target, src) => {
+            const ev = new Event(type, { bubbles: true, cancelable: true });
+            ev.clientX = src.clientX;
+            ev.clientY = src.clientY;
+            ev.pointerId = src.identifier;
+            ev.pointerType = 'touch';
+            ev.button = 0;
+            ev.buttons = (type === 'pointerup' || type === 'pointercancel') ? 0 : 1;
+            ev.isPrimary = true;
+            target.dispatchEvent(ev);
+        };
+        let startTarget = null;
+        svg.addEventListener('touchstart', (e) => {
+            startTarget = e.target;
+            synth('pointerdown', startTarget, e.changedTouches[0]);
+            e.preventDefault();
+        }, { passive: false });
+        svg.addEventListener('touchmove', (e) => {
+            if (!startTarget) return;
+            synth('pointermove', startTarget, e.changedTouches[0]);
+            e.preventDefault();
+        }, { passive: false });
+        const finish = (type) => (e) => {
+            if (!startTarget) return;
+            const tgt = startTarget;
+            startTarget = null;
+            synth(type, tgt, e.changedTouches[0]);
+            e.preventDefault();
+        };
+        svg.addEventListener('touchend', finish('pointerup'), { passive: false });
+        svg.addEventListener('touchcancel', finish('pointercancel'), { passive: false });
+    }
+
+    // 2. 获取端点信息
+    function getEndpointInfo(id) {
+        if (state.nodes[id]) {
+            let node = state.nodes[id];
+            if (node.isMergedInto) return getEndpointInfo(node.isMergedInto);
+            return { pin: {x: node.x, y: node.y}, lead: {x: node.x, y: node.y}, dir: null };
+        }
+
+        if (id.endsWith('_L') || id.endsWith('_R')) {
+            const compId = id.split('_')[0];
+            const comp = state.components[compId];
+            const rad = comp.angle * Math.PI / 180;
+            const isLeft = id.endsWith('_L');
+            const sign = isLeft ? -1 : 1;
+
+            const dirX = Math.cos(rad) * sign;
+            const dirY = Math.sin(rad) * sign;
+
+            const pinX = comp.cx + sign * (comp.w/2) * Math.cos(rad);
+            const pinY = comp.cy + sign * (comp.w/2) * Math.sin(rad);
+
+            const leadLen = 20;
+            const leadX = pinX + dirX * leadLen;
+            const leadY = pinY + dirY * leadLen;
+
+            return {
+                pin: {x: pinX, y: pinY},
+                lead: {x: leadX, y: leadY},
+                dir: {x: dirX, y: dirY}
+            };
+        }
+
+        const p = state.fixedPoints[id] || {x: 0, y: 0};
+        return { pin: p, lead: p, dir: null };
+    }
+
+    // 3. 极致平滑的曲线生成器 (已修复抓手处可能产生多余曲线的问题)
+    function generatePathString(info1, info2, wire) {
+        const p0 = info1.lead;
+        const p1 = info2.lead;
+
+        const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+        if (dist < 1) return '';
+
+        if (wire.grip) {
+            const G = wire.grip;
+            const dist0 = Math.hypot(G.x - p0.x, G.y - p0.y);
+            const dist1 = Math.hypot(p1.x - G.x, p1.y - G.y);
+
+            // 端点控制方向
+            let T0 = info1.dir ? info1.dir : { x: (G.x - p0.x)/(dist0||1), y: (G.y - p0.y)/(dist0||1) };
+            let T1 = info2.dir ? info2.dir : { x: (p1.x - G.x)/(dist1||1), y: (p1.y - G.y)/(dist1||1) };
+
+            // 核心修复：计算 G 点的切线，使用角平分线法确保绝对平滑无折角
+            let v1x = (G.x - p0.x) / (dist0 || 1);
+            let v1y = (G.y - p0.y) / (dist0 || 1);
+            let v2x = (p1.x - G.x) / (dist1 || 1);
+            let v2y = (p1.y - G.y) / (dist1 || 1);
+
+            let tgx = v1x + v2x;
+            let tgy = v1y + v2y;
+            let tgLen = Math.hypot(tgx, tgy);
+
+            if (tgLen < 0.1) { // 极端情况（直线被拉反向）
+                tgx = -v1y; tgy = v1x;
+                tgLen = 1;
+            } else {
+                tgx /= tgLen; tgy /= tgLen;
+            }
+
+            const pull0 = Math.min(dist0 * 0.4, 100);
+            const pull1 = Math.min(dist1 * 0.4, 100);
+
+            const C1_1 = { x: p0.x + T0.x * pull0, y: p0.y + T0.y * pull0 };
+
+            // G 点两边的控制点沿角平分线展开
+            const gPull0 = Math.min(dist0 * 0.4, 100);
+            const gPull1 = Math.min(dist1 * 0.4, 100);
+            const C1_2 = { x: G.x - tgx * gPull0, y: G.y - tgy * gPull0 };
+            const C2_1 = { x: G.x + tgx * gPull1, y: G.y + tgy * gPull1 };
+
+            const C2_2 = { x: p1.x - T1.x * pull1, y: p1.y - T1.y * pull1 };
+
+            return `M ${p0.x} ${p0.y} C ${C1_1.x} ${C1_1.y}, ${C1_2.x} ${C1_2.y}, ${G.x} ${G.y} C ${C2_1.x} ${C2_1.y}, ${C2_2.x} ${C2_2.y}, ${p1.x} ${p1.y}`;
+        }
+
+        // 自动避障逻辑
+        if ((wire.id1 === 'A' && wire.id2 === 'B') || (wire.id1 === 'B' && wire.id2 === 'A')) {
+            const height = Math.max(100, Math.abs(p1.x - p0.x) * 0.5);
+            const topY = Math.min(p0.y, p1.y) - height;
+            return `M ${p0.x} ${p0.y} C ${p0.x} ${topY}, ${p1.x} ${topY}, ${p1.x} ${p1.y}`;
+        }
+
+        if ((wire.id1 === 'R1_L' && wire.id2 === 'C') || (wire.id1 === 'C' && wire.id2 === 'R1_L')) {
+            let c1x = p0.x + 100, c1y = p0.y + 30;
+            let c2x = p1.x - 80, c2y = p1.y - 80;
+            if (wire.id1 === 'C') {
+                c1x = p0.x - 80; c1y = p0.y - 80;
+                c2x = p1.x + 100; c2y = p1.y + 30;
+            }
+            return `M ${p0.x} ${p0.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p1.x} ${p1.y}`;
+        }
+
+        // 控制臂长度：沿引线方向的“可用行程”决定上限，
+        // 保证控制点不会越过另一端（否则会出现 S 形回头，R2 左侧导线就是这种情况）
+        const base = Math.min(dist * 0.4, 120);
+        const arm = (pEnd, pOther, d) => {
+            const along = (pOther.x - pEnd.x) * d.x + (pOther.y - pEnd.y) * d.y;
+            if (along <= 1) return Math.max(12, Math.min(base, dist * 0.15));
+            return Math.min(base, along * 0.5);
+        };
+
+        // 自由端（结点端）的控制臂：略短于 0.5，弯得更均匀（0.5 会把弯折全挤在引线一侧）
+        const FREE = 0.38;
+
+        let c1 = { x: p0.x, y: p0.y };
+        let c2 = { x: p1.x, y: p1.y };
+
+        if (info1.dir) {
+            const l1 = arm(p0, p1, info1.dir);
+            c1.x += info1.dir.x * l1;
+            c1.y += info1.dir.y * l1;
+        } else {
+            c1.x += (p1.x - p0.x) * FREE;
+            c1.y += (p1.y - p0.y) * FREE;
+        }
+
+        if (info2.dir) {
+            const l2 = arm(p1, p0, info2.dir);
+            c2.x += info2.dir.x * l2;
+            c2.y += info2.dir.y * l2;
+        } else {
+            c2.x += (p0.x - p1.x) * FREE;
+            c2.y += (p0.y - p1.y) * FREE;
+        }
+
+        return `M ${p0.x} ${p0.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${p1.x} ${p1.y}`;
+    }
+
+    // 4. 渲染引擎
+    let wireGroups = [];        // 每条导线的 <g>，用于切换选中样式
+    let selectedWire = null;    // 当前选中的导线下标
+
+    function makeLine(a, b) {
+        const ln = document.createElementNS(ns, 'line');
+        ln.setAttribute('x1', a.x); ln.setAttribute('y1', a.y);
+        ln.setAttribute('x2', b.x); ln.setAttribute('y2', b.y);
+        ln.setAttribute('class', 'wire');
+        return ln;
+    }
+
+    // 感应轨 = 引脚→引线→曲线→引线→引脚，整条线任意位置都能抓住
+    function buildHitPath(info1, info2, pathData) {
+        let d = pathData;
+        if (info1.dir) {
+            d = `M ${info1.pin.x} ${info1.pin.y} L ${info1.lead.x} ${info1.lead.y} ` + d.replace(/^\s*M/, 'L');
+        }
+        if (info2.dir) {
+            d += ` L ${info2.pin.x} ${info2.pin.y}`;
+        }
+        return d;
+    }
+
+    function render() {
+        svg.innerHTML = '';
+        wireGroups = [];
+
+        // --- 绘制导线 ---
+        state.wires.forEach((wire, index) => {
+            const info1 = getEndpointInfo(wire.id1);
+            const info2 = getEndpointInfo(wire.id2);
+
+            if (info1.lead.x === info2.lead.x && info1.lead.y === info2.lead.y) return;
+
+            const pathData = generatePathString(info1, info2, wire);
+            if (!pathData) return;
+
+            const g = document.createElementNS(ns, 'g');
+            g.setAttribute('class', 'wire-group');
+
+            // 绘制引出线
+            if (info1.dir) g.appendChild(makeLine(info1.pin, info1.lead));
+            if (info2.dir) g.appendChild(makeLine(info2.pin, info2.lead));
+
+            // 绘制可见曲线
+            const path = document.createElementNS(ns, 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('class', 'wire');
+            g.appendChild(path);
+
+            // 形变抓手标记
+            if (wire.grip) {
+                const handle = document.createElementNS(ns, 'circle');
+                handle.setAttribute('cx', wire.grip.x);
+                handle.setAttribute('cy', wire.grip.y);
+                handle.setAttribute('r', 9);
+                handle.setAttribute('class', 'grip-handle');
+                g.appendChild(handle);
+            }
+
+            // 透明的拖拽感应轨
+            const hitArea = document.createElementNS(ns, 'path');
+            hitArea.setAttribute('d', buildHitPath(info1, info2, pathData));
+            hitArea.setAttribute('class', 'wire-hit');
+            hitArea.addEventListener('pointerdown', (e) => onWireDown(e, index));
+            hitArea.addEventListener('dblclick', (e) => { e.stopPropagation(); resetWire(index); });
+            g.appendChild(hitArea);
+
+            svg.appendChild(g);
+            wireGroups[index] = g;
+        });
+
+        applyWireSelection();
+
+        // --- 绘制电阻元件 ---
+        Object.keys(state.components).forEach(id => {
+            const comp = state.components[id];
+            const g = document.createElementNS(ns, 'g');
+            g.setAttribute('transform', `translate(${comp.cx}, ${comp.cy}) rotate(${comp.angle})`);
+            g.setAttribute('class', 'component-group');
+            g.setAttribute('data-id', id);
+
+            const rect = document.createElementNS(ns, 'rect');
+            rect.setAttribute('x', -comp.w / 2);
+            rect.setAttribute('y', -comp.h / 2);
+            rect.setAttribute('width', comp.w);
+            rect.setAttribute('height', comp.h);
+            rect.setAttribute('class', 'component');
+            g.appendChild(rect);
+
+            g.addEventListener('pointerdown', (e) => onObjectDown(e, 'component', id));
+            svg.appendChild(g);
+
+            const text = document.createElementNS(ns, 'text');
+            text.setAttribute('x', comp.cx + comp.labelOffset.x);
+            text.setAttribute('y', comp.cy + comp.labelOffset.y);
+            text.setAttribute('class', 'label');
+            text.innerHTML = `${comp.label[0]}<tspan font-size="26" dy="-5">${comp.label[1]}</tspan>`;
+            svg.appendChild(text);
+        });
+
+        // --- 绘制结点 ---
+        Object.keys(state.nodes).forEach(id => {
+            const node = state.nodes[id];
+            if (node.isMergedInto) return;
+
+            const circle = document.createElementNS(ns, 'circle');
+            circle.setAttribute('cx', node.x);
+            circle.setAttribute('cy', node.y);
+            circle.setAttribute('r', 7);
+            circle.setAttribute('class', 'node');
+            circle.setAttribute('data-id', id);
+
+            circle.addEventListener('pointerdown', (e) => onObjectDown(e, 'node', id));
+            circle.addEventListener('dblclick', (e) => unmergeSingleNode(e, id));
+            svg.appendChild(circle);
+
+            const label = document.createElementNS(ns, 'text');
+            let lx = node.x - (id === 'A' ? 65 : id === 'B' ? 10 : id === 'D' ? -40 : -5);
+            let ly = node.y + (id === 'B' ? 55 : id === 'C' ? 65 : -10);
+            label.setAttribute('x', lx);
+            label.setAttribute('y', ly);
+            label.setAttribute('class', 'label');
+            label.textContent = node.label;
+            svg.appendChild(label);
+        });
+    }
+
+    // ---------- 通用指针工具（白板/触摸屏/鼠标统一） ----------
+    // 用 getScreenCTM 反算：SVG 被缩放（大屏铺满）时坐标依然准确
+    function toSvgPoint(evt) {
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        const pt = svg.createSVGPoint();
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        const p = pt.matrixTransform(ctm.inverse());
+        return { x: p.x, y: p.y };
+    }
+
+    let activePointerId = null;   // 同一时刻只服务一个指针，避免多指互相抢拖
+    let wireDrag = null;
+    let objDrag = null;
+
+    // 双击/双点判定：指针被 <svg> 捕获后，浏览器会把后续 click 的目标改判为 <svg>，
+    // 挂在导线/结点上的原生 dblclick 会永远收不到，所以自己按“时间+位移+对象”判双击。
+    const tapInfo = { t: 0, x: 0, y: 0, key: '' };
+    function isDoubleTap(key, p) {
+        const now = performance.now();
+        const hit = (now - tapInfo.t < 400) && tapInfo.key === key &&
+                    Math.hypot(p.x - tapInfo.x, p.y - tapInfo.y) < 24;
+        if (hit) {
+            // 记为“已消费”：否则双击复位后 400ms 内再按同一条线会被当成第三击吃掉，拖不动
+            tapInfo.t = 0; tapInfo.key = '';
+            return true;
+        }
+        tapInfo.t = now; tapInfo.x = p.x; tapInfo.y = p.y; tapInfo.key = key;
+        return false;
+    }
+
+    function capturePointer(pointerId) {
+        activePointerId = pointerId;
+        // 捕获在 <svg> 根节点上：render() 重建子节点也不会丢失指针
+        try { svg.setPointerCapture(pointerId); } catch (err) {}
+    }
+
+    function releasePointer() {
+        window.removeEventListener('pointermove', onWireMove);
+        window.removeEventListener('pointermove', onObjectMove);
+        window.removeEventListener('pointerup', onWireUp);
+        window.removeEventListener('pointerup', onObjectUp);
+        window.removeEventListener('pointercancel', onWireUp);
+        window.removeEventListener('pointercancel', onObjectUp);
+        if (activePointerId !== null) {
+            try { svg.releasePointerCapture(activePointerId); } catch (err) {}
+            activePointerId = null;
+        }
+    }
+
+    // ---------- 导线拖拽 ----------
+    function applyWireSelection() {
+        wireGroups.forEach((g, i) => {
+            if (g) g.classList.toggle('sel', i === selectedWire);
+        });
+    }
+
+    function onWireDown(evt, index) {
+        if (activePointerId !== null) return;
+        if (evt.pointerType === 'mouse' && evt.button !== 0) return;
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        const p = toSvgPoint(evt);
+
+        // 双击（白板双点）该导线 = 恢复原状，本次不进入拖拽
+        if (isDoubleTap('wire' + index, p)) {
+            resetWire(index);
+            return;
+        }
+
+        capturePointer(evt.pointerId);
+
+        const wire = state.wires[index];
+        wireDrag = {
+            index: index,
+            start: p,
+            grip0: wire.grip ? { x: wire.grip.x, y: wire.grip.y } : null,
+            hasMoved: false
+        };
+
+        // 单击即高亮选中（只切 class，不重建 DOM，否则双击会被打断）
+        selectedWire = index;
+        applyWireSelection();
+
+        window.addEventListener('pointermove', onWireMove);
+        window.addEventListener('pointerup', onWireUp);
+        window.addEventListener('pointercancel', onWireUp);
+    }
+
+    function onWireMove(evt) {
+        if (!wireDrag || evt.pointerId !== activePointerId) return;
+        const p = toSvgPoint(evt);
+        const wire = state.wires[wireDrag.index];
+        const dx = p.x - wireDrag.start.x;
+        const dy = p.y - wireDrag.start.y;
+
+        if (!wireDrag.hasMoved) {
+            // 手指有抖动，阈值比鼠标大一点，避免“点一下就把线拉了”
+            const threshold = (evt.pointerType === 'mouse') ? 8 : 12;
+            if (Math.hypot(dx, dy) < threshold) return;
+            wireDrag.hasMoved = true;
+            tapInfo.t = 0; tapInfo.key = '';   // 已经拖动了，这一下不算“点击”
+            if (!wire.grip) {
+                // 之前没有抓手，就在按下的位置生成一个
+                wire.grip = { x: wireDrag.start.x, y: wireDrag.start.y };
+                wireDrag.grip0 = { x: wire.grip.x, y: wire.grip.y };
+            }
+        }
+        if (!wire.grip) return;
+
+        wire.grip.x = wireDrag.grip0.x + dx;
+        wire.grip.y = wireDrag.grip0.y + dy;
+        render();
+    }
+
+    function onWireUp(evt) {
+        if (!wireDrag) return;
+        if (evt && evt.pointerId !== undefined && evt.pointerId !== activePointerId) return;
+        wireDrag = null;
+        releasePointer();
+    }
+
+    // 双击（或白板双点）导线恢复原状
+    function resetWire(index) {
+        if (state.wires[index].grip) {
+            state.wires[index].grip = null;
+            render();
+        }
+    }
+
+    function resetAllWires() {
+        let hasGrip = false;
+        state.wires.forEach(w => { if (w.grip) { w.grip = null; hasGrip = true; } });
+        if (hasGrip) render();
+    }
+
+    // ---------- 结点 / 电阻拖拽 ----------
+    function onObjectDown(evt, type, id) {
+        if (activePointerId !== null) return;
+        if (evt.pointerType === 'mouse' && evt.button !== 0) return;
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        const p = toSvgPoint(evt);
+
+        // 双击（白板双点）结点 = 把合并进来的结点拆开
+        if (type === 'node' && isDoubleTap('node' + id, p)) {
+            unmergeNode(id);
+            return;
+        }
+
+        capturePointer(evt.pointerId);
+
+        selectedWire = null;
+        applyWireSelection();
+
+        objDrag = {
+            type: type,
+            id: id,
+            start: p,
+            initX: type === 'node' ? state.nodes[id].x : state.components[id].cx,
+            initY: type === 'node' ? state.nodes[id].y : state.components[id].cy,
+            moved: false,
+            el: evt.currentTarget
+        };
+        if (type === 'node') evt.currentTarget.classList.add('highlight');
+
+        window.addEventListener('pointermove', onObjectMove);
+        window.addEventListener('pointerup', onObjectUp);
+        window.addEventListener('pointercancel', onObjectUp);
+    }
+
+    function onObjectMove(evt) {
+        if (!objDrag || evt.pointerId !== activePointerId) return;
+        const p = toSvgPoint(evt);
+        const dx = p.x - objDrag.start.x;
+        const dy = p.y - objDrag.start.y;
+
+        if (!objDrag.moved) {
+            if (Math.hypot(dx, dy) < 3) return;
+            objDrag.moved = true;
+            tapInfo.t = 0; tapInfo.key = '';
+        }
+
+        if (objDrag.type === 'node') {
+            state.nodes[objDrag.id].x = objDrag.initX + dx;
+            state.nodes[objDrag.id].y = objDrag.initY + dy;
+        } else {
+            state.components[objDrag.id].cx = objDrag.initX + dx;
+            state.components[objDrag.id].cy = objDrag.initY + dy;
+        }
+        render();
+    }
+
+    function onObjectUp(evt) {
+        if (!objDrag) return;
+        if (evt && evt.pointerId !== undefined && evt.pointerId !== activePointerId) return;
+
+        const d = objDrag;
+        objDrag = null;
+        releasePointer();
+
+        if (!d.moved) {
+            // 没移动就只是“点了一下”：不重建 DOM，双击事件才不会被吞掉
+            if (d.el) d.el.classList.remove('highlight');
+            return;
+        }
+
+        if (d.type === 'node') {
+            const node = state.nodes[d.id];
+            const threshold = 30;
+            for (let id in state.nodes) {
+                if (id === d.id || state.nodes[id].isMergedInto) continue;
+                const target = state.nodes[id];
+                const dist = Math.sqrt((node.x - target.x) ** 2 + (node.y - target.y) ** 2);
+                if (dist < threshold) {
+                    node.isMergedInto = id;
+                    node.x = target.x;
+                    node.y = target.y;
+                    break;
+                }
+            }
+        }
+        render();
+    }
+
+    // 点空白处取消选中
+    svg.addEventListener('pointerdown', (e) => {
+        if (e.target === svg && selectedWire !== null) {
+            selectedWire = null;
+            applyWireSelection();
+        }
+    });
+    // 白板长按不要弹浏览器菜单
+    svg.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // 7. 滑块旋转交互
+    const sliders = document.querySelectorAll('input[type="range"]');
+    sliders.forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const compId = e.target.getAttribute('data-comp');
+            const angle = parseInt(e.target.value, 10);
+            state.components[compId].angle = angle;
+            render();
+        });
+    });
+
+    // 8. 结点拆分功能
+    function unmergeNode(id) {
+        const targetNode = state.nodes[id];
+        let hasMerged = false;
+        let offsetIndex = 1;
+
+        for (let otherId in state.nodes) {
+            const otherNode = state.nodes[otherId];
+            if (otherNode.isMergedInto === id) {
+                otherNode.isMergedInto = null;
+                otherNode.x = targetNode.x - 100 * offsetIndex;
+                otherNode.y = targetNode.y + 100 * offsetIndex;
+                hasMerged = true;
+                offsetIndex++;
+            }
+        }
+        if (hasMerged) render();
+    }
+
+    function unmergeSingleNode(e, id) {
+        if (e) { e.stopPropagation(); e.preventDefault(); }
+        unmergeNode(id);
+    }
+
+    function unmergeAllNodes() {
+        let hasMerged = false;
+        let offsetIndex = 1;
+
+        for (let id in state.nodes) {
+            const node = state.nodes[id];
+            if (node.isMergedInto) {
+                node.isMergedInto = null;
+                node.x -= 80 * offsetIndex;
+                node.y += 80 * offsetIndex;
+                hasMerged = true;
+                offsetIndex++;
+            }
+        }
+        if (hasMerged) render();
+    }
+
+    document.getElementById('unmerge-all-btn').addEventListener('click', unmergeAllNodes);
+    document.getElementById('reset-all-wires-btn').addEventListener('click', resetAllWires);
+
+    // 初始渲染
+    render();
+
+    /* =====================================================================
+     * 1.7.6 统一物理模型：受控参数与状态桥（阶段四 · SVG 试点）
+     * 只响应来自父窗口、且 token / 实例 id 都匹配的消息；状态走白名单 + 大小限制。
+     * 父侧没有桥或旧卡片没有 data.gwState 时，页面保持原来的默认启动方式。
+     * ===================================================================== */
+    (function () {
+        const CHANNEL = 'gw-physics-model';
+        const PAGE_ID = 'simhtml/circuit-simplify.html';
+        const MAX_BYTES = 32 * 1024;
+        const OBJ_KEYS = ['nodes', 'fixedPoints', 'components'];
+        const LIMITS = { nodes: 64, fixedPoints: 16, components: 64, wires: 256 };
+        let token = null, itemId = null, stateTimer = 0;
+        const parentWin = window.parent;
+
+        function finite(v) { return typeof v === 'number' && isFinite(v) && Math.abs(v) < 1e6; }
+        function cleanPoint(p) {
+            if (!p || typeof p !== 'object') return null;
+            const o = {};
+            ['x', 'y', 'cx', 'cy', 'w', 'h', 'angle'].forEach(function (k) { if (finite(p[k])) o[k] = p[k]; });
+            if (typeof p.label === 'string') o.label = p.label.slice(0, 24);
+            if (p.isMergedInto !== undefined) o.isMergedInto = (typeof p.isMergedInto === 'string' || p.isMergedInto === null) ? p.isMergedInto : null;
+            if (p.labelOffset && typeof p.labelOffset === 'object') {
+                const t = {};
+                if (finite(p.labelOffset.x)) t.x = p.labelOffset.x;
+                if (finite(p.labelOffset.y)) t.y = p.labelOffset.y;
+                if (Object.keys(t).length) o.labelOffset = t;
+            }
+            return Object.keys(o).length ? o : null;
+        }
+        function cleanWire(w) {
+            if (!w || typeof w !== 'object') return null;
+            const o = {};
+            if (typeof w.id1 === 'string') o.id1 = w.id1.slice(0, 32);
+            if (typeof w.id2 === 'string') o.id2 = w.id2.slice(0, 32);
+            o.grip = (w.grip && finite(w.grip.x) && finite(w.grip.y)) ? { x: w.grip.x, y: w.grip.y } : null;
+            return (o.id1 && o.id2) ? o : null;
+        }
+        // 白名单 + 数量 + 大小限制：只保留元件位置 / 旋角 / 节点合并 / 导线控制点
+        function sanitize(src) {
+            if (!src || typeof src !== 'object') return null;
+            try { if (JSON.stringify(src).length > MAX_BYTES) return null; } catch (e) { return null; }
+            const out = {};
+            OBJ_KEYS.forEach(function (top) {
+                const bag = src[top];
+                if (!bag || typeof bag !== 'object' || Array.isArray(bag)) return;
+                const clean = {};
+                Object.keys(bag).slice(0, LIMITS[top]).forEach(function (k) {
+                    const v = cleanPoint(bag[k]);
+                    if (v) clean[String(k).slice(0, 32)] = v;
+                });
+                if (Object.keys(clean).length) out[top] = clean;
+            });
+            if (Array.isArray(src.wires)) {
+                const arr = [];
+                src.wires.slice(0, LIMITS.wires).forEach(function (w) { const v = cleanWire(w); if (v) arr.push(v); });
+                if (arr.length) out.wires = arr;
+            }
+            return Object.keys(out).length ? out : null;
+        }
+        function snapshot() { return sanitize(state); }
+        function post(type, payload) {
+            if (!token || !parentWin || parentWin === window) return;
+            try {
+                parentWin.postMessage(Object.assign({ channel: CHANNEL, page: PAGE_ID,
+                    type: type, token: token, id: itemId }, payload || {}), '*');
+            } catch (e) { /* 跨源或父窗口已消失：静默 */ }
+        }
+        function syncSliders() {
+            try {
+                sliders.forEach(function (s) {
+                    const id = s.getAttribute('data-comp');
+                    if (state.components[id] && finite(state.components[id].angle)) s.value = String(state.components[id].angle);
+                });
+            } catch (e) { /* noop */ }
+        }
+        // 只写白名单字段，且沿用同一个 state 对象引用（render 依赖它）
+        function applyState(src) {
+            const clean = sanitize(src);
+            if (!clean) return false;
+            OBJ_KEYS.forEach(function (top) {
+                if (!clean[top]) return;
+                Object.keys(clean[top]).forEach(function (k) {
+                    if (!state[top][k]) return;   // 不接受未知元件/节点
+                    Object.keys(clean[top][k]).forEach(function (f) { state[top][k][f] = clean[top][k][f]; });
+                });
+            });
+            if (clean.wires && Array.isArray(state.wires)) {
+                state.wires.length = 0;
+                clean.wires.forEach(function (w) { state.wires.push(w); });
+            }
+            syncSliders(); render();
+            return true;
+        }
+        // 三个电阻旋角是首版开放的命名参数
+        function setParams(p) {
+            if (!p || typeof p !== 'object') return false;
+            let n = 0;
+            Object.keys(state.components).forEach(function (id) {
+                if (Object.prototype.hasOwnProperty.call(p, id) && finite(p[id])) {
+                    state.components[id].angle = Math.max(-360, Math.min(360, p[id]));
+                    n++;
+                }
+            });
+            if (n) { syncSliders(); render(); }
+            return n > 0;
+        }
+
+        // 静态导出：克隆页内 SVG，保留线/节点/标签/变换与必要样式，
+        // 过滤脚本、事件属性、外部引用和交互命中层（wire-hit / grip-handle）。
+        const SVG_STYLE = '.wire{fill:none;stroke:#334155;stroke-width:3;stroke-linecap:round}' +
+            '.component{fill:#fff;stroke:#0f766e;stroke-width:2.5}' +
+            '.node{fill:#0f766e;stroke:#fff;stroke-width:2}' +
+            '.label{font-family:Arial,"Microsoft YaHei",sans-serif;font-size:16px;fill:#1e293b}' +
+            '.wire-group.sel .wire{stroke:#b01f6b}';
+        const DROP_TAGS = { script: 1, foreignobject: 1, image: 1, a: 1 };
+        function cleanSVG() {
+            const clone = svg.cloneNode(true);
+            const kill = [];
+            const all = clone.querySelectorAll('*');
+            Array.prototype.forEach.call(all, function (n) {
+                const tag = String(n.tagName || '').toLowerCase();
+                const cls = n.getAttribute('class') || '';
+                if (DROP_TAGS[tag] || /(^|\s)(wire-hit|grip-handle)(\s|$)/.test(cls)) { kill.push(n); return; }
+                const names = [];
+                Array.prototype.forEach.call(n.attributes || [], function (a) { names.push(a.name); });
+                names.forEach(function (name) {
+                    const low = name.toLowerCase(), val = (n.getAttribute(name) || '').trim();
+                    if (/^on/.test(low)) { n.removeAttribute(name); return; }
+                    if (low === 'href' || low === 'xlink:href' || low === 'src') {
+                        if (val && val.charAt(0) !== '#') n.removeAttribute(name);
+                    }
+                    if (low === 'style' && /url\s*\(/i.test(val)) {
+                        n.setAttribute('style', val.replace(/url\s*\([^)]*\)/gi, 'none'));
+                    }
+                });
+            });
+            kill.forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+            clone.removeAttribute('id');
+            const st = document.createElementNS(ns, 'style');
+            st.textContent = SVG_STYLE;
+            clone.insertBefore(st, clone.firstChild);
+            return clone.innerHTML;
+        }
+
+        window.addEventListener('message', function (e) {
+            if (e.source !== parentWin) return;                       // 必须来自预期父页面
+            const d = e.data;
+            if (!d || d.channel !== CHANNEL) return;
+            if (token && (d.token !== token || d.id !== itemId)) return;  // 必须是当前实例
+            if (d.type === 'init') {
+                if (token || !d.id || !d.token) return;   // 重复 init 忽略，避免覆盖已恢复的状态
+                token = d.token; itemId = d.id;
+                if (d.state) applyState(d.state);                     // 旧卡无状态 → 原方式启动
+                post('ready', { state: snapshot() });
+                return;
+            }
+            if (!token || d.token !== token || d.id !== itemId) return;
+            if (d.type === 'getState') post('state', { state: snapshot() });
+            else if (d.type === 'setState') { if (d.state) applyState(d.state); post('state', { state: snapshot() }); }
+            else if (d.type === 'setParams') { setParams(d.params); post('state', { state: snapshot() }); }
+            else if (d.type === 'exportSVG') {
+                let xml = '', err = '';
+                try { xml = cleanSVG(); } catch (e2) { err = String(e2 && e2.message || e2); }
+                post('exportSVG', { req: d.req, xml: xml, err: err, viewBox: '0 0 800 500' });
+            }
+        });
+
+        // 拖动 / 调参后的状态上报（防抖）；取消指针或窗口失焦时清掉待发，避免残留交互
+        function scheduleState() {
+            if (!token) return;
+            clearTimeout(stateTimer);
+            stateTimer = setTimeout(function () { post('state', { state: snapshot(), reason: 'change' }); }, 120);
+        }
+        try {
+            const origRender = render;
+            render = function () { const r = origRender.apply(this, arguments); scheduleState(); return r; };
+        } catch (e) { /* 极老内核不允许改写函数声明：状态仍可由显式 getState 拉取 */ }
+        svg.addEventListener('pointercancel', function () { clearTimeout(stateTimer); });
+        window.addEventListener('blur', function () { clearTimeout(stateTimer); });
+
+        // 握手：页面自己不带 token，父侧校验 source 后回 init（带本实例 token 与已保存状态）
+        try { parentWin.postMessage({ channel: CHANNEL, page: PAGE_ID, type: 'hello' }, '*'); } catch (e) { /* noop */ }
+    })();
+
+</script>
+
+</body>
+</html>

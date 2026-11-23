@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>提词器</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; box-sizing: border-box;
+    background: #10151a; color: #e8eef3; font: 13px/1.5 "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none; }
+  .hd { display: flex; align-items: baseline; gap: 10px; }
+  .pg { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+  .tt { flex: 1 1 auto; min-width: 0; font-size: 13px; color: #9fb2c2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .clk { font-variant-numeric: tabular-nums; font-size: 15px; color: #7fd1c0; }
+  .shot { width: 100%; height: 108px; border-radius: 8px; background: #1a222a; object-fit: cover; display: block; }
+  .shot.empty { background: repeating-linear-gradient(45deg, #1a222a 0 8px, #161d24 8px 16px); }
+  .notes { flex: 1 1 auto; overflow: auto; white-space: pre-wrap; font-size: 12.5px; line-height: 1.65; color: #cbd8e2;
+    background: #161d24; border-radius: 8px; padding: 8px 10px; }
+  .notes:empty::before { content: "这一页没有文字备注。可以在板书里写点提示词，或给页面起个名字。"; color: #5f7385; }
+  .ft { display: flex; gap: 8px; }
+  button { flex: 1 1 0; padding: 8px 0; border-radius: 8px; border: 1px solid #2b3946; background: #1d262f;
+    color: #dbe6ee; font: inherit; cursor: pointer; }
+  button:hover { background: #24303b; }
+  button.x { flex: 0 0 72px; color: #f0a8a8; border-color: #4a2f33; background: #2a1c1f; }
+</style>
+</head>
+<body>
+  <div class="hd">
+    <span class="pg" id="pg">1 / 1</span>
+    <span class="tt" id="tt"></span>
+    <span class="clk" id="clk">00:00</span>
+  </div>
+  <img class="shot empty" id="shot" alt="">
+  <div class="notes" id="notes"></div>
+  <div class="ft">
+    <button id="prev">上一页</button>
+    <button id="next">下一页</button>
+    <button class="x" id="exit">退出</button>
+  </div>
+<script>
+(function () {
+  var G = window.gewu || {};
+  var $ = function (id) { return document.getElementById(id); };
+  var t0 = 0;
+  function fmt(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    var m = Math.floor(s / 60);
+    return (m < 10 ? '0' : '') + m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60);
+  }
+  function tick() { if (t0) $('clk').textContent = fmt(Date.now() - t0); }
+  function render(st) {
+    if (!st) return;
+    $('pg').textContent = (st.i || 1) + ' / ' + (st.n || 1);
+    $('tt').textContent = st.title || '';
+    $('notes').textContent = st.notes || '';
+    var img = $('shot');
+    if (st.thumb) { img.src = st.thumb; img.classList.remove('empty'); }
+    else { img.removeAttribute('src'); img.classList.add('empty'); }
+    if (!t0 && st.elapsed != null) t0 = Date.now() - (st.elapsed || 0);
+    tick();
+  }
+  if (G.on) G.on('presenter-state', render);
+  else { /* 网页版没有提词窗 */ }
+  var send = function (cmd) { try { if (G.presenter) G.presenter.cmd(cmd); } catch (e) {} };
+  $('prev').onclick = function () { send('prev'); };
+  $('next').onclick = function () { send('next'); };
+  $('exit').onclick = function () { send('exit'); };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); send('next'); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); send('prev'); }
+    else if (e.key === 'Escape') { e.preventDefault(); send('exit'); }
+  });
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

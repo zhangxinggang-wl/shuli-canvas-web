@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>平抛运动分解</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_projectile_decomp',
+  title: '平抛运动分解',
+  sub: "把平抛拆成「水平匀速」与「竖直自由落体」，两条分运动同步演示",
+  params: ["projV0","projT","projFlash"],
+  integrate: true,
+  note: "闪光点按固定间隔留下，竖直方向的间距越来越大。",
+formula: String.raw`x=v_0t\qquad y=\tfrac12gt^2`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.25,
+});
+</script>
+</body>
+</html>

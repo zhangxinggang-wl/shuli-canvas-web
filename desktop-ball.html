@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>数理无限画布悬浮球</title>
+<link rel="stylesheet" href="styles/kit.css">
+<style>
+  html, body { margin: 0; background: transparent; overflow: hidden; font-family: var(--font); user-select: none; }
+  #ball { position: absolute; right: 10px; top: 10px; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #2d4f78, #0d1b2e 70%); box-shadow: 0 4px 14px rgba(13,27,46,.5), inset 0 0 0 3px rgba(47,211,185,.6); display: grid; place-items: center; cursor: grab; touch-action: none; }
+  #ball svg { width: 44px; height: 44px; pointer-events: none; }
+  #ball.ink { box-shadow: 0 4px 14px rgba(13,27,46,.5), inset 0 0 0 3px #f2a541; }
+  #panel { position: absolute; top: 10px; right: 84px; display: none; background: rgba(255,255,255,.97); border-radius: 18px; padding: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.25); width: 300px; }
+  body.open #panel { display: block; }
+  body.left #ball { right: auto; left: 10px; }
+  body.left #panel { right: auto; left: 84px; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .b { flex: 1; min-width: 64px; height: 58px; border: 1px solid #e3e7ee; background: #fff; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 12px var(--font); color: #1b2433; cursor: pointer; }
+  .b svg { width: 22px; height: 22px; }
+  .b.on { background: #1b2433; color: #fff; border-color: #1b2433; }
+  .sw { width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .sw.on { outline: 3px solid #0f9d8a; outline-offset: 2px; }
+  .back { width: 100%; height: 46px; border: 0; border-radius: 12px; background: #0f9d8a; color: #fff; font: 600 15px var(--font); cursor: pointer; }
+  .tip { font-size: 12px; color: #5b6576; margin: 2px 2px 8px; }
+</style>
+</head>
+<body>
+<div id="ball"></div>
+<div id="panel">
+  <div class="tip">在任意软件（PPT、视频、exe）上方批注</div>
+  <div class="row" id="tools"></div>
+  <div class="row" id="colors"></div>
+  <button class="back" id="back">返回数理无限画布</button>
+</div>
+<script src="core/icons.js"></script>
+<script>
+  const G = window.gewu, ball = document.getElementById('ball');
+  ball.innerHTML = GW.LOGO;
+  let inkOn = false, tool = 'pen', color = '#e4572e', open = false;
+  const W_CLOSED = { w: 84, h: 84 }, W_OPEN = { w: 400, h: 330 };
+  const tools = [['pen', '画笔', 'pen'], ['hl', '荧光笔', 'highlighter'], ['eraser', '橡皮', 'eraser'], ['mouse', '鼠标', 'hand'], ['undo', '撤销', 'undo'], ['clear', '清屏', 'trash'], ['snap', '截图到板', 'camera'], ['snap-area', '区域截图', 'select']];
+  const tEl = document.getElementById('tools');
+  tools.forEach(([id, label, icon]) => {
+    const b = document.createElement('button');
+    b.className = 'b'; b.dataset.id = id; b.innerHTML = GW.icon(icon) + label;
+    b.onclick = () => act(id);
+    tEl.append(b);
+  });
+  const cEl = document.getElementById('colors');
+  ['#e4572e', '#3366ff', '#0f9d8a', '#f2a541', '#1b2433', '#ffffff', '#e2559a'].forEach((c) => {
+    const b = document.createElement('button'); b.className = 'sw'; b.style.background = c; b.dataset.c = c;
+    b.onclick = () => { color = c; send({ color }); if (!inkOn || tool === 'eraser') act('pen'); sync(); };
+    cEl.append(b);
+  });
+  document.getElementById('back').onclick = () => G.ball('back');
+  function send(cmd) { G.ball('ink-cmd', cmd); }
+  async function act(id) {
+    if (id === 'pen' || id === 'hl' || id === 'eraser') {
+      tool = id;
+      if (!inkOn) { await G.ball('ink'); inkOn = true; setTimeout(() => send({ tool, color }), 300); }
+      else send({ tool, color });
+    } else if (id === 'mouse') { inkOn = false; G.ball('ink-off'); }
+    else if (id === 'undo') send({ undo: true });
+    else if (id === 'clear') send({ clear: true });
+    else if (id === 'snap') { setOpen(false); setTimeout(async () => { await G.ball('snap'); }, 200); }
+    // 1.1.13：只截一块。面板里没有框选能力（它是悬浮球的小窗口，覆盖不到老师要讲的 PPT），
+    // 所以先叫起批注层（它有全屏遮罩），再让它进框选 —— 裁剪仍在主进程，走的还是 1.1.12 那条路。
+    else if (id === 'snap-area') {
+      setOpen(false);
+      setTimeout(async () => {
+        if (!inkOn) { await G.ball('ink', { snap: true }); inkOn = true; sync(); }
+        else send({ snap: true });
+      }, 200);
+    }
+    sync();
+  }
+  G.on('ink-closed', () => { inkOn = false; sync(); });
+  // 批注层上的「工具」按钮：把面板打开（面板在球这个窗口里，由主进程转达）
+  G.on('open-panel', () => { if (!open) setOpen(true); });
+  function sync() {
+    tEl.querySelectorAll('.b').forEach((b) => b.classList.toggle('on', (inkOn && b.dataset.id === tool) || (!inkOn && b.dataset.id === 'mouse')));
+    cEl.querySelectorAll('.sw').forEach((b) => b.classList.toggle('on', b.dataset.c === color));
+    ball.classList.toggle('ink', inkOn);
+  }
+  async function setOpen(v) {
+    open = v;
+    const [x] = await G.ball('pos');
+    document.body.classList.toggle('left', x < screen.availWidth / 2);
+    document.body.classList.toggle('open', v);
+    await G.ball('size', v ? W_OPEN : W_CLOSED);
+  }
+  // 拖动悬浮球（用屏幕坐标，避免窗口移动造成抖动）
+  ball.addEventListener('pointerdown', async (e) => {
+    ball.setPointerCapture(e.pointerId);
+    const [wx, wy] = await G.ball('pos');
+    const sx = e.screenX, sy = e.screenY;
+    let moved = false;
+    const mv = (ev) => {
+      if (Math.hypot(ev.screenX - sx, ev.screenY - sy) > 5) moved = true;
+      if (moved) G.ball('move', { x: wx + ev.screenX - sx, y: wy + ev.screenY - sy });
+    };
+    const up = () => { ball.removeEventListener('pointermove', mv); ball.removeEventListener('pointerup', up); if (!moved) setOpen(!open); };
+    ball.addEventListener('pointermove', mv); ball.addEventListener('pointerup', up);
+  });
+  sync();
+</script>
+</body>
+</html>

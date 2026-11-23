@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>带电粒子在交变电场中的运动</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<script defer src="../vendor/katex/katex.min.js"></script>
+<script defer src="../vendor/katex/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #06090f; color: #c8d5ee;
+    font-family: "KaiTi", "楷体", "STKaiti", "Kaiti SC", "SimSun", serif;
+  }
+  .wrap { display: flex; height: 100%; }
+  #cv { flex: 1; min-width: 0; display: block; cursor: grab; touch-action: none; }
+  #cv:active { cursor: grabbing; }
+  #ui {
+    width: 280px; flex: 0 0 280px;
+    background: #0a0f1c;
+    border-left: 1px solid #172136;
+    padding: 16px 16px 30px;
+    overflow-y: auto;
+  }
+  #ui h1 { font-size: 17px; margin: 0 0 6px; color: #e8f0ff; letter-spacing: .5px; }
+  #ui .sub { font-size: 12px; color: #5b6b91; margin-bottom: 16px; line-height: 2.1; }
+  .field { margin-bottom: 13px; }
+  .field > label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: #8fa2c7; margin-bottom: 6px;
+  }
+  .field > label b { color: #43e0a0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .unit { font-size: 11px; color: #4a5a7a; }
+  input[type=range] {
+    width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+    background: #1c2740; border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: #43e0a0; cursor: pointer; border: 2px solid #0a0f1c;
+    box-shadow: 0 0 6px rgba(67,224,160,.5);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #43e0a0; cursor: pointer; border: 2px solid #0a0f1c;
+  }
+
+  .dd { position: relative; user-select: none; }
+  .dd-head {
+    background: #141d31; border: 1px solid #22304d; border-radius: 6px;
+    padding: 7px 10px; cursor: pointer; display: flex; justify-content: space-between;
+    align-items: center; font-size: 14px; min-height: 36px;
+    transition: border-color .15s;
+  }
+  .dd-head:hover { border-color: #2f4067; }
+  .dd-ar { color: #5b6b91; font-size: 11px; margin-left: 8px; }
+  .dd-list {
+    display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+    background: #141d31; border: 1px solid #22304d; border-radius: 6px;
+    z-index: 30; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  .dd.open .dd-list { display: block; }
+  .dd-item {
+    padding: 8px 12px; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; min-height: 34px;
+  }
+  .dd-item:hover { background: #1c2740; }
+  .dd-item.active { background: #1a5c44; color: #d9ffef; }
+  .dd-item .katex { font-size: 1.05em; }
+
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0 12px; }
+  button {
+    padding: 9px 4px; font-size: 13px; border-radius: 7px; cursor: pointer;
+    border: 1px solid #22304d; background: #141d31; color: #c8d5ee;
+    transition: .15s; font-family: inherit;
+  }
+  button:hover { background: #1c2740; border-color: #2f4067; }
+  button.primary { background: #1a5c44; border-color: #2b8f6b; color: #d9ffef; }
+  button.primary:hover { background: #227354; }
+
+  .chk {
+    display: flex; align-items: center; gap: 8px; font-size: 13px;
+    color: #8fa2c7; margin-bottom: 10px; cursor: pointer; user-select: none;
+  }
+  .chk input { accent-color: #43e0a0; cursor: pointer; }
+
+  .hint {
+    font-size: 12px; color: #46587c; line-height: 2.1; margin-top: 16px;
+    border-top: 1px solid #172136; padding-top: 12px;
+  }
+  .hint code {
+    color: #43e0a0; background: #101a2c; padding: 1px 5px; border-radius: 3px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  .katex { font-size: 1.02em; }
+</style>
+<link rel="stylesheet" href="dark-fix.css">
+</head>
+<body>
+<div class="wrap">
+  <canvas id="cv"></canvas>
+  <aside id="ui">
+    <h1>交变电场中的带电粒子</h1>
+    <div class="sub">
+      $E(t)=E_0\,\mathrm{sgn}(\sin\omega t)$<br>
+      $a=\dfrac{qE}{m}$，初速度 $v_0$ 垂直于电场
+    </div>
+
+    <div class="field">
+      <label>电场波形</label>
+      <div class="dd" id="dd-wave" data-def="square">
+        <div class="dd-head"><span class="dd-cur">方波</span><span class="dd-ar">▾</span></div>
+        <div class="dd-list">
+          <div class="dd-item" data-v="square" data-txt="方波">方波</div>
+          <div class="dd-item" data-v="cos"    data-txt="余弦波">余弦波</div>
+          <div class="dd-item" data-v="triangle" data-txt="三角波">三角波</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label><span>$E_0$ <span class="unit">(V/m)</span></span> <b id="E0v">2.0</b></label>
+      <input id="E0" type="range" min="0.5" max="6" step="0.1" value="2">
+    </div>
+
+    <div class="field">
+      <label><span>$T$ <span class="unit">(s)</span></span> <b id="Tv">1.0</b></label>
+      <input id="T" type="range" min="0.4" max="3" step="0.1" value="1">
+    </div>
+
+    <div class="field">
+      <label><span>$q$ <span class="unit">(C)</span></span> <b id="qv">+1.0</b></label>
+      <input id="q" type="range" min="-2" max="2" step="0.5" value="1">
+    </div>
+
+    <div class="field">
+      <label><span>$m$ <span class="unit">(kg)</span></span> <b id="mv">1.0</b></label>
+      <input id="m" type="range" min="0.5" max="3" step="0.1" value="1">
+    </div>
+
+    <div class="field">
+      <label><span>$v_0$ <span class="unit">(m/s)</span></span> <b id="v0v">1.0</b></label>
+      <input id="v0" type="range" min="0" max="3" step="0.1" value="1">
+    </div>
+
+    <div class="field">
+      <label><span>粒子运动周期数 $N$</span> <b id="Nv">1</b></label>
+      <input id="N" type="range" min="1" max="6" step="1" value="1">
+    </div>
+
+    <div class="field">
+      <label>释放时刻 $t_0$</label>
+      <div class="dd" id="dd-release" data-def="0">
+        <div class="dd-head"><span class="dd-cur"></span><span class="dd-ar">▾</span></div>
+        <div class="dd-list">
+          <div class="dd-item" data-v="0"     data-tex="0"></div>
+          <div class="dd-item" data-v="0.125" data-tex="\dfrac{T}{8}"></div>
+          <div class="dd-item" data-v="0.25"  data-tex="\dfrac{T}{4}"></div>
+          <div class="dd-item" data-v="0.375" data-tex="\dfrac{3T}{8}"></div>
+          <div class="dd-item" data-v="0.5"   data-tex="\dfrac{T}{2}"></div>
+          <div class="dd-item" data-v="0.75"  data-tex="\dfrac{3T}{4}"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label><span>时间倍率</span> <b id="speedv">0.2×</b></label>
+      <input id="speed" type="range" min="0.1" max="3" step="0.1" value="0.2">
+    </div>
+
+    <div class="btns">
+      <button id="play" class="primary">▶ 开始</button>
+      <button id="reset">↺ 重置</button>
+      <button id="recenter">视角复位</button>
+      <button id="redraw">重绘图像</button>
+    </div>
+
+    <label class="chk"><input type="checkbox" id="follow"> 视角跟随粒子</label>
+
+    <div class="hint">
+      <code>拖动</code> 上/下区域平移视图<br>
+      <code>滚轮</code> 以光标为中心缩放<br>
+      上区：平行板、中轴线、轨迹（无坐标轴）<br>
+      下区：$v_y$–$t$ 与 $E$–$t$ 共用无刻度 $xOy$<br>
+      $N$ 表示粒子实际运动的完整周期数
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   常量
+   ============================================================ */
+const TAU = Math.PI * 2;
+const KAI = '"KaiTi","楷体","STKaiti","Kaiti SC","SimSun",serif';
+/* LaTeX 风格数学斜体字体 */
+const MATH_FONT = '"Cambria Math","STIX Two Math","Latin Modern Math","Times New Roman","Georgia",serif';
+
+/* ============================================================
+   参数与状态
+   ============================================================ */
+const P = {
+  wave: 'square',
+  E0: 2,
+  T: 1,
+  q: 1,
+  m: 1,
+  v0: 1,
+  release: 0,
+  N: 1,              // 默认粒子运动周期数 = 1
+  speed: 0.2         // 时间倍率默认 0.2×
+};
+
+const s = { t: 0, x: 0, y: 0, vy: 0, running: false, trail: [] };
+
+let vyCurve = [];
+let eCurve  = [];
+let vAbsMax = 1;
+let t0      = 0;
+let tEnd    = 1;      // 总仿真时间 = t0 + N*T
+let plateD  = 4;
+let plateL  = 4;
+
+const view = {
+  ox: 0, oy: 0, scale: 80,
+  gx: 0, gy: 0, gsT: 80, gsY: 60,
+  follow: false
+};
+
+let W = 0, H = 0, mainH = 0, DPR = 1;
+let viewInited = false;
+
+const cv  = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const playBtn = document.getElementById('play');
+
+/* ============================================================
+   物理模型
+   ============================================================ */
+function waveVal(ph){
+  if (P.wave === 'square')   return Math.sin(ph) >= 0 ? 1 : -1;
+  if (P.wave === 'triangle') return (2 / Math.PI) * Math.asin(Math.sin(ph));
+  return Math.cos(ph);
+}
+function fieldAt(t){ return P.E0 * waveVal(TAU * t / P.T); }
+function accelAt(t){ return P.q * fieldAt(t) / P.m; }
+
+/* ============================================================
+   预计算
+   ------------------------------------------------------------
+   粒子实际运动时间 = N · T
+   总仿真时间 tEnd = t0 + N · T
+   板长 plateL = v0 · N · T（刚好匹配水平位移）
+   ============================================================ */
+function computeAll(){
+  t0   = P.release * P.T;
+  tEnd = t0 + P.N * P.T;            // 粒子实际运动 N 个完整周期
+
+  const NSTEP = 3000;
+  const dt = Math.max(1e-6, (tEnd - t0) / NSTEP);
+
+  let y = 0, vy = 0;
+  let yMin = 0, yMax = 0;
+
+  const vpts = [{ t: 0, v: 0 }, { t: t0, v: 0 }];
+
+  let t = t0;
+  for (let i = 0; i < NSTEP; i++){
+    const aMid = accelAt(t + dt / 2);
+    vy += aMid * dt;
+    y  += vy * dt;
+    t  += dt;
+    if (y < yMin) yMin = y;
+    if (y > yMax) yMax = y;
+    vpts.push({ t, v: vy });
+  }
+  vyCurve = vpts;
+
+  let vm = 0.1;
+  for (const p of vpts) vm = Math.max(vm, Math.abs(p.v));
+  vAbsMax = vm;
+
+  const epts = [];
+  const NE = 600;
+  for (let i = 0; i <= NE; i++){
+    const tt = tEnd * i / NE;
+    epts.push({ t: tt, E: fieldAt(tt) });
+  }
+  eCurve = epts;
+
+  /* --- 板长：严格匹配 N 个运动周期的水平位移 v0·N·T --- */
+  const xEnd = P.v0 * P.N * P.T;
+  plateL = xEnd > 0.05 ? xEnd : 3;
+
+  /* --- 板间距：足够宽，包住全部轨迹 --- */
+  const yAbs = Math.max(Math.abs(yMin), Math.abs(yMax), 0.15);
+  plateD = Math.max(yAbs * 2.6, 1.2);
+}
+
+/* ============================================================
+   曲线插值
+   ============================================================ */
+function sampleVy(t){
+  const arr = vyCurve;
+  if (!arr.length) return 0;
+  if (t <= arr[0].t) return arr[0].v;
+  if (t >= arr[arr.length - 1].t) return arr[arr.length - 1].v;
+  let lo = 0, hi = arr.length - 1;
+  while (hi - lo > 1){
+    const mid = (lo + hi) >> 1;
+    if (arr[mid].t <= t) lo = mid; else hi = mid;
+  }
+  const a = arr[lo], b = arr[hi];
+  const f = (t - a.t) / ((b.t - a.t) || 1);
+  return a.v + (b.v - a.v) * f;
+}
+
+/* ============================================================
+   仿真
+   ============================================================ */
+function resetSim(){
+  s.t = 0; s.x = 0; s.y = 0; s.vy = 0; s.running = false;
+  s.trail = [];
+  updatePlayBtn();
+}
+
+function updatePlayBtn(){
+  if (s.running){
+    playBtn.textContent = '⏸ 暂停';
+    playBtn.classList.remove('primary');
+  } else {
+    const ended = s.t >= tEnd - 1e-9;
+    playBtn.textContent = ended ? '↻ 重新开始' : '▶ 开始';
+    playBtn.classList.add('primary');
+  }
+}
+
+function stepPhysics(dt){
+  if (s.t >= tEnd - 1e-9){
+    s.running = false; updatePlayBtn(); return;
+  }
+  if (s.t < t0 - 1e-9){
+    const wait = Math.min(dt, t0 - s.t);
+    s.t += wait;
+    dt -= wait;
+    if (dt <= 1e-9) return;
+  }
+
+  const n = Math.max(1, Math.ceil(dt / 0.001));
+  const h = dt / n;
+  for (let i = 0; i < n; i++){
+    if (s.t >= tEnd) break;
+    const a = accelAt(s.t);
+    s.y  += s.vy * h + 0.5 * a * h * h;
+    s.vy += a * h;
+    s.x  += P.v0 * h;
+    s.t  += h;
+  }
+  if (s.t >= tEnd){
+    s.t = tEnd;
+    s.running = false;
+    updatePlayBtn();
+  }
+}
+
+/* ============================================================
+   视图
+   ============================================================ */
+function initView(){
+  const sx = W * 0.70 / Math.max(plateL, 0.1);
+  const sy = mainH * 0.66 / Math.max(plateD, 0.1);
+  view.scale = Math.min(sx, sy, 160);
+
+  view.ox = W * 0.15;
+  view.oy = mainH * 0.5;
+
+  view.gsT = (W * 0.70) / Math.max(tEnd, 0.1);
+  view.gsY = (H - mainH) * 0.28;
+  view.gx  = W * 0.14;
+  view.gy  = mainH + (H - mainH) * 0.55;
+}
+
+function resize(){
+  const r = cv.getBoundingClientRect();
+  W = Math.max(1, Math.round(r.width));
+  H = Math.max(1, Math.round(r.height));
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width  = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  mainH = Math.round(H * 0.55);
+
+  if (!viewInited && W > 60 && H > 60){
+    viewInited = true;
+    initView();
+  }
+}
+
+/* ============================================================
+   绘制辅助
+   ============================================================ */
+function arrowHead(x, y, ang, color, size){
+  size = size || 7;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - size * Math.cos(ang - 0.42), y - size * Math.sin(ang - 0.42));
+  ctx.lineTo(x - size * Math.cos(ang + 0.42), y - size * Math.sin(ang + 0.42));
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* LaTeX 风格斜体字母 */
+function drawMath(text, x, y, size, color, align){
+  ctx.font = 'italic ' + size + 'px ' + MATH_FONT;
+  ctx.fillStyle = color;
+  ctx.textAlign = align || 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  return ctx.measureText(text).width;
+}
+
+/* v_y 组合标签 */
+function drawVyLabel(x, y, size, color, align){
+  ctx.font = 'italic ' + size + 'px ' + MATH_FONT;
+  const wV = ctx.measureText('v').width;
+  const sub = Math.round(size * 0.68);
+  ctx.font = 'italic ' + sub + 'px ' + MATH_FONT;
+  const wY = ctx.measureText('y').width;
+  const total = wV + wY + 1;
+
+  let sx = x;
+  if (align === 'right') sx = x - total;
+  else if (align === 'center') sx = x - total / 2;
+
+  ctx.font = 'italic ' + size + 'px ' + MATH_FONT;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('v', sx, y);
+
+  ctx.font = 'italic ' + sub + 'px ' + MATH_FONT;
+  ctx.fillText('y', sx + wV + 1, y + Math.round(size * 0.24));
+
+  return total;
+}
+
+/* ============================================================
+   上区：平行板 + 中轴线 + 轨迹 + 粒子（无坐标轴）
+   ============================================================ */
+function drawMain(){
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, mainH); ctx.clip();
+
+  if (window.__gwSimBackground) ctx.clearRect(0, 0, W, mainH);
+  else { ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, W, mainH); }
+
+  const sc = view.scale, ox = view.ox, oy = view.oy;
+  const toS = (wx, wy) => ({ x: ox + wx * sc, y: oy - wy * sc });
+
+  const D2 = plateD / 2;
+
+  /* --- 平行板 --- */
+  const p1 = toS(0, D2),   p2 = toS(plateL, D2);
+  const p3 = toS(0, -D2),  p4 = toS(plateL, -D2);
+
+  ctx.strokeStyle = '#8b9cc0';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.stroke();
+
+  /* --- 中轴线（虚线） --- */
+  const mL = toS(0, 0), mR = toS(plateL, 0);
+  ctx.setLineDash([7, 7]);
+  ctx.strokeStyle = 'rgba(139,156,192,0.35)';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.moveTo(mL.x, mL.y); ctx.lineTo(mR.x, mR.y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* --- 极板电性符号 --- */
+  const E = fieldAt(s.t);
+  const topSign = E > 0 ? '−' : '+';
+  const botSign = E > 0 ? '+' : '−';
+  const cTop = toS(plateL * 0.5, D2 + plateD * 0.16);
+  const cBot = toS(plateL * 0.5, -D2 - plateD * 0.16);
+
+  ctx.font = 'bold 22px ' + KAI;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = topSign === '+' ? '#ffb347' : '#4fc3f7';
+  ctx.fillText(topSign, cTop.x, cTop.y);
+  ctx.fillStyle = botSign === '+' ? '#ffb347' : '#4fc3f7';
+  ctx.fillText(botSign, cBot.x, cBot.y);
+
+  /* --- 电场线：从一块板完整指向另一块板 --- */
+  const rel = E / P.E0;
+  const mag = Math.abs(rel);
+  if (mag > 0.04){
+    const dir = rel > 0 ? 1 : -1;      // +1：从下板指向上板
+    const yFrom = -dir * (D2 * 0.97);
+    const yTo   =  dir * (D2 * 0.97);
+    const alpha = 0.14 + 0.46 * mag;
+    const col   = 'rgba(92,160,255,' + alpha.toFixed(3) + ')';
+    const n = 4;
+    for (let i = 0; i < n; i++){
+      const xw = plateL * (i + 0.5) / n;
+      const a = toS(xw, yFrom);
+      const b = toS(xw, yTo);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      arrowHead(b.x, b.y, Math.atan2(b.y - a.y, b.x - a.x), col, 7);
+    }
+  }
+
+  /* --- 粒子轨迹 --- */
+  const released = s.t >= t0 - 1e-9;
+  const positive = P.q >= 0;
+  const trailColor = positive ? 'rgba(255,179,71,0.55)' : 'rgba(79,195,247,0.55)';
+
+  if (s.trail.length > 1){
+    ctx.beginPath();
+    let started = false;
+    for (const pt of s.trail){
+      const P2 = toS(pt.x, pt.y);
+      if (!started){ ctx.moveTo(P2.x, P2.y); started = true; }
+      else ctx.lineTo(P2.x, P2.y);
+    }
+    ctx.strokeStyle = trailColor;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  /* --- 粒子 --- */
+  const p = toS(s.x, s.y);
+  const alpha = released ? 1 : 0.3;
+
+  const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 22);
+  grd.addColorStop(0, positive
+    ? 'rgba(255,179,71,' + (0.55 * alpha) + ')'
+    : 'rgba(79,195,247,' + (0.55 * alpha) + ')');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd;
+  ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, TAU); ctx.fill();
+
+  ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, TAU);
+  ctx.fillStyle = positive ? '#ffb347' : '#4fc3f7';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.strokeStyle = positive ? '#3a2500' : '#00304a';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(p.x - 3.5, p.y); ctx.lineTo(p.x + 3.5, p.y);
+  if (positive){ ctx.moveTo(p.x, p.y - 3.5); ctx.lineTo(p.x, p.y + 3.5); }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  /* --- 速度矢量 --- */
+  if (released){
+    const k = 30;
+    const ex = p.x + P.v0 * k;
+    const ey = p.y - s.vy * k;
+    if (Math.hypot(ex - p.x, ey - p.y) > 9){
+      ctx.strokeStyle = '#43e0a0';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ex, ey); ctx.stroke();
+      arrowHead(ex, ey, Math.atan2(ey - p.y, ex - p.x), '#43e0a0', 8);
+    }
+  }
+
+  if (!released){
+    ctx.fillStyle = 'rgba(200,213,238,0.55)';
+    ctx.font = '14px ' + KAI;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('待释放', p.x + 15, p.y - 10);
+  }
+
+  ctx.restore();
+}
+
+/* ============================================================
+   下区：无刻度 xOy（可拖动）+ v_y–t 与 E–t 同图
+   ============================================================ */
+function drawGraph(){
+  const top = mainH;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, top, W, H - top); ctx.clip();
+
+  if (window.__gwSimBackground) ctx.clearRect(0, top, W, H - top);
+  else { ctx.fillStyle = '#080d18'; ctx.fillRect(0, top, W, H - top); }
+
+  const gx = view.gx, gy = view.gy, gsT = view.gsT, gsY = view.gsY;
+  const toX  = t => gx + t * gsT;
+  const toYv = v => gy - (v / vAbsMax) * gsY;
+  const toYe = e => gy - (e / P.E0) * gsY;
+
+  const axisCol = '#3a4a72';
+
+  /* --- x 轴 --- */
+  const axY = Math.round(gy) + 0.5;
+  if (axY > top - 4 && axY < H + 4){
+    ctx.strokeStyle = axisCol;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(20, axY); ctx.lineTo(W - 20, axY); ctx.stroke();
+    arrowHead(W - 20, axY, 0, axisCol, 8);
+    drawMath('t', W - 46, axY + 20, 19, '#6b7fa8', 'left');
+  }
+
+  /* --- y 轴 --- */
+  const axX = Math.round(gx) + 0.5;
+  if (axX > -4 && axX < W + 4){
+    ctx.strokeStyle = axisCol;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(axX, H - 20); ctx.lineTo(axX, top + 20); ctx.stroke();
+    arrowHead(axX, top + 20, -Math.PI / 2, axisCol, 8);
+
+    const wVy = drawVyLabel(axX + 12, top + 46, 17, '#6b7fa8', 'left');
+    ctx.font = 'italic 17px ' + MATH_FONT;
+    ctx.fillStyle = '#6b7fa8';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(' , E', axX + 12 + wVy + 2, top + 46);
+  }
+
+  /* --- 原点 O --- */
+  if (axY > top - 4 && axY < H + 4 && axX > -4 && axX < W + 4){
+    ctx.font = '16px ' + MATH_FONT;
+    ctx.fillStyle = '#6b7fa8';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('O', axX - 8, axY + 6);
+  }
+
+  /* --- E–t 曲线（蓝） --- */
+  if (eCurve.length > 1){
+    ctx.beginPath();
+    let started = false;
+    for (const pt of eCurve){
+      const X = toX(pt.t), Y = toYe(pt.E);
+      if (X < -100 || X > W + 100) continue;
+      if (!started){ ctx.moveTo(X, Y); started = true; }
+      else ctx.lineTo(X, Y);
+    }
+    ctx.strokeStyle = 'rgba(92,160,255,0.85)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+
+  /* --- 等待阶段 vy=0 虚线 --- */
+  if (t0 > 0.01){
+    ctx.setLineDash([4, 5]);
+    ctx.strokeStyle = 'rgba(67,224,160,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toYv(0));
+    ctx.lineTo(toX(t0), toYv(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  /* --- v_y–t 曲线（绿） --- */
+  if (vyCurve.length > 1){
+    ctx.beginPath();
+    let started = false;
+    for (const pt of vyCurve){
+      if (pt.t < t0 - 1e-9) continue;
+      const X = toX(pt.t), Y = toYv(pt.v);
+      if (X < -100 || X > W + 100) continue;
+      if (!started){ ctx.moveTo(X, Y); started = true; }
+      else ctx.lineTo(X, Y);
+    }
+    ctx.strokeStyle = '#43e0a0';
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(67,224,160,0.45)';
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  /* --- 移动亮点 --- */
+  if (s.t >= t0 - 1e-9){
+    const X = toX(s.t);
+    const Y = toYv(sampleVy(s.t));
+
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = 'rgba(255,209,102,0.30)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X, axY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    const g2 = ctx.createRadialGradient(X, Y, 0, X, Y, 15);
+    g2.addColorStop(0, 'rgba(255,209,102,0.80)');
+    g2.addColorStop(1, 'rgba(255,209,102,0)');
+    ctx.fillStyle = g2;
+    ctx.beginPath(); ctx.arc(X, Y, 15, 0, TAU); ctx.fill();
+
+    ctx.beginPath(); ctx.arc(X, Y, 5, 0, TAU);
+    ctx.fillStyle = '#ffd166'; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+
+  /* --- 图例 --- */
+  const lx = W - 128, ly = top + 18;
+  ctx.fillStyle = 'rgba(10,16,30,0.75)';
+  ctx.strokeStyle = '#1e2a44';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(lx, ly, 114, 52, 7);
+  else ctx.rect(lx, ly, 114, 52);
+  ctx.fill(); ctx.stroke();
+
+  ctx.strokeStyle = '#43e0a0'; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(lx + 12, ly + 17); ctx.lineTo(lx + 34, ly + 17); ctx.stroke();
+  drawVyLabel(lx + 42, ly + 23, 14, '#c8d5ee', 'left');
+
+  ctx.strokeStyle = 'rgba(92,160,255,0.95)'; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(lx + 12, ly + 38); ctx.lineTo(lx + 34, ly + 38); ctx.stroke();
+  ctx.fillStyle = '#c8d5ee';
+  ctx.font = 'italic 14px ' + MATH_FONT;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('E', lx + 42, ly + 43);
+
+  ctx.restore();
+}
+
+/* ============================================================
+   主绘制
+   ============================================================ */
+function draw(){
+  if (!viewInited) return;
+  ctx.clearRect(0, 0, W, H);
+  drawMain();
+  drawGraph();
+
+  ctx.strokeStyle = '#16203a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, mainH + 0.5);
+  ctx.lineTo(W, mainH + 0.5);
+  ctx.stroke();
+}
+
+/* ============================================================
+   主循环
+   ============================================================ */
+let lastTs = 0;
+
+function frame(ts){
+  if (!lastTs) lastTs = ts;
+  let dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+  if (dt > 0.05) dt = 0.05;
+
+  if (s.running){
+    stepPhysics(dt * P.speed);
+    if (s.t >= t0 - 1e-9 && s.trail.length < 40000){
+      const last = s.trail[s.trail.length - 1];
+      if (!last || Math.abs(last.x - s.x) > 1e-5 || Math.abs(last.y - s.y) > 1e-5){
+        s.trail.push({ x: s.x, y: s.y });
+      }
+    }
+  }
+
+  if (view.follow && s.t >= t0 - 1e-9){
+    const tx = W * 0.42 - s.x * view.scale;
+    const ty = mainH * 0.5 + s.y * view.scale;
+    view.ox += (tx - view.ox) * 0.10;
+    view.oy += (ty - view.oy) * 0.10;
+  }
+
+  draw();
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   交互：拖动 / 缩放
+   ============================================================ */
+let drag = null;
+
+function localPos(e){
+  const r = cv.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+cv.addEventListener('pointerdown', e => {
+  const p = localPos(e);
+  if (p.y < mainH){
+    drag = { panel: 'main', mx: p.x, my: p.y, ox: view.ox, oy: view.oy };
+  } else {
+    drag = { panel: 'graph', mx: p.x, my: p.y, gx: view.gx, gy: view.gy };
+  }
+  try { cv.setPointerCapture(e.pointerId); } catch(_){}
+});
+
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const p = localPos(e);
+  const dx = p.x - drag.mx;
+  const dy = p.y - drag.my;
+
+  if (drag.panel === 'main'){
+    view.ox = drag.ox + dx;
+    view.oy = drag.oy + dy;
+    if (view.follow){
+      view.follow = false;
+      document.getElementById('follow').checked = false;
+    }
+  } else {
+    view.gx = drag.gx + dx;
+    view.gy = drag.gy + dy;
+  }
+});
+
+function endDrag(e){
+  if (!drag) return;
+  drag = null;
+  try { cv.releasePointerCapture(e.pointerId); } catch(_){}
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = localPos(e);
+  const k = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+
+  if (p.y < mainH){
+    view.ox = p.x - (p.x - view.ox) * k;
+    view.oy = p.y - (p.y - view.oy) * k;
+    view.scale = Math.max(6, Math.min(1600, view.scale * k));
+  } else {
+    view.gx = p.x - (p.x - view.gx) * k;
+    view.gy = p.y - (p.y - view.gy) * k;
+    view.gsT = Math.max(4, Math.min(2000, view.gsT * k));
+    view.gsY = Math.max(4, Math.min(2000, view.gsY * k));
+  }
+}, { passive: false });
+
+/* ============================================================
+   自定义下拉（KaTeX 支持）
+   ============================================================ */
+function setupDropdown(id, onChange){
+  const dd    = document.getElementById(id);
+  const head  = dd.querySelector('.dd-head');
+  const cur   = dd.querySelector('.dd-cur');
+  const items = Array.from(dd.querySelectorAll('.dd-item'));
+
+  function select(item){
+    items.forEach(it => it.classList.remove('active'));
+    item.classList.add('active');
+
+    const tex = item.dataset.tex;
+    const txt = item.dataset.txt;
+    if (tex && window.katex){
+      cur.innerHTML = '';
+      try { katex.render(tex, cur, { throwOnError: false, displayMode: false }); }
+      catch(_){ cur.textContent = tex; }
+    } else {
+      cur.textContent = txt || item.textContent;
+    }
+    onChange(item.dataset.v);
+  }
+
+  head.addEventListener('click', e => {
+    e.stopPropagation();
+    dd.classList.toggle('open');
+  });
+
+  items.forEach(it => {
+    const tex = it.dataset.tex;
+    if (tex && window.katex){
+      it.innerHTML = '';
+      try { katex.render(tex, it, { throwOnError: false, displayMode: false }); }
+      catch(_){ it.textContent = tex; }
+    }
+    it.addEventListener('click', e => {
+      e.stopPropagation();
+      select(it);
+      dd.classList.remove('open');
+    });
+  });
+
+  document.addEventListener('click', () => dd.classList.remove('open'));
+
+  const def = dd.dataset.def;
+  const defItem = items.find(it => it.dataset.v === def) || items[0];
+  if (defItem) select(defItem);
+}
+
+/* ============================================================
+   UI 参数
+   ============================================================ */
+function onParamChange(){
+  computeAll();
+  resetSim();
+  initView();
+}
+
+function bindRange(id, key, fmtFn, cb){
+  const el  = document.getElementById(id);
+  const out = document.getElementById(id + 'v');
+  function update(){
+    P[key] = parseFloat(el.value);
+    if (out) out.textContent = fmtFn ? fmtFn(P[key]) : P[key];
+    if (cb) cb();
+  }
+  el.addEventListener('input', update);
+  update();
+}
+
+bindRange('E0', 'E0', v => v.toFixed(1), onParamChange);
+bindRange('T',  'T',  v => v.toFixed(1), onParamChange);
+bindRange('q',  'q',  v => (v > 0 ? '+' : '') + v.toFixed(1), onParamChange);
+bindRange('m',  'm',  v => v.toFixed(1), onParamChange);
+bindRange('v0', 'v0', v => v.toFixed(1), onParamChange);
+bindRange('N',  'N',  v => v.toFixed(0), onParamChange);
+bindRange('speed', 'speed', v => v.toFixed(1) + '×');
+
+playBtn.addEventListener('click', () => {
+  if (s.running){
+    s.running = false;
+  } else {
+    if (s.t >= tEnd - 1e-9) resetSim();
+    s.running = true;
+  }
+  updatePlayBtn();
+});
+
+document.getElementById('reset').addEventListener('click', resetSim);
+
+document.getElementById('recenter').addEventListener('click', () => {
+  initView();
+  view.follow = false;
+  document.getElementById('follow').checked = false;
+});
+
+document.getElementById('redraw').addEventListener('click', onParamChange);
+
+document.getElementById('follow').addEventListener('change', e => {
+  view.follow = e.target.checked;
+});
+
+/* ============================================================
+   启动
+   ============================================================ */
+window.addEventListener('load', () => {
+  if (window.renderMathInElement){
+    try {
+      renderMathInElement(document.body, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$',  right: '$',  display: false }
+        ],
+        ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+        throwOnError: false
+      });
+    } catch(_){}
+  }
+
+  setupDropdown('dd-wave',    v => { P.wave = v; onParamChange(); });
+  setupDropdown('dd-release', v => { P.release = parseFloat(v); onParamChange(); });
+
+  computeAll();
+  resize();
+  if (!viewInited && W > 60){
+    viewInited = true;
+    initView();
+  }
+  resetSim();
+
+  new ResizeObserver(resize).observe(cv);
+  requestAnimationFrame(frame);
+});
+
+if (document.readyState === 'complete'){
+  setTimeout(() => window.dispatchEvent(new Event('load')), 0);
+}
+
+})();
+</script>
+<script src="panel-toggle.js" defer></script>
+</body>
+</html>

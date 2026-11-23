@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>水平弹簧振子</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_spring_horizontal',
+  title: '水平弹簧振子',
+  sub: "水平弹簧连物块，位移—速度—加速度的关系一目了然",
+  params: ["hsPeriod","hsAmp","hsCoils","hsBlock"],
+  period: 'hsPeriod',
+  note: "位移最大时加速度最大、速度为零（简谐运动的相位关系）。",
+formula: String.raw`x=A\cos(\omega t)\qquad a=-\omega^2x`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.6,
+});
+</script>
+</body>
+</html>

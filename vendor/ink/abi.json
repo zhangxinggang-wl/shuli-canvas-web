@@ -1,0 +1,8245 @@
+{
+ "wasm": "WASMInkCanvasApp.wasm",
+ "generatedAt": "2026-11-14T07:28:46.048Z",
+ "scannedBytes": 25165824,
+ "importCount": 670,
+ "nonFuncImports": [
+  {
+   "module": "env",
+   "name": "memory",
+   "kind": "memory",
+   "decl": "(;0;) 1157 16384 shared"
+  }
+ ],
+ "exportCount": 376,
+ "exportSource": "_symbol_inventory.json",
+ "byModule": {
+  "inkcanvas_image_bitmap": 3,
+  "inkcanvas_logger": 1,
+  "inkcanvas_context2d": 80,
+  "inkcanvas_path2d": 13,
+  "javascript_kit": 32,
+  "bjs": 77,
+  "inkcanvas_image_bitmap_options": 13,
+  "inkcanvas_image_data": 4,
+  "inkcanvas_webgl2_context": 119,
+  "WASMAPIBridge": 5,
+  "inkcanvas_canvas": 13,
+  "inkcanvas_abort_controller": 3,
+  "inkcanvas_abort_signal": 2,
+  "inkcanvas_cssstyledeclaration": 31,
+  "inkcanvas_dom_node": 3,
+  "inkcanvas_document": 8,
+  "inkcanvas_app": 3,
+  "inkcanvas_document_event": 1,
+  "inkcanvas_html_element": 5,
+  "inkcanvas_event": 1,
+  "inkcanvas_fontfaceset": 1,
+  "inkcanvas_global": 2,
+  "inkcanvas_image_element": 6,
+  "inkcanvas_mouse_event": 4,
+  "inkcanvas_pointer_event": 10,
+  "inkcanvas_webgl_context_event": 1,
+  "inkcanvas_wheel_event": 2,
+  "inkcanvas_window": 7,
+  "inkcanvas_window_event": 1,
+  "inkcanvas_bitmaprenderer_context": 1,
+  "inkcanvas_offscreen_canvas": 7,
+  "inkcanvas_text_editor": 1,
+  "inkcanvas_blob": 1,
+  "inkcanvas_canvas_gradient": 1,
+  "inkcanvas_canvas_pattern": 1,
+  "inkcanvas_element_image": 3,
+  "inkcanvas_webgl_lose_context_extension": 2,
+  "inkcanvas_location": 3,
+  "inkcanvas_performance": 2,
+  "inkcanvas_url": 2,
+  "inkcanvas_url_search_params": 5,
+  "inkcanvas_interaction_container": 12,
+  "WASMInkCanvasLibrary": 63,
+  "hack": 1,
+  "inkcanvas_events": 78,
+  "wasi_snapshot_preview1": 35,
+  "wasi": 1
+ },
+ "imports": {
+  "inkcanvas_image_bitmap": {
+   "width": {
+    "i": 0,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "height": {
+    "i": 1,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "close": {
+    "i": 407,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_logger": {
+   "log": {
+    "i": 2,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_context2d": {
+   "measureText": {
+    "i": 3,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getGlobalAlpha": {
+    "i": 94,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setGlobalAlpha": {
+    "i": 95,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getGlobalCompositeOperation": {
+    "i": 96,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setGlobalCompositeOperation": {
+    "i": 97,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setFilterBlur": {
+    "i": 98,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "drawImage": {
+    "i": 99,
+    "params": [
+     "i32",
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "drawImageDestinyPoint": {
+    "i": 100,
+    "params": [
+     "i32",
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "drawImageDestiny": {
+    "i": 101,
+    "params": [
+     "i32",
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "beginPath": {
+    "i": 102,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "clip": {
+    "i": 103,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "clipFillRule": {
+    "i": 104,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clipPath": {
+    "i": 105,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clipPathFillRule": {
+    "i": 106,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "fill": {
+    "i": 107,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "fillFillRule": {
+    "i": 108,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "fillPath": {
+    "i": 109,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "fillPathFillRule": {
+    "i": 110,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "strokePath": {
+    "i": 111,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "stroke": {
+    "i": 112,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "getFillStyleGradient": {
+    "i": 113,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getFillStyleColor": {
+    "i": 114,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getFillStyleType": {
+    "i": 115,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setFillStyleColor": {
+    "i": 116,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setFillStyleObject": {
+    "i": 117,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getStrokeStyleGradient": {
+    "i": 118,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getStrokeStyleColor": {
+    "i": 119,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getStrokeStyleType": {
+    "i": 120,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setStrokeStyleColor": {
+    "i": 121,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setStrokeStyleObject": {
+    "i": 122,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createLinearGradient": {
+    "i": 123,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createConicGradient": {
+    "i": 124,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createRadialGradient": {
+    "i": 125,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createPattern": {
+    "i": 126,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getImageData": {
+    "i": 127,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "putImageData": {
+    "i": 128,
+    "params": [
+     "i32",
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "putImageDataDirty": {
+    "i": 129,
+    "params": [
+     "i32",
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "arc": {
+    "i": 130,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bezierCurveTo": {
+    "i": 131,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "closePath": {
+    "i": 132,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "lineTo": {
+    "i": 133,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "moveTo": {
+    "i": 134,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "quadraticCurveTo": {
+    "i": 135,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "rect": {
+    "i": 136,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getLineCap": {
+    "i": 137,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setLineCap": {
+    "i": 138,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getLineDashOffset": {
+    "i": 139,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setLineDashOffset": {
+    "i": 140,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getLineJoin": {
+    "i": 141,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setLineJoin": {
+    "i": 142,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getLineWidth": {
+    "i": 143,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setLineWidth": {
+    "i": 144,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setLineDash": {
+    "i": 145,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clearRect": {
+    "i": 146,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "fillRect": {
+    "i": 147,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "strokeRect": {
+    "i": 148,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getShadowBlur": {
+    "i": 149,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setShadowBlur": {
+    "i": 150,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getShadowColor": {
+    "i": 151,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setShadowColor": {
+    "i": 152,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getShadowOffsetX": {
+    "i": 153,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setShadowOffsetX": {
+    "i": 154,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getShadowOffsetY": {
+    "i": 155,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setShadowOffsetY": {
+    "i": 156,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "isContextLost": {
+    "i": 157,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "reset": {
+    "i": 158,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "restore": {
+    "i": 159,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "save": {
+    "i": 160,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "fillText": {
+    "i": 161,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setFont": {
+    "i": 162,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getFont": {
+    "i": 163,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getTextAlign": {
+    "i": 164,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setTextAlign": {
+    "i": 165,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getTransform": {
+    "i": 166,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "resetTransform": {
+    "i": 167,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "rotate": {
+    "i": 168,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "scale": {
+    "i": 169,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "transform": {
+    "i": 170,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "translate": {
+    "i": 171,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setTransform": {
+    "i": 172,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_path2d": {
+   "rect": {
+    "i": 4,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "closePath": {
+    "i": 5,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "moveTo": {
+    "i": 6,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "lineTo": {
+    "i": 7,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "addPath": {
+    "i": 8,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "arcTo": {
+    "i": 9,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "bezierCurveTo": {
+    "i": 10,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "ellipse": {
+    "i": 11,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "arc": {
+    "i": 12,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "i32"
+    ],
+    "results": []
+   },
+   "quadraticCurveTo": {
+    "i": 13,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "roundRect": {
+    "i": 79,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "new": {
+    "i": 278,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "newFromPath": {
+    "i": 279,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "javascript_kit": {
+   "swjs_i64_to_bigint": {
+    "i": 14,
+    "params": [
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_bigint_to_i64": {
+    "i": 15,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i64"
+    ]
+   },
+   "swjs_request_sending_object": {
+    "i": 16,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_unsafe_event_loop_yield": {
+    "i": 17,
+    "params": [],
+    "results": []
+   },
+   "swjs_send_job_to_main_thread": {
+    "i": 18,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_wake_up_worker_thread": {
+    "i": 19,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_listen_message_from_worker_thread": {
+    "i": 20,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_get_worker_thread_id": {
+    "i": 21,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_listen_message_from_main_thread": {
+    "i": 22,
+    "params": [],
+    "results": []
+   },
+   "swjs_set_prop": {
+    "i": 53,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64"
+    ],
+    "results": []
+   },
+   "swjs_get_prop": {
+    "i": 54,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_set_subscript": {
+    "i": 55,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64"
+    ],
+    "results": []
+   },
+   "swjs_instanceof": {
+    "i": 56,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_get_subscript": {
+    "i": 57,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_new": {
+    "i": 58,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_i64_to_bigint_slow": {
+    "i": 59,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_release_remote": {
+    "i": 60,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_release": {
+    "i": 61,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_create_oneshot_function": {
+    "i": 62,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_create_function": {
+    "i": 63,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_function_no_catch": {
+    "i": 64,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_function_with_this_no_catch": {
+    "i": 65,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_create_object": {
+    "i": 66,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_decode_string": {
+    "i": 67,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_encode_string": {
+    "i": 68,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_load_string": {
+    "i": 69,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swjs_value_equals": {
+    "i": 70,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_throwing_new": {
+    "i": 71,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_function_with_this": {
+    "i": 72,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_call_function": {
+    "i": 73,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_create_typed_array": {
+    "i": 74,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swjs_load_typed_array": {
+    "i": 75,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "bjs": {
+   "swift_js_throw": {
+    "i": 23,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_closure_unregister": {
+    "i": 24,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_pop_i32": {
+    "i": 25,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_push_i32": {
+    "i": 26,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_push_i64": {
+    "i": 27,
+    "params": [
+     "i64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_pop_i64": {
+    "i": 28,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i64"
+    ]
+   },
+   "swift_js_pop_f32": {
+    "i": 29,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "swift_js_push_f32": {
+    "i": 30,
+    "params": [
+     "f32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_pop_f64": {
+    "i": 31,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "swift_js_push_f64": {
+    "i": 32,
+    "params": [
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_init_memory_with_result": {
+    "i": 33,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_init_memory": {
+    "i": 34,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_push_string": {
+    "i": 35,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_retain": {
+    "i": 36,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_pop_pointer": {
+    "i": 37,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_push_pointer": {
+    "i": 38,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_push_typed_array": {
+    "i": 39,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_return_optional_bool": {
+    "i": 40,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_get_optional_int_presence": {
+    "i": 41,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_get_optional_int_value": {
+    "i": 42,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_return_optional_int": {
+    "i": 43,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_get_optional_string": {
+    "i": 44,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_return_optional_string": {
+    "i": 45,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_get_optional_float_presence": {
+    "i": 46,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_get_optional_float_value": {
+    "i": 47,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "swift_js_return_optional_float": {
+    "i": 48,
+    "params": [
+     "i32",
+     "f32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_get_optional_double_presence": {
+    "i": 49,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_get_optional_double_value": {
+    "i": 50,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "swift_js_return_optional_double": {
+    "i": 51,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_make_promise": {
+    "i": 52,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMAPIBridge_13WASMAPIBridgeSd_y": {
+    "i": 82,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMAPIBridge_13WASMAPIBridgey_y": {
+    "i": 83,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarys20TaskSchedulerRequestC_y": {
+    "i": 437,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarys7JSValueV_y": {
+    "i": 438,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarysSS_y": {
+    "i": 439,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarysSb_y": {
+    "i": 440,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "make_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibraryy_y": {
+    "i": 441,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmCommentThreadDismissInfo": {
+    "i": 442,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmCommentThreadDismissInfo": {
+    "i": 443,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmMergeDocumentResult": {
+    "i": 444,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmMergeDocumentResult": {
+    "i": 445,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmNewFolderInfo": {
+    "i": 446,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmNewFolderInfo": {
+    "i": 447,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmMovePagesToDocumentResult": {
+    "i": 448,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmMovePagesToDocumentResult": {
+    "i": 449,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmCopyPagesRequest": {
+    "i": 450,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmCopyPagesRequest": {
+    "i": 451,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmRendererSnapshot": {
+    "i": 452,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmRendererSnapshot": {
+    "i": 453,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmPoint": {
+    "i": 454,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmPoint": {
+    "i": 455,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmRect": {
+    "i": 456,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmRect": {
+    "i": 457,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmColor": {
+    "i": 458,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmColor": {
+    "i": 459,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmRulerConfig": {
+    "i": 460,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmRulerConfig": {
+    "i": 461,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmClassroomUser": {
+    "i": 462,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmClassroomUser": {
+    "i": 463,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmIndexingResult": {
+    "i": 464,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmIndexingResult": {
+    "i": 465,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmDocumentIndexingResult": {
+    "i": 466,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmDocumentIndexingResult": {
+    "i": 467,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_GNWasmIndexingAdmissionTiming": {
+    "i": 468,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_GNWasmIndexingAdmissionTiming": {
+    "i": 469,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "swift_js_struct_lower_EditorInMemoryCounts": {
+    "i": 470,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "swift_js_struct_lift_EditorInMemoryCounts": {
+    "i": 471,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "promise_reject_WASMInkCanvasLibrary": {
+    "i": 476,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_20GNWasmIndexingResultV": {
+    "i": 477,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_y": {
+    "i": 478,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_SS": {
+    "i": 479,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_25GNWasmMergeDocumentResultV": {
+    "i": 480,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_Si": {
+    "i": 481,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_SaSS": {
+    "i": 482,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_31GNWasmMovePagesToDocumentResultV": {
+    "i": 483,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_22GNWasmRendererSnapshotV": {
+    "i": 484,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "promise_resolve_WASMInkCanvasLibrary_SqSS": {
+    "i": 485,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_image_bitmap_options": {
+   "setImageOrientation": {
+    "i": 76,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getColorSpaceConversion": {
+    "i": 408,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setColorSpaceConversion": {
+    "i": 409,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getImageOrientation": {
+    "i": 410,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getPremultiplyAlpha": {
+    "i": 411,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setPremultiplyAlpha": {
+    "i": 412,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getResizeHeight": {
+    "i": 413,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setResizeHeight": {
+    "i": 414,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getResizeQuality": {
+    "i": 415,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setResizeQuality": {
+    "i": 416,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getResizeWidth": {
+    "i": 417,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setResizeWidth": {
+    "i": 418,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "new": {
+    "i": 419,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_image_data": {
+   "width": {
+    "i": 77,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "height": {
+    "i": 78,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "newFromBuffer": {
+    "i": 420,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "copyToBuffer": {
+    "i": 421,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_webgl2_context": {
+   "scissor": {
+    "i": 80,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "disable": {
+    "i": 81,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "activeTexture": {
+    "i": 287,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "attachShader": {
+    "i": 288,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "beginQuery": {
+    "i": 289,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindAttribLocation": {
+    "i": 290,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindBuffer": {
+    "i": 291,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindBufferBase": {
+    "i": 292,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindBufferRange": {
+    "i": 293,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindFramebuffer": {
+    "i": 294,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindSampler": {
+    "i": 295,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindTexture": {
+    "i": 296,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindVertexArray": {
+    "i": 297,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "blendFunc": {
+    "i": 298,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "blendFuncSeparate": {
+    "i": 299,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "blitFramebuffer": {
+    "i": 300,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferDataSize": {
+    "i": 301,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferData": {
+    "i": 302,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferDatai": {
+    "i": 303,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferDataf": {
+    "i": 304,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferDatas": {
+    "i": 305,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bufferSubData": {
+    "i": 306,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "checkFramebufferStatus": {
+    "i": 307,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "clear": {
+    "i": 308,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clearColor": {
+    "i": 309,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "clientWaitSync": {
+    "i": 310,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "compileShader": {
+    "i": 311,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "copyTexSubImage2D": {
+    "i": 312,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createBuffer": {
+    "i": 313,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createFramebuffer": {
+    "i": 314,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createProgram": {
+    "i": 315,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createQuery": {
+    "i": 316,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createSampler": {
+    "i": 317,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createShader": {
+    "i": 318,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createTexture": {
+    "i": 319,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "createVertexArray": {
+    "i": 320,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "deleteBuffer": {
+    "i": 321,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteFramebuffer": {
+    "i": 322,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteProgram": {
+    "i": 323,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteQuery": {
+    "i": 324,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteSampler": {
+    "i": 325,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteShader": {
+    "i": 326,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteSync": {
+    "i": 327,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteTexture": {
+    "i": 328,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "deleteVertexArray": {
+    "i": 329,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "detachShader": {
+    "i": 330,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "disableVertexAttribArray": {
+    "i": 331,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "drawArrays": {
+    "i": 332,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "drawArraysInstanced": {
+    "i": 333,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "drawElements": {
+    "i": 334,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "drawElementsInstanced": {
+    "i": 335,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "enable": {
+    "i": 336,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "enableVertexAttribArray": {
+    "i": 337,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "endQuery": {
+    "i": 338,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "fenceSync": {
+    "i": 339,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "flush": {
+    "i": 340,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "framebufferTexture2D": {
+    "i": 341,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createRenderbuffer": {
+    "i": 342,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "deleteRenderbuffer": {
+    "i": 343,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bindRenderbuffer": {
+    "i": 344,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "renderbufferStorage": {
+    "i": 345,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "renderbufferStorageMultisample": {
+    "i": 346,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getExtension": {
+    "i": 347,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "framebufferRenderbuffer": {
+    "i": 348,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "invalidateFramebuffer": {
+    "i": 349,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "stencilFunc": {
+    "i": 350,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "stencilOp": {
+    "i": 351,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "stencilMask": {
+    "i": 352,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "colorMask": {
+    "i": 353,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clearStencil": {
+    "i": 354,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "depthFunc": {
+    "i": 355,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "depthMask": {
+    "i": 356,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "clearDepth": {
+    "i": 357,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getError": {
+    "i": 358,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getParameterb": {
+    "i": 359,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getProgramInfoLog": {
+    "i": 360,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getProgramParameter": {
+    "i": 361,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getQueryParameterb": {
+    "i": 362,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getQueryParameterui": {
+    "i": 363,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getShaderInfoLog": {
+    "i": 364,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getShaderParameter": {
+    "i": 365,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "isContextLost": {
+    "i": 366,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "linkProgram": {
+    "i": 367,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "pixelStoreb": {
+    "i": 368,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "pixelStorei": {
+    "i": 369,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "readPixelsFloat": {
+    "i": 370,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "readPixelsUnsignedByte": {
+    "i": 371,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "samplerParameteri": {
+    "i": 372,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "samplerParameterf": {
+    "i": 373,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "shaderSource": {
+    "i": 374,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texImage2DTexImageSource": {
+    "i": 375,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texParameteri": {
+    "i": 376,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texParameterf": {
+    "i": 377,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "texStorage2D": {
+    "i": 378,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texStorage3D": {
+    "i": 379,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texSubImage2DFullTexImageSource": {
+    "i": 380,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "generateMipmap": {
+    "i": 381,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texSubImage2DTexImageSource": {
+    "i": 382,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniform1f": {
+    "i": 383,
+    "params": [
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "uniform1ui": {
+    "i": 384,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniform1i": {
+    "i": 385,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniform1iv": {
+    "i": 386,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniform2fv": {
+    "i": 387,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniform4fv": {
+    "i": 388,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "uniformBlockBinding": {
+    "i": 389,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "useProgram": {
+    "i": 390,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "vertexAttribDivisor": {
+    "i": 391,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "vertexAttribIPointer": {
+    "i": 392,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "vertexAttribPointer": {
+    "i": 393,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "viewPort": {
+    "i": 394,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getAttribLocation": {
+    "i": 395,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getUniformBlockIndex": {
+    "i": 396,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getUniformLocation": {
+    "i": 397,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "texImage2DBytes": {
+    "i": 398,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texImage2DFloat": {
+    "i": 399,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "compressedTexImage2D": {
+    "i": 400,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texSubImage2DFloat": {
+    "i": 401,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texSubImage2DUint8": {
+    "i": 402,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "texSubImage3DUint8": {
+    "i": 403,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "WASMAPIBridge": {
+   "bjs_jsSetTimeout": {
+    "i": 84,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "bjs_jsClearTimeout": {
+    "i": 85,
+    "params": [
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_jsRequestAnimationFrame": {
+    "i": 86,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "bjs_jsCancelAnimationFrame": {
+    "i": 87,
+    "params": [
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_jsEncodeURIComponent": {
+    "i": 88,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_canvas": {
+   "new": {
+    "i": 89,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "getContext": {
+    "i": 90,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setWidth": {
+    "i": 91,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setHeight": {
+    "i": 92,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getContext2DAttributes": {
+    "i": 93,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "toDataURLExtended": {
+    "i": 209,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getWidth": {
+    "i": 210,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getHeight": {
+    "i": 211,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getBitmapRendererContext": {
+    "i": 212,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "addEventListener": {
+    "i": 213,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "toDataURL": {
+    "i": 214,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "transferControlToOffscreen": {
+    "i": 215,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getWebGL2ContextAttributes": {
+    "i": 405,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_abort_controller": {
+   "signal": {
+    "i": 173,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "abort": {
+    "i": 174,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "new": {
+    "i": 175,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_abort_signal": {
+   "timeout": {
+    "i": 176,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "aborted": {
+    "i": 177,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_cssstyledeclaration": {
+   "cancelFadeout": {
+    "i": 178,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "fadeout": {
+    "i": 179,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getBottomPx": {
+    "i": 180,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setBottomPx": {
+    "i": 181,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getTopPx": {
+    "i": 182,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setTopPx": {
+    "i": 183,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getLeftPx": {
+    "i": 184,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setLeftPx": {
+    "i": 185,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getHeightPx": {
+    "i": 186,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setHeightPx": {
+    "i": 187,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getHeightPercent": {
+    "i": 188,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setHeightPercent": {
+    "i": 189,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getOpacity": {
+    "i": 190,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setOpacity": {
+    "i": 191,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getZoom": {
+    "i": 192,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "setZoom": {
+    "i": 193,
+    "params": [
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "getPosition": {
+    "i": 194,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setPosition": {
+    "i": 195,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getVisibility": {
+    "i": 196,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setVisibility": {
+    "i": 197,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getWidthPx": {
+    "i": 198,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setWidthPx": {
+    "i": 199,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getWidthPercent": {
+    "i": 200,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setWidthPercent": {
+    "i": 201,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getZIndex": {
+    "i": 202,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setZIndex": {
+    "i": 203,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getPointerEvents": {
+    "i": 204,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setPointerEvents": {
+    "i": 205,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setTransformOrigin": {
+    "i": 206,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setTransformOriginPx": {
+    "i": 207,
+    "params": [
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "setTransformMatrix": {
+    "i": 208,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_dom_node": {
+   "addEventListener": {
+    "i": 216,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "appendChild": {
+    "i": 217,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "removeChild": {
+    "i": 218,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_document": {
+   "setTitle": {
+    "i": 219,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createElement": {
+    "i": 220,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getBody": {
+    "i": 221,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getFonts": {
+    "i": 222,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getHidden": {
+    "i": 223,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getVisibilityState": {
+    "i": 224,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getTitle": {
+    "i": 225,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "addEventListener": {
+    "i": 226,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_app": {
+   "document": {
+    "i": 227,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "window": {
+    "i": 268,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "performance": {
+    "i": 427,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_document_event": {
+   "currentTarget": {
+    "i": 228,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_html_element": {
+   "onload": {
+    "i": 229,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onerror": {
+    "i": 230,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setId": {
+    "i": 231,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getId": {
+    "i": 232,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "style": {
+    "i": 233,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_event": {
+   "preventDefault": {
+    "i": 234,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_fontfaceset": {
+   "check": {
+    "i": 235,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_global": {
+   "createImageBitmapFrame": {
+    "i": 236,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createImageBitmap": {
+    "i": 237,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_image_element": {
+   "setSrc": {
+    "i": 238,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "setWidth": {
+    "i": 239,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getWidth": {
+    "i": 240,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setHeight": {
+    "i": 241,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getHeight": {
+    "i": 242,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getSrc": {
+    "i": 243,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_mouse_event": {
+   "clientX": {
+    "i": 244,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "clientY": {
+    "i": 245,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "movementX": {
+    "i": 246,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "movementY": {
+    "i": 247,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_pointer_event": {
+   "height": {
+    "i": 248,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "isPrimary": {
+    "i": 249,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "pointerId": {
+    "i": 250,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "pointerType": {
+    "i": 251,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "pressure": {
+    "i": 252,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "tangentialPressure": {
+    "i": 253,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "tiltX": {
+    "i": 254,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "tiltY": {
+    "i": 255,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "twist": {
+    "i": 256,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "width": {
+    "i": 257,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_webgl_context_event": {
+   "statusMessage": {
+    "i": 258,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_wheel_event": {
+   "deltaX": {
+    "i": 259,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "deltaY": {
+    "i": 260,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   }
+  },
+  "inkcanvas_window": {
+   "setLocation": {
+    "i": 261,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "innerHeight": {
+    "i": 262,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "innerWidth": {
+    "i": 263,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "devicePixelRatio": {
+    "i": 264,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f32"
+    ]
+   },
+   "prefersReducedMotion": {
+    "i": 265,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getLocation": {
+    "i": 266,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "addEventListener": {
+    "i": 267,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_window_event": {
+   "currentTarget": {
+    "i": 269,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_bitmaprenderer_context": {
+   "transferFromImageBitmap": {
+    "i": 270,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_offscreen_canvas": {
+   "new": {
+    "i": 271,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "getWidth": {
+    "i": 272,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setWidth": {
+    "i": 273,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "getHeight": {
+    "i": 274,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "setHeight": {
+    "i": 275,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "addEventListener": {
+    "i": 276,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "transferToImageBitmap": {
+    "i": 277,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_text_editor": {
+   "new": {
+    "i": 280,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_blob": {
+   "newFromBufferSizeMimeType": {
+    "i": 281,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_canvas_gradient": {
+   "addColorStop": {
+    "i": 282,
+    "params": [
+     "i32",
+     "f32",
+     "i32",
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_canvas_pattern": {
+   "setTransform": {
+    "i": 283,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_element_image": {
+   "width": {
+    "i": 284,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "height": {
+    "i": 285,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "close": {
+    "i": 286,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_webgl_lose_context_extension": {
+   "loseContext": {
+    "i": 404,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "restoreContext": {
+    "i": 406,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_location": {
+   "search": {
+    "i": 422,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "reload": {
+    "i": 423,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "noreturnReload": {
+    "i": 424,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "inkcanvas_performance": {
+   "now": {
+    "i": 425,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "timeOrigin": {
+    "i": 426,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   }
+  },
+  "inkcanvas_url": {
+   "revokeObjectURL": {
+    "i": 428,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "createObjectURL": {
+    "i": 429,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_url_search_params": {
+   "append": {
+    "i": 430,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "delete": {
+    "i": 431,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "get": {
+    "i": 432,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "new": {
+    "i": 433,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "size": {
+    "i": 434,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_interaction_container": {
+   "deinitPageContainer": {
+    "i": 435,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "updateInteractionLayerPageId": {
+    "i": 436,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "updateErrorPageId": {
+    "i": 545,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "initialize": {
+    "i": 546,
+    "params": [],
+    "results": []
+   },
+   "createPageContainer": {
+    "i": 547,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   },
+   "deinitialize": {
+    "i": 548,
+    "params": [],
+    "results": []
+   },
+   "appendPageContainerIfNeeded": {
+    "i": 549,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "removePageContainer": {
+    "i": 550,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "updateErrorPageFrame": {
+    "i": 551,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "updateInteractionLayerPageFrame": {
+    "i": 552,
+    "params": [
+     "i32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "removeErrorPage": {
+    "i": 627,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "updatePageFrameInfo": {
+    "i": 628,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   }
+  },
+  "WASMInkCanvasLibrary": {
+   "bjs_GNWasmIndexingRun_wrap": {
+    "i": 472,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_GNWasmEditorBridge_wrap": {
+    "i": 473,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_GNWasmStartupOptions_wrap": {
+    "i": 474,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_GNWasmStartup_wrap": {
+    "i": 475,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_performanceMarkTracer": {
+    "i": 486,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_makePreloadLanguageModels": {
+    "i": 487,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_makeGNTextCheckerODRLoader": {
+    "i": 488,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_createJSRTCSocket": {
+    "i": 489,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_remoteLogger": {
+    "i": 490,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_monitoring": {
+    "i": 491,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_indexingExecutionMarker": {
+    "i": 492,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_taskScheduler": {
+    "i": 493,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_indexingPageMetadata": {
+    "i": 494,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_PerformanceMarkTracer_now": {
+    "i": 495,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "bjs_PerformanceMarkTracer_mark": {
+    "i": 496,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_PreloadLanguageModels_loadLanguageModelResource": {
+    "i": 497,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_PreloadLanguageModels_unloadLanguageModelResource": {
+    "i": 498,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_GNTextCheckerODRLoader_loadModel": {
+    "i": 499,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_JSRTCSocket_connect_get": {
+    "i": 500,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_isConnected_get": {
+    "i": 501,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_disconnect_get": {
+    "i": 502,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerJoinListener_get": {
+    "i": 503,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerLeaveListener_get": {
+    "i": 504,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerPublicationListener_get": {
+    "i": 505,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_unregisterListeners_get": {
+    "i": 506,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_sendMessage_get": {
+    "i": 507,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_subscribeToWaitingRoom_get": {
+    "i": 508,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerWaitingRoomJoinListener_get": {
+    "i": 509,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerWaitingRoomLeaveListener_get": {
+    "i": 510,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_subscribeToRTC_get": {
+    "i": 511,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_unsubscribeFromRTC_get": {
+    "i": 512,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerConnectedListener_get": {
+    "i": 513,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerDisconnectedListener_get": {
+    "i": 514,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerWaitingRoomSubscribedListener_get": {
+    "i": 515,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerWaitingRoomSubscriptionErrorListener_get": {
+    "i": 516,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerRTCSubscribedListener_get": {
+    "i": 517,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_registerRTCSubscriptionErrorListener_get": {
+    "i": 518,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_JSRTCSocket_getPresenceStats_get": {
+    "i": 519,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "bjs_RemoteLoggerPort_log": {
+    "i": 520,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_addAttributes": {
+    "i": 521,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_addAction": {
+    "i": 522,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_startAction": {
+    "i": 523,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_stopAction": {
+    "i": 524,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_startView": {
+    "i": 525,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_stopView": {
+    "i": 526,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_startResource": {
+    "i": 527,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_MonitoringPort_stopResource": {
+    "i": 528,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_IndexingExecutionMarkerPort_begin": {
+    "i": 529,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_IndexingExecutionMarkerPort_finish": {
+    "i": 530,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_TaskSchedulerPort_createRequest": {
+    "i": 531,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_TaskSchedulerPort_releaseSlot": {
+    "i": 532,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_TaskSchedulerRequest_waitForSlot": {
+    "i": 533,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_TaskSchedulerRequest_cancelWait": {
+    "i": 534,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_waitUntilUsable": {
+    "i": 535,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_stableBool": {
+    "i": 536,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_stableInt": {
+    "i": 537,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_stableString": {
+    "i": 538,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_latestBool": {
+    "i": 539,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_latestInt": {
+    "i": 540,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_latestString": {
+    "i": 541,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_RemoteConfigurationClientPort_subscribeToLatestValue": {
+    "i": 542,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "f64"
+    ]
+   },
+   "bjs_RemoteConfigurationClientPort_unsubscribeFromLatestValue": {
+    "i": 543,
+    "params": [
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "bjs_IndexingPageMetadataPort_hasTypedContent": {
+    "i": 544,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "hack": {
+   "i32_wrap_i64": {
+    "i": 553,
+    "params": [
+     "i64"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "inkcanvas_events": {
+   "onNexusDocumentNotesUpdated": {
+    "i": 554,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onNexusDocumentAttachmentIdsUpdated": {
+    "i": 555,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onRulerToggled": {
+    "i": 556,
+    "params": [],
+    "results": []
+   },
+   "onNoUserIdProvidedError": {
+    "i": 557,
+    "params": [],
+    "results": []
+   },
+   "onClassroomCompatibilityError": {
+    "i": 558,
+    "params": [],
+    "results": []
+   },
+   "onExportingFileProgressUpdate": {
+    "i": 559,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentUnloaded": {
+    "i": 560,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentConsistencyCheck": {
+    "i": 561,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentNotesConsistencyCheck": {
+    "i": 562,
+    "params": [
+     "i32",
+     "i32",
+     "f32"
+    ],
+    "results": []
+   },
+   "onEditorLoaded": {
+    "i": 563,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onOpenPDFExternalUrl": {
+    "i": 564,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCanUndoRedoUpdated": {
+    "i": 565,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onPullToAddState": {
+    "i": 566,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f32",
+     "f32"
+    ],
+    "results": []
+   },
+   "onPullToAddUpdate": {
+    "i": 567,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCurrentPageUpdated": {
+    "i": 568,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCommentsError": {
+    "i": 569,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onThumbnailUpdated": {
+    "i": 570,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncPending": {
+    "i": 571,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncStarted": {
+    "i": 572,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncCompleted": {
+    "i": 573,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncErrorRetrying": {
+    "i": 574,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncErrorTooManyRetries": {
+    "i": 575,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onStylusEnabledUpdated": {
+    "i": 576,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentUnshared": {
+    "i": 577,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onFirstVisiblePageRendered": {
+    "i": 578,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "f64",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onEditorUnloaded": {
+    "i": 579,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onNotesPreloadProgress": {
+    "i": 580,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSearchThumbnailUpdated": {
+    "i": 581,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onToolSelected": {
+    "i": 582,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onContentPositionedStatusUpdated": {
+    "i": 583,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onRenderingStatusUpdated": {
+    "i": 584,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onFetchStatusUpdated": {
+    "i": 585,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onPageNavigationStarted": {
+    "i": 586,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentNotFound": {
+    "i": 587,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDismissSharedMenu": {
+    "i": 588,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDismissObjectMenu": {
+    "i": 589,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onTextErrorRenderingIssues": {
+    "i": 590,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCopyAsTextCompleted": {
+    "i": 591,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onFailedToStoreNotes": {
+    "i": 592,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onEventsSaved": {
+    "i": 593,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncEventsSaved": {
+    "i": 594,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncEventsSynced": {
+    "i": 595,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncEventsAttempted": {
+    "i": 596,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncEventsSucceeded": {
+    "i": 597,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncNotesAttempted": {
+    "i": 598,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncNotesSucceeded": {
+    "i": 599,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onArrowDrawn": {
+    "i": 600,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onLineDrawn": {
+    "i": 601,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onConnectorDrawn": {
+    "i": 602,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onFreeShapeDrawn": {
+    "i": 603,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDefinedShapeDrawn": {
+    "i": 604,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onShapeUndo": {
+    "i": 605,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onScribbleToEraseApplied": {
+    "i": 606,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onUndoScribbleToEraseApplied": {
+    "i": 607,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCircleToLassoStarted": {
+    "i": 608,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCircleToLassoCompleted": {
+    "i": 609,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onCircleToLassoUndone": {
+    "i": 610,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onConvertToTextUndone": {
+    "i": 611,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onInternalPDFLinkClicked": {
+    "i": 612,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onNotesAdded": {
+    "i": 613,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onPDFLinkTargetPageNotFound": {
+    "i": 614,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onResetTextToolbarStyles": {
+    "i": 615,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onResetTextToolbarView": {
+    "i": 616,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onTextBoxUsage": {
+    "i": 617,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onTextEditIntercepted": {
+    "i": 618,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onUserActionDetected": {
+    "i": 619,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onUpdateTextEditorIsEditing": {
+    "i": 620,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onNotesOrganisationError": {
+    "i": 621,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onNotesOrganisationServiceReady": {
+    "i": 622,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onAddingElementErrored": {
+    "i": 623,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onAddingElementCompleted": {
+    "i": 624,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onParticipantsRemoved": {
+    "i": 625,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "onSearchThumbnailCleared": {
+    "i": 626,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onToolTypingInteraction": {
+    "i": 629,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onErrorRenderingPage": {
+    "i": 630,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onAnswerZonesUpdated": {
+    "i": 631,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onDocumentError": {
+    "i": 632,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": []
+   },
+   "onSyncAuthenticationFailed": {
+    "i": 633,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": []
+   }
+  },
+  "wasi_snapshot_preview1": {
+   "random_get": {
+    "i": 634,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "clock_time_get": {
+    "i": 635,
+    "params": [
+     "i32",
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_write": {
+    "i": 636,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "args_get": {
+    "i": 637,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "args_sizes_get": {
+    "i": 638,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "environ_get": {
+    "i": 639,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "environ_sizes_get": {
+    "i": 640,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "clock_res_get": {
+    "i": 641,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_close": {
+    "i": 642,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_fdstat_get": {
+    "i": 643,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_fdstat_set_flags": {
+    "i": 644,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_filestat_get": {
+    "i": 645,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_filestat_set_size": {
+    "i": 646,
+    "params": [
+     "i32",
+     "i64"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_filestat_set_times": {
+    "i": 647,
+    "params": [
+     "i32",
+     "i64",
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_pread": {
+    "i": 648,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_prestat_get": {
+    "i": 649,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_prestat_dir_name": {
+    "i": 650,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_read": {
+    "i": 651,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_readdir": {
+    "i": 652,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_renumber": {
+    "i": 653,
+    "params": [
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_seek": {
+    "i": 654,
+    "params": [
+     "i32",
+     "i64",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "fd_sync": {
+    "i": 655,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_create_directory": {
+    "i": 656,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_filestat_get": {
+    "i": 657,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_filestat_set_times": {
+    "i": 658,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i64",
+     "i64",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_link": {
+    "i": 659,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_open": {
+    "i": 660,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i64",
+     "i64",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_readlink": {
+    "i": 661,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_remove_directory": {
+    "i": 662,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_rename": {
+    "i": 663,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_symlink": {
+    "i": 664,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "path_unlink_file": {
+    "i": 665,
+    "params": [
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "poll_oneoff": {
+    "i": 666,
+    "params": [
+     "i32",
+     "i32",
+     "i32",
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   },
+   "proc_exit": {
+    "i": 667,
+    "params": [
+     "i32"
+    ],
+    "results": []
+   },
+   "sched_yield": {
+    "i": 668,
+    "params": [],
+    "results": [
+     "i32"
+    ]
+   }
+  },
+  "wasi": {
+   "thread-spawn": {
+    "i": 669,
+    "params": [
+     "i32"
+    ],
+    "results": [
+     "i32"
+    ]
+   }
+  }
+ },
+ "exports": [
+  {
+   "name": "memory",
+   "kind": "memory"
+  },
+  {
+   "name": "__stack_pointer",
+   "kind": "global"
+  },
+  {
+   "name": "_initialize",
+   "kind": "function"
+  },
+  {
+   "name": "__indirect_function_table",
+   "kind": "table"
+  },
+  {
+   "name": "free",
+   "kind": "function"
+  },
+  {
+   "name": "malloc",
+   "kind": "function"
+  },
+  {
+   "name": "realloc",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_invoke_remote_jsobject_body",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_receive_response",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_receive_error",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_enqueue_main_job_from_worker",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_wake_worker_thread",
+   "kind": "function"
+  },
+  {
+   "name": "_swift_js_exception",
+   "kind": "global"
+  },
+  {
+   "name": "bjs_release_swift_closure",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_name",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_text",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_int64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_double",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_bytes",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_blob",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_type",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_errcode",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_extended_errcode",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_errmsg",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_errstr",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_open_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_exec",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_prepare_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_finalize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_step",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_sql",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_count",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_reset",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_null",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_int64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_double",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_text",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_blob",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMAPIBridge_13WASMAPIBridgeSd_y",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMAPIBridge_13WASMAPIBridgey_y",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleCanvasAddEventListener",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleDomNodeAddEventListener",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleDocumentAddEventListener",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleHTMLElementOnload",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleHTMLElementOnError",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleCreateImageBitmap",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleWindowAddEventListener",
+   "kind": "function"
+  },
+  {
+   "name": "gn_malloc",
+   "kind": "function"
+  },
+  {
+   "name": "gn_free",
+   "kind": "function"
+  },
+  {
+   "name": "__main_argc_argv",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarys20TaskSchedulerRequestC_y",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarys7JSValueV_y",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarysSS_y",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibrarysSb_y",
+   "kind": "function"
+  },
+  {
+   "name": "invoke_swift_closure_WASMInkCanvasLibrary_20WASMInkCanvasLibraryy_y",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmCommentThreadDismissInfo_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmMergeDocumentResult_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmNewFolderInfo_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmMovePagesToDocumentResult_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmCopyPagesRequest_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmRendererSnapshot_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmPoint_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmRect_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmColor_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmRulerConfig_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmClassroomUser_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_EditorInMemoryCounts_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmIndexingRun_getAdmissionTiming",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmIndexingRun_cancel",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmIndexingRun_waitForResult",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmIndexingRun_deinit",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_cancelFFAClarification",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_darkThemeEnabled",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_storageQuotaExceeded",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_syncPasteboard",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteAudioNote",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_renameAudioNote",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_duplicateAudioNote",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateTranscriptionText",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteTranscription",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteTranscriptionSummary",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_sendComment",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_resolveThread",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteComment",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateShowResolvedComments",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_dismissCommentThread",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_loadComments",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_addComment",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_editComment",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_addStickyNoteToCurrentPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_addTextToCurrentPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_addTextAtPosition",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_showStickyNoteAuthor",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearHighlights",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_highlightContent",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_tombstoneDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_recoverDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_renameDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_moveDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_mergeDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_cleanupUnsharedDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_setDocumentClassroomEnabled",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_favouriteDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_setMaxEditorsInMemory",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getEditorsInMemoryCounts",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_unloadDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_closeTabs",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_changeDocumentLanguage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_createFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_renameFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_stylizeFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_moveFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_tombstoneFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_recoverFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_favouriteFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_indexDocuments",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_startIndexing",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_preloadLibrary",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getTotalNumberOfDocuments",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getNumberOfTrashedDocuments",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_loadRetailLibrary",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onImagePickerDisplayed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onImagePickerDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onFontSizePickerDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onLineHeightPickerDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onColorPickerDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onTextBoxStylePickerDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onXpNestedObjectMenuOpened",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_onXpNestedObjectMenuDismissed",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_collapseItem",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_goToPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_goToPageById",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_reloadPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearPageTapes",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearPageItems",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearCurrentPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_renderThumbnail",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_cancelThumbnailRender",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_relabelPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_removePage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_trashPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_trashPages",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_movePages",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_movePagesToDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_recoverPage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_favouritePage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_rotatePage",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_rotatePages",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_copyPages",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_captureRendererSnapshot",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_cancelRendererSnapshotCapture",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateSchemaCompatibility",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getSchemaVersion",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getClassroomSchemaMitigationSchemaVersion",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearSearchResults",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_convertStrokesToText",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateSnapToGrid",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateSnapToObjects",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_wentOffline",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_backOnline",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_retrySync",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_stopSync",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_sync",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getDocumentIdsFromSyncEvents",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_createP2pArrayIndices",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_selectTool",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_selectPreviouslySelectedTool",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getSelectedTool",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_changeFillAlpha",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_changeStrokeWidth",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_changeStrokeStyle",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_changeStrokeColor",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateRulerConfig",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_selectBeautificationStyle",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_showBeautificationFeedback",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_trackBeautificationFeedback",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deactivateObjectEditingTool",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_disconnectStylus",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_undo",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_redo",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_setTeacherAnnotationVisible",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearAuthCache",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_clearSession",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateUserInfo",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateClassroomUser",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_moveViewport",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_setDocumentScale",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_getDocumentScale",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_increaseDocumentScale",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_decreaseDocumentScale",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_resetDocumentScale",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_zoomToFit",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateScrollDirection",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_setMinimapVisibility",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_updateVirtualKeyboardDimensions",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_createWorkspaceFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deleteWorkspaceFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_moveWorkspaceFolder",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_moveWorkspaceDocument",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_resolveWorkspaceFolderAlias",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmEditorBridge_deinit",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartupOptions_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartupOptions_deinit",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartup_init",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartup_startup",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartup_editorBridge",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartup_setup",
+   "kind": "function"
+  },
+  {
+   "name": "bjs_GNWasmStartup_deinit",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handlePointerEvent",
+   "kind": "function"
+  },
+  {
+   "name": "gn_handleResizeViewPort",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_library_version",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_prepare_host_function_call",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_cleanup_host_function_call",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_call_host_function",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_free_host_function",
+   "kind": "function"
+  },
+  {
+   "name": "swjs_library_features",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_status64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_status",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_db_status",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_msize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vfs_find",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_initialize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vfs_register",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vfs_unregister",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_malloc",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_malloc64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_free",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_realloc",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_realloc64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_randomness",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stricmp",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_strnicmp",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_uri_parameter",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_serialize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_file_control",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_int",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_deserialize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_clear_bindings",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_blob",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_text",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_bytes",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_double",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_int",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_int64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_subtype",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_pointer",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_type",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_nochange",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_frombind",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_dup",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_free",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_blob",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_error_nomem",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_double",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_error",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_int",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_int64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_null",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_pointer",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_subtype",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_text",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_error_toobig",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_zeroblob",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_zeroblob64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_result_error_code",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_user_data",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_context_db_handle",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_nochange",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_in_first",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_in_next",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_aggregate_context",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_get_auxdata",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_set_auxdata",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_data_count",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_value",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_column_decltype",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_int",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_pointer",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_parameter_count",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_parameter_name",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_bind_parameter_index",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_db_handle",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stmt_readonly",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stmt_isexplain",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stmt_explain",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stmt_busy",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_stmt_status",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_expanded_sql",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_value_numeric_type",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_strglob",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_strlike",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_auto_extension",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_cancel_auto_extension",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_reset_auto_extension",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_prepare_v3",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_on_conflict",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_collation",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_in",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_rhs_value",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_vtab_distinct",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_keyword_name",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_keyword_count",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_keyword_check",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_complete",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_libversion",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_libversion_number",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_shutdown",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_last_insert_rowid",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_set_last_insert_rowid",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_changes64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_changes",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_total_changes64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_total_changes",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_txn_state",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_close_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_busy_handler",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_busy_timeout",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_interrupt",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_is_interrupted",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_create_function",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_create_function_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_overload_function",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_trace_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_commit_hook",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_update_hook",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_rollback_hook",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_error_offset",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_limit",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_open",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_create_collation",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_create_collation_v2",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_collation_needed",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_get_autocommit",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_table_column_metadata",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_extended_result_codes",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_uri_key",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_uri_boolean",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_uri_int64",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_db_name",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_db_filename",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_db_readonly",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_compileoption_used",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_compileoption_get",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3_sourceid",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_pstack_ptr",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_pstack_restore",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_pstack_alloc",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_pstack_remaining",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_pstack_quota",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_error",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_enum_json",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_vfs_unlink",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_vfs",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_reset",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_export_chunked",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_serialize",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_vfs_create_file",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_posix_create_file",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_kvvfsMakeKeyOnPstack",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_kvvfs_methods",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_vtab_config",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_config_ip",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_config_pii",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_db_config_s",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_config_i",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_config_ii",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_config_j",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_qfmt_token",
+   "kind": "function"
+  },
+  {
+   "name": "sqlite3__wasm_init_wasmfs",
+   "kind": "function"
+  },
+  {
+   "name": "__crash_diagnostics_stack_size_bytes",
+   "kind": "function"
+  },
+  {
+   "name": "__crash_diagnostics_get_least_valid_pointer",
+   "kind": "function"
+  },
+  {
+   "name": "__crash_diagnostics_get_swift_fatal_error_message_buffer",
+   "kind": "function"
+  },
+  {
+   "name": "wasi_thread_start",
+   "kind": "function"
+  }
+ ]
+}

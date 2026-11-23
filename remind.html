@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>提醒</title>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; overflow: hidden;
+    font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; user-select: none; }
+  #card { box-sizing: border-box; width: 100%; height: 100%; padding: 14px 16px;
+    background: #fff; border: 1px solid #e3e7ee; border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(20, 30, 50, .22);
+    display: flex; flex-direction: column; gap: 6px;
+    animation: in .16s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .row { display: flex; align-items: center; gap: 8px; }
+  #t { flex: 1; font-size: 15px; font-weight: 700; color: #1b2433; }
+  #x { flex: none; border: 0; background: #1b2433; color: #fff; font-size: 12px;
+    padding: 5px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; }
+  #x:hover { background: #2b3a52; }
+  #b { font-size: 13px; line-height: 1.55; color: #5a6472;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .foot { font-size: 11px; color: #9aa4b2; }
+</style>
+</head>
+<body>
+  <div id="card">
+    <div class="row"><div id="t">提醒</div><button id="x">知道了</button></div>
+    <div id="b"></div>
+    <div class="foot">点卡片回到画布</div>
+  </div>
+<script>
+  (function () {
+    var G = window.gewu;
+    var t = document.getElementById('t');
+    var b = document.getElementById('b');
+    var card = document.getElementById('card');
+    function render(info) {
+      if (!info) return;
+      t.textContent = info.title || '提醒';
+      b.textContent = info.body || '';
+    }
+    if (!G || !G.remind) { b.textContent = '这个窗口只由数理无限画布打开。'; return; }
+    G.remind.info().then(render).catch(function () {});
+    G.on('remind-show', render);
+    document.getElementById('x').addEventListener('click', function (e) {
+      e.stopPropagation();
+      G.remind.close();
+    });
+    card.addEventListener('click', function () { G.remind.action(); });
+    card.addEventListener('mouseenter', function () { G.remind.hover(true); });
+    card.addEventListener('mouseleave', function () { G.remind.hover(false); });
+  })();
+</script>
+</body>
+</html>

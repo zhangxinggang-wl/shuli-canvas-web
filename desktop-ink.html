@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>数理无限画布桌面批注</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: rgba(0,0,0,0.004); }
+  canvas { position: fixed; inset: 0; touch-action: none; cursor: crosshair; }
+  /* 实时层：只给半透明的荧光笔用（分段叠画会在接缝处叠深），空闲时 display:none，
+     避免白白多合成一整屏。仿画布内的 board.js setLiveShown。 */
+  #live { display: none; pointer-events: none; }
+  body.eraser canvas { cursor: cell; }
+  #hint { position: fixed; top: 68px; left: 50%; transform: translateX(-50%); background: rgba(27,36,51,.85); color: #fff; font: 14px "Microsoft YaHei", sans-serif; padding: 8px 18px; border-radius: 20px; pointer-events: none; transition: opacity .6s; }
+  /* 批注层自带的入口条：批注层占满全屏、接住所有输入，必须自己留一个可点的退出口，
+     否则老师只能去点悬浮球（球可能被压在下层或被拖到屏幕边上）或者按键盘。 */
+  #bar { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; z-index: 2; max-width: calc(100vw - 20px); overflow-x: auto; padding: 5px; border-radius: 24px; background: rgba(27,36,51,.9); box-shadow: 0 6px 20px rgba(0,0,0,.22); }
+  #bar .grp { display: flex; align-items: center; gap: 4px; flex: none; }
+  #bar .sep { width: 1px; height: 22px; background: rgba(255,255,255,.22); flex: none; }
+  #bar button { min-width: 0; height: 34px; padding: 0 12px; border: 0; border-radius: 17px; background: transparent; color: #e8edf5; font: 600 14px "Microsoft YaHei", sans-serif; cursor: pointer; white-space: nowrap; }
+  #bar button:hover { background: rgba(255,255,255,.12); }
+  #bar button.on { background: #0f9d8a; color: #fff; }
+  #bar .wd { padding: 0 9px; font-weight: 500; }
+  #bar .sw { width: 24px; height: 24px; padding: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+  #bar .sw.on { box-shadow: 0 0 0 2px #fff, inset 0 0 0 1px rgba(0,0,0,.2); }
+  #bar #b-exit { background: rgba(228,87,46,.9); color: #fff; }
+  #bar #b-exit:hover { background: #e4572e; }
+  /* 区域截图（1.1.12）：批注层自己出一层框选界面。矩形靠 box-shadow 的四散阴影把框外压暗，
+     比铺四块遮罩省 DOM，也不会在缩放/DPR 变化时露出缝。 */
+  #snap { position: fixed; inset: 0; z-index: 9; display: none; cursor: crosshair; }
+  #snap.on { display: block; }
+  #snap-rect { position: absolute; display: none; border: 1px solid #ffffff; border-radius: 2px;
+    box-shadow: 0 0 0 9999px rgba(10,16,26,.42), 0 0 0 2.5px rgba(63,208,182,.9);
+    background: rgba(63,208,182,.06); }
+  #snap-size { position: absolute; display: none; padding: 3px 8px; border-radius: 6px;
+    background: rgba(10,16,26,.86); color: #eef3fa; font: 600 12px/1.4 "Microsoft YaHei", sans-serif;
+    white-space: nowrap; pointer-events: none; }
+  #snap-tip { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); padding: 7px 14px;
+    border-radius: 999px; background: rgba(10,16,26,.86); color: #eef3fa;
+    font: 600 13px "Microsoft YaHei", sans-serif; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
+  /* 笔尖预测线。照抄 src/styles/app.css:37-38 —— 同样**刻意不写 will-change**：
+     transform-origin 在左中的元素 Chromium 自己会提升为合成层，写死反而每块屏多占一份显存。 */
+  #pen-pred { position: absolute; left: 0; top: 0; z-index: 8; display: none; pointer-events: none;
+    transform-origin: 0 50%; border-radius: 999px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<canvas id="live"></canvas>
+<div id="pen-pred"></div>
+<div id="bar">
+  <div class="grp">
+    <button data-tool="pen" title="画笔">画笔</button>
+    <button data-tool="hl" title="荧光笔（半透明高亮）">荧光笔</button>
+    <button data-tool="eraser" title="橡皮（擦掉经过的笔迹）">橡皮</button>
+  </div>
+  <span class="sep"></span>
+  <div class="grp" id="widths">
+    <button class="wd" data-w="2.5" title="细笔">细</button>
+    <button class="wd on" data-w="4" title="中笔">中</button>
+    <button class="wd" data-w="7" title="粗笔">粗</button>
+  </div>
+  <span class="sep"></span>
+  <div class="grp" id="colors"></div>
+  <span class="sep"></span>
+  <div class="grp">
+    <button id="b-undo" title="撤销上一笔（Ctrl+Z）">撤销</button>
+    <button id="b-clear" title="清空全部批注">清屏</button>
+  </div>
+  <button id="b-snap" title="框选一块屏幕区域，截到板书">区域截图</button>
+  <button id="b-tools" title="更多工具（悬浮球面板：截图到板等）">更多</button>
+  <button id="b-exit" title="退出桌面批注（Esc）">退出批注</button>
+</div>
+<div id="snap"><div id="snap-rect"></div><div id="snap-size"></div><div id="snap-tip">拖出一块区域截到板书 · Esc 取消</div></div>
+<div id="hint">桌面批注中 · 点上方「退出批注」或悬浮球中的「鼠标」恢复操作其他软件</div>
+<script src="core/kit.js"></script>
+<script src="core/pen.js"></script>
+<script src="core/ink-style.js"></script>
+<script>
+  // 透明全屏批注层：笔迹位图 + 撤销栈（快照）
+  // 桌面层没有缩放，垫一个 GW.camera 是为了让下面从 input.js 照抄来的算式原样可用。
+  GW.camera = { s: 1 };
+  // 桌面窗口和主窗口都是 app://gewu 同源，共用一份 localStorage。这里的设置**只读**，
+  // 绝不写回 —— 桌面批注不该有能力改动主窗口的设置。
+  const S = Object.assign({ penTaper: 1 }, JSON.parse(localStorage.getItem('gewu.settings') || '{}'));
+  // pen.js 的 profile() 要读 GW.settings（抖动抑制档位 / 预测帧数 / 笔锋开关都从这儿取），
+  // 桌面层把上面那份只读快照借给它 —— 与主窗口的设置保持一致，两边的「跟手」程度才一样。
+  GW.settings = S;
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const lv = document.getElementById('live'), lctx = lv.getContext('2d');
+  const dpr = devicePixelRatio || 1;
+  const MIN_D = 0.7; // 采样门限（CSS px）：红外屏 0.5~2px 的量化抖动不该变成顶点，同 input.js 的默认值
+  const W_OF = (t) => (t === 'hl' ? Math.max(10, Math.round(penW * 5.5)) : penW); // 笔头名义宽度（CSS px），橡皮另有自己的 40
+  let tool = 'pen', color = '#e4572e';
+  const strokes = [];
+  function fit() {
+    const w = innerWidth, h = innerHeight;
+    for (const c of [cv, lv]) { c.width = w * dpr; c.height = h * dpr; c.style.width = w + 'px'; c.style.height = h + 'px'; }
+    redraw();
+  }
+  addEventListener('resize', fit);
+  setTimeout(() => (document.getElementById('hint').style.opacity = 0), 2500);
+  // 一笔的画笔状态。整笔重画（drawOn）与增量落墨（paintInc/paintEnd）必须共用这一份，
+  // 否则增量画出来的和整屏重画的会不一样。
+  function style(c, s) {
+    c.save();
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    if (s.tool === 'eraser') { c.globalCompositeOperation = 'destination-out'; c.strokeStyle = '#000'; c.lineWidth = 40; }
+    else { c.strokeStyle = s.color; c.fillStyle = s.color; c.lineWidth = s.width; c.globalAlpha = s.tool === 'hl' ? 0.35 : 1; }
+  }
+  // ================= 笔锋：入锋 / 出锋 + 速度当压感 =================
+  // 整段照抄 src/core/input.js:385-419 与 :522-538、:544-558。桌面层没有尺规吸附、没有智能笔、
+  // 没有设备档案（prof = null），所以那些分支在这里恒为假，但算式一行不改 —— 目的是让老师在
+  // 桌面批注和画布内写出来的笔锋完全一样。scripts/check-desktop-ink.js 会逐行核对这 11 行。
+  // 关闭开关沿用主窗口设置里的「笔锋」项（S.penTaper === 0 表示关）；这里只读，不写回。
+  function taperCtx(stroke, e, prof) {
+    const hl = stroke.tool === 'hl';
+    if (hl || stroke.tool !== 'pen') return null;
+    // 开关沿用主窗口设置里的「笔锋」项，经 pen.js 的 profile() 读出来（prof.taper === 0 表示关）
+    if (prof && prof.taper === 0) return null;
+    const brush = false;                                      // 桌面批注只有普通笔，没有毛笔模式
+    // 2.0.3：笔种（中性笔/圆珠笔/硬笔/钢笔/毛笔/铅笔/马克笔/粉笔）。与画布内同一张表，
+    // 桌面批注写出来的粗细纹理才会跟画布上一致。
+    const IS = window.GW.inkStyle || null;
+    const brushStyle = (GW.settings || {}).brush || 'pen';
+    const sty = IS ? IS.of((GW.settings || {}).penInk
+      || (brushStyle === 'pencil' ? 'pencil' : brushStyle === 'marker' ? 'marker' : 'gel')) : null;
+    // 2.0.4：与画布内同一份六维配置，缺省逐位等价 2.0.3。
+    const tc = IS ? IS.tipConfig(sty && sty.id, (GW.settings || {}).penTipCfg) : null;
+    let pressSeen = !hl && e.pointerType === 'pen' && e.pressure > 0 && e.pressure !== 0.5;
+    const W = stroke.width * (sty ? sty.wScale : (brush ? 1.7 : 1));              // 世界单位
+    const entryPx = Math.max(3.5, W * GW.camera.s * (sty ? sty.entry : (brush ? 2.9 : 2.0)));   // 入锋长度（屏幕像素）
+    const speedK = sty ? sty.vK : (brush ? 0.86 : 0.30), speedLo = sty ? sty.vLo : (brush ? 0.16 : 0.55);
+    const bSpeed = brushStyle === 'pencil' ? 1.75 : brushStyle === 'marker' ? 0.4 : 1;
+    const vTau = (prof && prof.vTau) || 39;
+    const pTau = 18;
+    let travelledPx = 0, vSmooth = 0, pSmooth = 0, pSeen = false, lastT = e.timeStamp;
+    // 2.0.8（I4）：与主画布同源的压感标定归一化。批注层也是书写面，
+    // 这里绝不能有第二套算法 —— 否则同一块屏上「主画布轻、批注层重」。
+    const calib = ((GW.settings || {}).inkCalib && GW.pen && GW.pen.calib) ? GW.pen.calib() : null;
+    const widthAt = (ev, dPx, dt) => {
+      const ms = Math.max(1, dt);
+      let m;
+      const pRaw = ev.pressure;                               // 1.3.5：压感闩锁 —— 起笔报 0.5 也不整笔放弃
+      if (!pressSeen && ev.pointerType === 'pen' && pRaw > 0 && pRaw !== 0.5) pressSeen = true;
+      // 压感灵敏度（设置 →「压感灵敏度」）：把 device 报的 pressure 围绕 0.5 放大/压缩。
+      // 红外屏（无压感）走速度分支，同一个旋钮也放大速度对粗细的影响，保证「调了有感」。
+      const pGain = GW.clamp((+((GW.settings || {}).penPress) || 1), 0.4, 3);
+      if (pressSeen && pRaw > 0) {
+        if (!pSeen) { pSmooth = pRaw; pSeen = true; }
+        else pSmooth += (pRaw - pSmooth) * (1 - Math.exp(-ms / pTau));
+        const pIn = calib ? GW.clamp((pSmooth - calib.lo) / (calib.hi - calib.lo), 0, 1) : pSmooth;
+        const pEff = GW.clamp(0.5 + (pIn - 0.5) * pGain * (sty ? (sty.pressK || 1) : 1), 0.02, 1);
+        m = sty ? IS.pressureCurve(sty, pEff, tc)
+          : brush ? (0.12 + pEff * 2.08)
+          : brushStyle === 'marker' ? (0.78 + pEff * 0.55)
+          : brushStyle === 'pencil' ? (0.18 + pEff * 1.9)
+          : (0.26 + pEff * 1.5);
+      } else {
+        const v = dPx / ms;                                   // 屏幕像素 / 毫秒
+        vSmooth += (v - vSmooth) * (1 - Math.exp(-ms / vTau));
+        m = sty ? IS.speedW(sty, vSmooth, pGain)
+          : GW.clamp(1.25 - vSmooth * speedK * bSpeed * (0.55 + 0.45 * pGain), speedLo, 1.25);
+      }
+      const g = sty ? IS.entryK(sty, travelledPx, entryPx)
+        : (travelledPx >= entryPx ? 1 : 0.34 + 0.66 * (travelledPx / entryPx));
+      return W * m * g;
+    };
+    const ws = [widthAt(e, 0, 1)];
+    // 2.0.4：plain 的 exitLen 本来是 0（直通、不出锋），却被 max(10,…) 兜成 10px 强出锋。
+    const exitLen = () => (sty && sty.exitLen === 0) ? 0 : Math.max(10, W * GW.camera.s * (sty ? sty.exitLen : (brush ? 5.2 : 3.2)) *
+      GW.clamp((+((GW.settings || {}).penExit) || 1), 0.3, 2));
+    const tailBox = () => {
+      const P = stroke.pts, n = P.length / 2;
+      const exitPx = exitLen();
+      let acc = 0, wm = 0, x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+      for (let i = n - 1; i >= 0; i--) {
+        if (i < n - 1) acc += Math.hypot(P[2 * i] - P[2 * i + 2], P[2 * i + 1] - P[2 * i + 3]) * GW.camera.s;
+        const w = (ws[i] || W) / 2 + W * 0.6 + 3;
+        if (w > wm) wm = w;
+        if (P[2 * i] < x1) x1 = P[2 * i];
+        if (P[2 * i + 1] < y1) y1 = P[2 * i + 1];
+        if (P[2 * i] > x2) x2 = P[2 * i];
+        if (P[2 * i + 1] > y2) y2 = P[2 * i + 1];
+        if (acc > exitPx) break;
+      }
+      return { x1: x1 - wm, y1: y1 - wm, x2: x2 + wm, y2: y2 + wm };
+    };
+    return {
+      ws,
+      // 每个新采样点都要喂进来：travelledPx 先累加，再算这一段该多宽（与 input.js 的次序一致）
+      push(ev, dPx, now) { travelledPx += dPx; ws.push(widthAt(ev, dPx, now - lastT)); lastT = now; },
+      finish() {
+        if (ws) {
+          if (travelledPx < 3) {
+            // 一个顿笔 / 点：不该是个尖，给回满宽
+            for (let i = 0; i < ws.length; i++) ws[i] = W;
+          } else {
+            // 出锋：三种汉字常见收笔 —— 出锋（渐细到尖，撇/捺/悬针）、藏锋（收圆，横/竖的回锋）、
+            // 方切（顿笔收，起笔方、收笔方）。与 src/core/input.js 的收笔分支逐字一致。
+            const exitPx = exitLen();
+            // 2.0.4：只有二级弹层里为这支笔显式配过锋型才覆盖（没配 ⇒ 逐位等价 2.0.3）。
+            const autoTip = !!(sty && sty.id !== 'gel' && (GW.settings || {}).penTipAuto !== false);
+            const cfgPen = ((GW.settings || {}).penTipCfg || {})[sty ? sty.id : 'gel'];
+            const tip = (cfgPen && cfgPen.penTip) ? cfgPen.penTip
+              : (autoTip ? sty.tip : ((GW.settings && GW.settings.penTip) || 'sharp'));
+            const floor = tc ? tc.tipFloor : 0.12;
+            const baseW = autoTip ? (sty ? sty.exitW : 0.12)
+              : (tip === 'round' ? 0.58 : tip === 'flat' ? 0.86 : 0.12);
+            const sharp = cfgPen ? (+cfgPen.penTipSharp || 0) : 0;
+            const tipW = Math.max(floor, Math.min(1, baseW - sharp * (baseW - floor)));
+            // acc = 从笔尖（最后一个采样点）往回的屏幕距离。先按**当前点**算宽度再累加下一段，
+            // 否则采样间距一超过 exitPx 就会在收笔前就 break，尾巴根本收不下去。
+            let acc = 0;
+            for (let i = ws.length - 1; i > 0; i--) {
+              const k = exitPx > 0 ? Math.min(1, acc / exitPx) : 1;
+              let t = tip === 'sharp' ? Math.pow(k, 0.72) : k;
+              if (tip === 'back') t = 0.25 + 0.75 * Math.pow(k, 0.72);
+              else if (tip === 'flatEnd') t = Math.min(1, 0.15 + 1.35 * k);
+              const target = W * (tipW + (1 - tipW) * t);
+              ws[i] = cfgPen ? Math.min(ws[i], Math.max(target, ws[i] * (1 - 0.5 * (1 - t))))
+                : Math.min(ws[i], target);
+              acc += Math.hypot(stroke.pts[2 * i] - stroke.pts[2 * i - 2], stroke.pts[2 * i + 1] - stroke.pts[2 * i - 1]) * GW.camera.s;
+              if (acc > exitPx) break;
+            }
+          }
+        }
+      },
+      tailBox,
+    };
+  }
+  function drawStroke(s) { drawOn(ctx, s); }
+  // 变宽笔迹的轮廓多边形。**逐字照抄 src/core/board.js:116-136**（scripts/check-desktop-ink.js
+  // 会把两处压缩空白后逐字比对），为的是和画布内画出完全一样的笔锋形状。
+  function outlinePath(pts, ws) {
+    const n = pts.length / 2, L = [], R = [];
+    for (let i = 0; i < n; i++) {
+      const x = pts[2 * i], y = pts[2 * i + 1];
+      const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
+      let dx = pts[2 * b] - pts[2 * a], dy = pts[2 * b + 1] - pts[2 * a + 1];
+      const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+      const w = ws[i] / 2;
+      L.push(x - dy * w, y + dx * w); R.push(x + dy * w, y - dx * w);
+    }
+    const P = new Path2D();
+    P.moveTo(L[0], L[1]);
+    for (let i = 2; i < L.length; i += 2) P.lineTo(L[i], L[i + 1]);
+    // 终点圆帽
+    const ex = pts[2 * n - 2], ey = pts[2 * n - 1];
+    P.arc(ex, ey, ws[n - 1] / 2, Math.atan2(L[L.length - 1] - ey, L[L.length - 2] - ex), Math.atan2(R[R.length - 1] - ey, R[R.length - 2] - ex), true);
+    for (let i = R.length - 2; i >= 0; i -= 2) P.lineTo(R[i], R[i + 1]);
+    P.arc(pts[0], pts[1], ws[0] / 2, Math.atan2(R[1] - pts[1], R[0] - pts[0]), Math.atan2(L[1] - pts[1], L[0] - pts[0]), true);
+    P.closePath();
+    return P;
+  }
+  // 变宽笔迹每一段的半宽（照抄 board.js:496-498 的 trailHalf）
+  function trailHalf(s, i) {
+    const W = s.ws;
+    return ((W && W[i] != null ? W[i] : s.width) || 2) / 2;
+  }
+  // 照抄 board.js:500-517 的 trailOffsets / trailQuad：每个采样点按前后点的切线方向往两侧撑开
+  function trailOffsets(s, i, o) {
+    const P = s.pts, n = P.length / 2;
+    const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
+    let dx = P[2 * b] - P[2 * a], dy = P[2 * b + 1] - P[2 * a + 1];
+    const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+    const w = trailHalf(s, i), x = P[2 * i], y = P[2 * i + 1];
+    o.lx = x - dy * w; o.ly = y + dx * w;
+    o.rx = x + dy * w; o.ry = y - dx * w;
+    return o;
+  }
+  function trailQuad(c, s, i, oa, ob) {
+    trailOffsets(s, i - 1, oa); trailOffsets(s, i, ob);
+    c.moveTo(oa.lx, oa.ly);
+    c.lineTo(ob.lx, ob.ly);
+    c.lineTo(ob.rx, ob.ry);
+    c.lineTo(oa.rx, oa.ry);
+    c.closePath();
+  }
+  function drawOn(c, s) {
+    style(c, s);
+    if (s.ws) { c.fill(outlinePath(s.pts, s.ws)); c.restore(); return; } // 变宽笔迹：填轮廓，不描边
+    const p = s.pts;
+    c.beginPath(); c.moveTo(p[0], p[1]);
+    if (p.length === 2) c.lineTo(p[0] + 0.1, p[1]);
+    for (let i = 2; i < p.length - 2; i += 2) c.quadraticCurveTo(p[i], p[i + 1], (p[i] + p[i + 2]) / 2, (p[i + 1] + p[i + 3]) / 2);
+    if (p.length > 2) c.lineTo(p[p.length - 2], p[p.length - 1]);
+    c.stroke();
+    c.restore();
+  }
+  // 整屏重画：只留给撤销 / 清屏 / 改窗口尺寸。书写路径上不再调用它 —— 之前每来一个
+  // pointermove 就整屏重画一遍全部历史笔迹，写得越多每一帧越慢。
+  function redraw() { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); strokes.forEach(drawStroke); }
+  const _oa = {}, _ob = {};   // trailQuad 的临时量，照抄 board.js 的写法（避免每段都新建对象）
+  // 变宽笔迹的增量落墨：逐段填四边形（对应 board.js:539-578 的 inkTrail.point）。
+  // 只画到 n-2 段 —— 最后一段的切线要等下一个采样点到齐才定得下来，收笔时补。
+  function paintQuad(s) {
+    const last = s.pts.length / 2 - 2;
+    if (last < s.n) return;
+    style(ctx, s);
+    ctx.beginPath();
+    // 起点圆帽必须**单独一次 fill**：圆帽与第一个四边形在同一个路径里时，两者的环绕方向相反，
+    // nonzero 规则会在重叠处相消，起笔处被挖掉一块（实测 alpha 只有 82，整笔重画是 224）。
+    if (s.n === 1) {
+      ctx.arc(s.pts[0], s.pts[1], trailHalf(s, 0), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+    }
+    for (let i = s.n; i <= last; i++) trailQuad(ctx, s, i, _oa, _ob);
+    ctx.fill();
+    ctx.restore();
+    s.n = last + 1;
+  }
+  // 出锋改的是「已经落上去的像素」，所以把尾巴那一小块按最终几何重画一遍
+  // （对应 input.js:559-566 的 tailBox + GW.renderPartial）。只清这一小块、只重放与它相交的笔迹。
+  function redrawRect(bx1, by1, bx2, by2) {
+    // 必须对齐到整像素：裁剪路径和 clearRect 的边界一旦落在像素中间，抗锯齿会让边界上的像素
+    // 「只清掉一部分」，再叠上新墨就成了偏浓的一圈。实测每条笔迹都会留下几个像素的痕迹，
+    // 堆到 100 笔时就是 3.7% 的着色像素与整屏重画不一致（阈值 2%）。向外取整后归零。
+    const x = Math.floor(bx1 * dpr), y = Math.floor(by1 * dpr);
+    const x2 = Math.ceil(bx2 * dpr), y2 = Math.ceil(by2 * dpr);
+    const w = x2 - x, h = y2 - y;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    ctx.clearRect(x, y, w, h);
+    for (const st of strokes) if (hitBox(st, bx1, by1, bx2, by2)) drawOn(ctx, st);
+    ctx.restore();
+  }
+  function hitBox(s, x1, y1, x2, y2) {
+    const p = s.pts;
+    let a = s.box;
+    if (!a) {
+      let mx1 = p[0], my1 = p[1], mx2 = p[0], my2 = p[1];
+      for (let i = 2; i < p.length; i += 2) {
+        if (p[i] < mx1) mx1 = p[i]; if (p[i] > mx2) mx2 = p[i];
+        if (p[i + 1] < my1) my1 = p[i + 1]; if (p[i + 1] > my2) my2 = p[i + 1];
+      }
+      const pad = (s.tool === 'eraser' ? 40 : 22) / 2 + 3;
+      a = s.box = [mx1 - pad, my1 - pad, mx2 + pad, my2 + pad];
+    }
+    return !(a[2] < x1 || a[0] > x2 || a[3] < y1 || a[1] > y2);
+  }
+  // 增量落墨：只画「上次画到的段 → 现在最后一个完整的段」。第 k 段（点索引 k = 1…n-2）
+  // 起点 = k===1 ? P0 : mid(P[k-1],P[k])，控制点 P[k]，终点 mid(P[k],P[k+1])，
+  // 与 drawOn 里那两行 quadraticCurveTo 逐段相同。一次 stroke() 里的多段会被并成一次合成，
+  // 所以接缝处不会叠深。s.n 记录已经画到第几段。
+  function paintInc(s) {
+    if (s.ws) return paintQuad(s);   // 变宽笔迹走四边形填充那条路，几何与画布内一致
+    const p = s.pts, last = p.length / 2 - 2;
+    if (last < s.n) return;
+    style(ctx, s);
+    ctx.beginPath();
+    for (let k = s.n; k <= last; k++) {
+      ctx.moveTo(k === 1 ? p[0] : (p[2 * k - 2] + p[2 * k]) / 2, k === 1 ? p[1] : (p[2 * k - 1] + p[2 * k + 1]) / 2);
+      ctx.quadraticCurveTo(p[2 * k], p[2 * k + 1], (p[2 * k] + p[2 * k + 2]) / 2, (p[2 * k + 1] + p[2 * k + 3]) / 2);
+    }
+    ctx.stroke();
+    ctx.restore();
+    s.n = last + 1;
+  }
+  // 收笔：补上最后那段 lineTo（与 drawOn 的收尾一致）。只点了一下就画那个圆点。
+  function paintEnd(s) {
+    const p = s.pts;
+    style(ctx, s);
+    ctx.beginPath();
+    if (s.ws) {   // 变宽笔迹：补最后一段四边形 + 终点圆帽（对应 board.js:582-590）
+      const n = p.length / 2;
+      for (let i = s.n; i <= n - 1; i++) trailQuad(ctx, s, i, _oa, _ob);
+      if (n >= 1) {
+        ctx.fill();                       // 四边形先单独落一次
+        ctx.beginPath();
+        ctx.arc(p[2 * n - 2], p[2 * n - 1], trailHalf(s, n - 1), 0, Math.PI * 2);
+      }
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+    if (p.length === 2) { ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + 0.1, p[1]); }
+    else {
+      const k = p.length / 2 - 1;
+      ctx.moveTo((p[2 * k - 2] + p[2 * k]) / 2, (p[2 * k - 1] + p[2 * k + 1]) / 2);
+      ctx.lineTo(p[2 * k], p[2 * k + 1]);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  // 荧光笔半透明，分段叠画会在接缝处叠深，所以它改在独立的 #live 层上整笔重画，
+  // 松手时再一次性画进主画布。包围盒只覆盖当前这一笔，清的范围与笔画长度成正比。
+  function setLiveShown(v) { lv.style.display = v ? '' : 'none'; }
+  function paintLive(s) {
+    const m = s.width / 2 + 2, p = s.pts;
+    let x0 = p[0], y0 = p[1], x1 = p[0], y1 = p[1];
+    for (let i = 2; i < p.length; i += 2) {
+      if (p[i] < x0) x0 = p[i]; if (p[i] > x1) x1 = p[i];
+      if (p[i + 1] < y0) y0 = p[i + 1]; if (p[i + 1] > y1) y1 = p[i + 1];
+    }
+    const bb = [Math.max(0, (x0 - m) * dpr), Math.max(0, (y0 - m) * dpr), Math.min(lv.width, (x1 + m) * dpr), Math.min(lv.height, (y1 + m) * dpr)];
+    lctx.setTransform(1, 0, 0, 1, 0, 0);
+    const b0 = s.bb;
+    if (b0) lctx.clearRect(Math.min(b0[0], bb[0]), Math.min(b0[1], bb[1]), Math.max(b0[2], bb[2]) - Math.min(b0[0], bb[0]), Math.max(b0[3], bb[3]) - Math.min(b0[1], bb[1]));
+    else lctx.clearRect(0, 0, lv.width, lv.height);
+    drawOn(lctx, s);
+    s.bb = bb;
+  }
+  const live = new Map();
+  // ================= 笔尖预测线（照抄 input.js:451-477）=================
+  // 桌面层没有视口变换，input.js 里的 GW.toScreen() 在这边就是恒等，所以去掉了那两处转换。
+  // 起点刻意取「墨迹**已经画到**的地方」而不是笔尖：增量落墨为定切线要等下一个点到齐，
+  // 墨迹末端永远落后笔尖。取笔尖起画会留缝，快速走笔时肉眼就是一颗孤零零的「断点」。
+  const predEl = document.getElementById('pen-pred');
+  let predOff = null, pred = null;
+  const hidePred = () => { if (predEl && predEl.style.display !== 'none') predEl.style.display = 'none'; };
+  function drawPred(s) {
+    if (!predEl) return;
+    if (!pred) return hidePred();
+    const P = s.pts, n = P.length, ws = s.ws;
+    const px = P[n - 2], py = P[n - 1];                        // 笔尖
+    const qx = n >= 4 ? P[n - 4] : px, qy = n >= 4 ? P[n - 3] : py;   // 倒数第二个点
+    const ax = ws ? qx : (qx + px) / 2;                        // 墨迹末端
+    const ay = ws ? qy : (qy + py) / 2;
+    const dx = pred.x - ax, dy = pred.y - ay, L0 = Math.hypot(dx, dy);
+    if (!(L0 > 0.5)) return hidePred();
+    // 厚度取墨迹末端那一点的笔锋宽度（倒数第二个），接缝两侧一样粗
+    const k2 = ws ? Math.max(0, ws.length - 2) : 0;
+    const wNow = ws && ws.length ? ws[Math.min(k2, ws.length - 1)] : s.width;
+    const h = Math.max(1, wNow * GW.camera.s);
+    // 起点再往回压 2px 叠在墨迹上：两条抗锯齿边贴在一起时会透出一道浅缝
+    const ux = dx / L0, uy = dy / L0, ov = 2;
+    const sx = ax - ux * ov, sy = ay - uy * ov;
+    predEl.style.display = 'block';
+    predEl.style.width = (L0 + ov).toFixed(1) + 'px';
+    predEl.style.height = h.toFixed(1) + 'px';
+    predEl.style.background = s.color;
+    predEl.style.transform = 'translate3d(' + sx.toFixed(1) + 'px,' + (sy - h / 2).toFixed(1) + 'px,0) rotate(' + Math.atan2(dy, dx).toFixed(4) + 'rad)';
+  }
+  cv.addEventListener('pointerdown', (e) => {
+    cv.setPointerCapture(e.pointerId);
+    GW.pen.observe(e);                            // 设备采样：桌面批注也要参与「红外屏/电磁屏」判定
+    const flt = GW.pen.newFilter(e.clientX, e.clientY, e.timeStamp);
+    const prof = flt.profile;
+    const stroke = { tool, color, width: W_OF(tool), pts: [e.clientX, e.clientY], n: 1, flt, prof };
+    stroke.tw = taperCtx(stroke, e, prof);        // 笔锋（只有画笔有；荧光笔 / 橡皮 / 关了开关时为 null）
+    if (stroke.tw) stroke.ws = stroke.tw.ws;      // 先挂上去：增量绘制要按它算每一段的宽度
+    live.set(e.pointerId, stroke); strokes.push(stroke);
+    if (stroke.tool === 'hl') setLiveShown(true);
+    // 预测线只给普通画笔（与 input.js 的 `inc && prof.predict > 0` 一致；荧光笔/橡皮没有预测）
+    predOff = (stroke.tool === 'pen' && prof && prof.predict > 0 && predEl) ? hidePred : null;
+    pred = null;
+  });
+  cv.addEventListener('pointermove', (e) => {
+    const s = live.get(e.pointerId); if (!s) return;
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    GW.pen.observe(e, evs.length);
+    for (const ev of evs) {
+      // 抖动抑制：与画布内同一条滤波器（档位取自主窗口的「笔迹抖动抑制」设置）
+      const q = s.flt ? s.flt.add(ev.clientX, ev.clientY, ev.timeStamp) : { x: ev.clientX, y: ev.clientY };
+      const p = s.pts, m = p.length;
+      let d = 0;
+      if (m >= 2) {
+        d = Math.hypot(q.x - p[m - 2], q.y - p[m - 1]);
+        if (d * d < MIN_D * MIN_D) continue;      // 采样门限：红外屏的量化抖动不该变成顶点
+      }
+      p.push(q.x, q.y);
+      // 笔锋要按**点入栈的顺序**喂，而且必须先累加 travelledPx 再算这一段的宽度
+      if (s.tw) s.tw.push(ev, d, ev.timeStamp);
+    }
+    if (predOff) { const a = s.flt.ahead(s.prof.predict); pred = a || null; drawPred(s); }
+    if (s.pts.length < 4) return; // 只有一个点时还没有段可画（点一下就画圆点，在收笔时补）
+    if (s.tool === 'hl') paintLive(s); else paintInc(s);
+  });
+  const up = (e) => {
+    const s = live.get(e.pointerId); if (!s) return;
+    live.delete(e.pointerId);
+    if (predOff) { hidePred(); pred = null; }
+    if (s.tool === 'hl') {
+      drawOn(ctx, s); // 整笔一次性落到主画布，保证与整屏重画的结果一致
+      setLiveShown(false);
+      lctx.setTransform(1, 0, 0, 1, 0, 0); lctx.clearRect(0, 0, lv.width, lv.height); s.bb = null;
+    } else if (s.tw) {
+      // 出锋改的是已经画上去的像素：先把最终宽度定下来，再把尾巴那一小块按最终几何重画
+      const multi = s.pts.length > 2;
+      if (!multi) { s.pts.push(s.pts[0] + 0.01, s.pts[1]); s.tw.ws.push(s.tw.ws[0]); }
+      s.tw.finish();
+      if (multi) { const b = s.tw.tailBox(); redrawRect(b.x1, b.y1, b.x2, b.y2); }
+      else paintEnd(s);
+    } else paintEnd(s);
+  };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  window.gewu.on('ink-cmd', (c) => {
+    if (c.tool) { tool = c.tool; document.body.className = tool; }
+    if (c.color) color = c.color;
+    if (c.undo) { strokes.pop(); redraw(); }
+    if (c.clear) { strokes.length = 0; redraw(); }
+    // 截图到板时把入口条藏起来，否则它会被一起截进板书（main.js 的 snap 分支成对下发）
+    if ('bar' in c) document.getElementById('bar').style.visibility = c.bar ? '' : 'hidden';
+    // 1.1.13：悬浮球面板的「区域截图」叫起来之后直接进框选（主进程只负责转达这一条命令）
+    if (c.snap) snapOpen();
+    syncBar();
+  });
+  // ---------- 顶部工具条：直接接这一层的画笔状态 ----------
+  // 以前这条只放「工具 / 退出批注」两个按钮，「工具」只是把悬浮球的面板叫出来，
+  // 老师点完画笔之后顶部看着一排按钮却不落墨。现在笔类 / 粗细 / 颜色 / 撤销 / 清屏全部就地生效。
+  let penW = 4;
+  const barEl = document.getElementById('bar');
+  const COLORS = ['#e4572e', '#3366ff', '#0f9d8a', '#f2a541', '#1b2433', '#ffffff', '#e2559a'];
+  const cEl = document.getElementById('colors');
+  for (const c of COLORS) {
+    const b = document.createElement('button');
+    b.className = 'sw'; b.dataset.c = c; b.style.background = c;
+    b.onclick = () => { color = c; syncBar(); };
+    cEl.append(b);
+  }
+  function syncBar() {
+    barEl.querySelectorAll('[data-tool]').forEach((b) => b.classList.toggle('on', b.dataset.tool === tool));
+    barEl.querySelectorAll('.wd').forEach((b) => b.classList.toggle('on', +b.dataset.w === penW));
+    barEl.querySelectorAll('.sw').forEach((b) => b.classList.toggle('on', b.dataset.c === color));
+  }
+  barEl.querySelectorAll('[data-tool]').forEach((b) => {
+    b.onclick = () => { tool = b.dataset.tool; document.body.className = tool; syncBar(); };
+  });
+  barEl.querySelectorAll('.wd').forEach((b) => {
+    b.onclick = () => { penW = +b.dataset.w; syncBar(); };
+  });
+  document.getElementById('b-undo').onclick = () => { if (strokes.length) { strokes.pop(); redraw(); } };
+  document.getElementById('b-clear').onclick = () => { if (strokes.length) { strokes.length = 0; redraw(); } };
+  // 区域截图（1.1.12）：拖框 → 主进程按框裁剪 → 插到当前页
+  const snapEl = document.getElementById('snap');
+  const snapRect = document.getElementById('snap-rect');
+  const snapSize = document.getElementById('snap-size');
+  const snapBar = document.getElementById('bar');
+  const snapHint = document.getElementById('hint');
+  let snapMode = false, snapA = null, snapBox = null;
+  function snapOpen() {
+    if (snapMode) return;
+    snapMode = true; snapBox = null; snapA = null;
+    snapEl.classList.add('on');
+    snapRect.style.display = 'none'; snapSize.style.display = 'none';
+    snapBar.style.visibility = 'hidden'; snapHint.style.opacity = 0;
+  }
+  function snapClose() {
+    snapMode = false; snapBox = null; snapA = null;
+    snapEl.classList.remove('on');
+    snapRect.style.display = 'none'; snapSize.style.display = 'none';
+    snapBar.style.visibility = ''; snapHint.style.opacity = 0;
+  }
+  function snapPaint(x, y) {
+    const l = Math.min(snapA[0], x), t = Math.min(snapA[1], y);
+    const w = Math.abs(x - snapA[0]), h = Math.abs(y - snapA[1]);
+    snapRect.style.display = 'block';
+    snapRect.style.left = l + 'px'; snapRect.style.top = t + 'px';
+    snapRect.style.width = w + 'px'; snapRect.style.height = h + 'px';
+    snapSize.style.display = 'block';
+    snapSize.textContent = Math.round(w) + ' × ' + Math.round(h);
+    snapSize.style.left = Math.max(4, Math.min(l, innerWidth - 96)) + 'px';
+    snapSize.style.top = (t > 30 ? t - 26 : t + h + 8) + 'px';
+    snapBox = { x: l, y: t, w: w, h: h };
+  }
+  snapEl.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    try { snapEl.setPointerCapture(e.pointerId); } catch (err) { /* 合成事件没有指针 */ }
+    snapA = [e.clientX, e.clientY]; snapBox = null; snapPaint(e.clientX, e.clientY);
+  });
+  snapEl.addEventListener('pointermove', (e) => { if (snapA) snapPaint(e.clientX, e.clientY); });
+  const snapUp = (e) => {
+    if (!snapA) return;
+    snapPaint(e.clientX, e.clientY);
+    const box = snapBox; snapA = null;
+    const okBox = box && box.w >= 6 && box.h >= 6;
+    snapClose();
+    if (!okBox) return;
+    window.gewu.ball('snap', { x: box.x, y: box.y, w: box.w, h: box.h, vw: innerWidth, vh: innerHeight });
+  };
+  snapEl.addEventListener('pointerup', snapUp);
+  snapEl.addEventListener('pointercancel', () => { snapA = null; snapClose(); });
+  document.getElementById('b-snap').onclick = snapOpen;
+
+  document.getElementById('b-tools').onclick = () => window.gewu.ball('panel');
+  document.getElementById('b-exit').onclick = () => window.gewu.ball('ink-off');
+  syncBar();
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { if (snapMode) { snapClose(); return; } window.gewu.ball('ink-off'); }
+    if (e.ctrlKey && e.key === 'z') { strokes.pop(); redraw(); }
+  });
+  fit();
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一维碰撞</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="sim.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="cv"></canvas><div id="hud"></div></div>
+  <aside id="panel"><div id="ctl"></div><div id="note"></div></aside>
+</div>
+<script>window.GW = window.GW || { live: {} };</script>
+<script src="../core/physshapes.js"></script>
+<script src="../vendor/katex/katex.min.js"></script>
+<script src="sim.js"></script>
+<script>
+Sim.boot({
+  key: 'anim_collision1d',
+  title: '一维碰撞',
+  sub: "两球在直线上碰撞：质量、初速度与恢复系数可调",
+  params: ["animM1","animM2","animV1","animV2","animRestitution"],
+  noWrap: true,
+  note: "恢复系数 e=1 完全弹性、e=0 完全非弹性；碰撞前后动量守恒。",
+formula: String.raw`v_1'=\dfrac{(m_1-em_2)v_1+(1+e)m_2v_2}{m_1+m_2}`,
+  hud: (o, t) => 't = ' + t.toFixed(2) + ' s',
+  speed: 0.6,
+});
+</script>
+</body>
+</html>

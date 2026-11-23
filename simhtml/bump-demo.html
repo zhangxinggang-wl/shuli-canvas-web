@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>两球碰撞 · 地面参考系弹塑性形变演示</title>
+<style>
+  :root{
+    --bg:#080c14; --panel:#0f1522; --line:#1c2740;
+    --blue:#4dabf7; --accent:#7ec4ff; --dim:#8ea3c4;
+    --ok:#51cf66; --move:#ff9f43; --fly:#e599f7; --warn:#ffb454;
+    --track:#1e2a40;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg);color:#c8d8ef;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .m{
+    font-family:"Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif;
+    font-style:italic;letter-spacing:.01em;
+  }
+  .m sub,.m sup{font-style:normal;font-size:.72em;}
+  sub,sup{font-size:.72em;}
+
+  .app{display:flex;width:100%;height:100vh;height:100dvh;}
+  .stage{position:relative;flex:1 1 auto;min-width:0;min-height:0;}
+  #cv{display:block;width:100%;height:100%;touch-action:none;cursor:grab;}
+  #cv:active{cursor:grabbing;}
+
+  .panel{
+    flex:0 0 312px;width:312px;
+    background:var(--panel);border-left:1px solid var(--line);
+    padding:16px 16px 22px;overflow-y:auto;overflow-x:hidden;
+  }
+  .panel::-webkit-scrollbar{width:8px;}
+  .panel::-webkit-scrollbar-thumb{background:#1c2740;border-radius:4px;}
+
+  .head{margin-bottom:14px;}
+  .head h1{margin:0 0 3px;font-size:15px;font-weight:650;color:#dbe9fb;letter-spacing:.02em;}
+  .head p{margin:0;font-size:11.5px;color:#5f7a9e;}
+  .head .ref{
+    display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;
+    background:#12203a;border:1px solid var(--line);
+    color:#7ec4ff;font-size:10px;letter-spacing:.04em;
+  }
+
+  .readout{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;}
+  .item{
+    display:flex;align-items:center;justify-content:space-between;
+    line-height:12.5px;padding:4px 0;font-size:12px;
+  }
+  .item > span{color:#7c90ad;display:flex;align-items:baseline;gap:1px;}
+  .item > b{
+    font-weight:600;color:#dbe9fb;font-variant-numeric:tabular-nums;
+    font-size:12px;letter-spacing:.01em;
+  }
+  .item > b.moving{color:var(--move);}
+  .item > b.static{color:var(--ok);}
+  .item > b.flying{color:var(--fly);}
+  .item > b.warn{color:var(--warn);}
+
+  .ctrl{margin-bottom:13px;}
+  .ctrl .row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;}
+  .ctrl .row label{font-size:12.5px;color:#8ea3c4;display:flex;align-items:baseline;gap:1px;}
+  .ctrl .row b{font-size:12.5px;font-weight:600;color:var(--blue);font-variant-numeric:tabular-nums;}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;display:block;width:100%;height:4px;
+    border-radius:2px;background:var(--track);outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;
+    background:var(--blue);border:2px solid #0b1220;
+    box-shadow:0 0 0 3px rgba(77,171,247,.16),0 0 10px rgba(77,171,247,.6);
+    cursor:pointer;transition:box-shadow .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{
+    box-shadow:0 0 0 4px rgba(77,171,247,.24),0 0 14px rgba(77,171,247,.85);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:11px;height:11px;border-radius:50%;background:var(--blue);border:2px solid #0b1220;
+    box-shadow:0 0 0 3px rgba(77,171,247,.16),0 0 10px rgba(77,171,247,.6);cursor:pointer;
+  }
+  input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--track);}
+
+  .seg{display:flex;gap:6px;}
+  .seg button{
+    flex:1 1 0;min-width:0;padding:7px 0;border-radius:6px;
+    border:1px solid #22334f;background:#1e2a40;color:#8ea3c4;
+    font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.02em;
+    cursor:pointer;
+    transition:filter .15s,transform .08s,background .15s,color .15s,border-color .15s;
+  }
+  .seg button:hover{filter:brightness(1.25);}
+  .seg button:active{transform:scale(.97);}
+  .seg button.on{
+    background:linear-gradient(180deg,#1d4e7d 0%,#16395c 100%);
+    border-color:#2a5f93;color:#d8ecff;
+    box-shadow:0 0 10px rgba(77,171,247,.22);
+  }
+
+  .switch{display:flex;align-items:center;gap:9px;margin:4px 0 14px;cursor:pointer;
+    font-size:12.5px;color:#8ea3c4;user-select:none;}
+  .switch input[hidden]{display:none;}
+  .switch .box{position:relative;flex:0 0 auto;width:34px;height:18px;border-radius:9px;
+    background:var(--track);transition:background .18s;}
+  .switch .box::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;
+    border-radius:50%;background:#5c7ba6;transition:transform .18s,background .18s;}
+  .switch input:checked + .box{background:#1d4e7d;}
+  .switch input:checked + .box::after{transform:translateX(16px);background:var(--blue);
+    box-shadow:0 0 8px rgba(77,171,247,.8);}
+
+  .btn-row{display:flex;gap:8px;align-items:stretch;}
+  #release{
+    flex:1 1 auto;min-width:0;
+    padding:11px;border:1px solid #2a5f93;border-radius:8px;
+    background:linear-gradient(180deg,#1d4e7d 0%,#16395c 100%);
+    color:#d8ecff;font-family:inherit;font-size:13.5px;font-weight:600;letter-spacing:.08em;
+    cursor:pointer;transition:filter .15s,transform .08s;
+  }
+  #release:hover{filter:brightness(1.2);}
+  #release:active{transform:scale(.985);}
+
+  #pause{
+    flex:0 0 auto;padding:11px 13px;
+    border:1px solid #22334f;border-radius:8px;
+    background:#1e2a40;color:#8ea3c4;
+    font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;
+    cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s,transform .08s,box-shadow .15s;
+  }
+  #pause:hover:not(:disabled){background:#243450;color:#c8d8ef;border-color:#2c3f5e;}
+  #pause:active:not(:disabled){transform:scale(.985);}
+  #pause:disabled{opacity:.42;cursor:not-allowed;}
+  #pause.active{
+    background:linear-gradient(180deg,#1d4e7d 0%,#16395c 100%);
+    border-color:#2a5f93;color:#d8ecff;
+    box-shadow:0 0 10px rgba(77,171,247,.28);
+  }
+
+  #reset{
+    flex:0 0 auto;padding:11px 15px;
+    border:1px solid #22334f;border-radius:8px;
+    background:#1e2a40;color:#8ea3c4;
+    font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.08em;
+    cursor:pointer;
+    transition:background .15s,color .15s,border-color .15s,transform .08s;
+  }
+  #reset:hover{background:#243450;color:#c8d8ef;border-color:#2c3f5e;}
+  #reset:active{transform:scale(.985);}
+
+  .hint{
+    max-height:0;opacity:0;overflow:hidden;margin-top:0;padding:0 10px;
+    background:#12203a;border:1px solid var(--line);border-radius:7px;
+    color:#8ea3c4;font-size:12px;line-height:1.6;
+    transition:max-height .26s ease,opacity .26s ease,padding .26s ease,margin .26s ease;
+  }
+  .hint.show{max-height:96px;opacity:1;padding:8px 10px;margin-top:10px;}
+
+  @media (max-width:760px){
+    .app{flex-direction:column;}
+    .stage{flex:0 0 52%;height:52%;}
+    .panel{flex:0 0 48%;width:100%;height:48%;border-left:none;border-top:1px solid var(--line);
+      padding:12px 14px 18px;}
+    .head{margin-bottom:10px;}
+    .head h1{font-size:14px;}
+    .ctrl{margin-bottom:10px;}
+    .item{padding:3px 0;}
+    .seg button{padding:6px 0;font-size:11px;}
+    #release{padding:10px;font-size:13px;}
+    #pause{padding:10px 11px;font-size:12.5px;}
+    #reset{padding:10px 12px;font-size:12.5px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <aside class="panel">
+    <div class="head">
+      <h1>两球碰撞<span class="ref">参考系：地面</span></h1>
+      <p>弹塑性形变 · 恢复系数控制</p>
+    </div>
+
+    <div class="readout">
+      <div class="item"><span>状态</span><b id="rState" class="static">待发射</b></div>
+      <div class="item"><span>碰撞类型</span><b id="rType" class="static">弹性</b></div>
+      <div class="item"><span><span class="m">v</span><sub>1</sub></span><b id="rV1">0.00 m/s</b></div>
+      <div class="item"><span><span class="m">v</span><sub>2</sub></span><b id="rV2">0.00 m/s</b></div>
+      <div class="item"><span><span class="m">v</span><sub>1</sub>′</span><b id="rV1p">0.00 m/s</b></div>
+      <div class="item"><span><span class="m">v</span><sub>2</sub>′</span><b id="rV2p">0.00 m/s</b></div>
+      <div class="item"><span>动能损失 <span class="m">ΔE</span><sub>k</sub></span><b id="rDE">0.00 J</b></div>
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>质量 <span class="m">m</span><sub>1</sub></label><b id="m1Val">1.0 kg</b></div>
+      <input type="range" id="m1" min="0.5" max="4" step="0.1" value="1">
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>质量 <span class="m">m</span><sub>2</sub></label><b id="m2Val">1.0 kg</b></div>
+      <input type="range" id="m2" min="0.5" max="4" step="0.1" value="1">
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>初速 <span class="m">v</span><sub>1</sub></label><b id="v1Val">3.0 m/s</b></div>
+      <input type="range" id="v1" min="0" max="6" step="0.1" value="3">
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>初速 <span class="m">v</span><sub>2</sub></label><b id="v2Val">-3.0 m/s</b></div>
+      <input type="range" id="v2" min="-6" max="0" step="0.1" value="-3">
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>恢复系数 <span class="m">e</span></label><b id="eVal">1.00</b></div>
+      <input type="range" id="e" min="0" max="1" step="0.05" value="1">
+    </div>
+
+    <div class="ctrl">
+      <div class="row"><label>动画速度</label><b id="speedVal">1×</b></div>
+      <div class="seg" id="speedSeg">
+        <button type="button" data-speed="0.25">0.25×</button>
+        <button type="button" data-speed="0.5">0.5×</button>
+        <button type="button" data-speed="0.75">0.75×</button>
+        <button type="button" data-speed="1" class="on">1×</button>
+      </div>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" id="showVel" hidden checked>
+      <span class="box"></span>
+      <span>显示速度矢量</span>
+    </label>
+
+    <div class="btn-row">
+      <button id="release">释 放</button>
+      <button id="pause" disabled>暂 停</button>
+      <button id="reset">复 位</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     0. 工具
+     ========================================================= */
+  var el = function (id) { return document.getElementById(id); };
+  function sign(x) { return x < 0 ? -1 : 1; }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  function mixColor(hex, target, t) {
+    var c = parseInt(hex.slice(1), 16);
+    var r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+    var tr = target[0], tg = target[1], tb = target[2];
+    return 'rgb(' + Math.round(r + (tr - r) * t) + ','
+                  + Math.round(g + (tg - g) * t) + ','
+                  + Math.round(b + (tb - b) * t) + ')';
+  }
+
+  /* =========================================================
+     1. 常量
+     ========================================================= */
+  var R           = 0.45;    // 刚体半径（米）
+  var GROUND_Y    = -0.45;   // 地面高度
+  var MIN_VIEW_W  = 5.0;     // 视野最小宽度（米）
+  var START_X     = 2.2;     // 初始半间距
+  var WORLD_LIMIT = 60;      // 超出则停止
+  var K_CONTACT   = 90;      // 接触等效刚度（数值越小，压缩越夸张）
+  var PERM_MAX    = 0.80;    // 永久形变上限（相对半径）
+  var MAX_PHYS_DT = 0.0125;  // 单个物理子步上限（秒）
+
+  // 形变可视化系数
+  var SQUASH_X    = 0.55;    // 水平收缩比例
+  var STRETCH_Y   = 0.46;    // 垂直拉伸比例
+
+  /* =========================================================
+     2. 状态
+     ========================================================= */
+  var state = {
+    mode: 'idle',          // idle | moving | contact
+    animating: false,
+    paused: false,
+    animLast: 0,
+    rafId: 0,
+    e: 1,
+    showVel: true,
+    timeScale: 1,
+    viewLocked: false,
+    pannedOnce: false,
+    drag: null,
+    panning: null,
+    trail: [[], []],
+    view:       { sc: 100, ox: 0, oy: 0 },
+    viewTarget: { sc: 100, ox: 0, oy: 0 },
+    collision:  { active: false, phase: 'done', curComp: 0, curDelta: 0 },
+    balls: [
+      { x: -START_X, v: 3,  m: 1, r: R, perm: 0, color: '#4dabf7', tag: '1' },
+      { x:  START_X, v: -3, m: 1, r: R, perm: 0, color: '#e599f7', tag: '2' }
+    ]
+  };
+
+  /* =========================================================
+     3. 画布 & 坐标
+     ========================================================= */
+  var cv  = el('cv');
+  var ctx = cv.getContext('2d');
+  var cssW = 800, cssH = 600, dpr = 1;
+
+  function P(x, y) {
+    var v = state.view;
+    return [v.ox + x * v.sc, v.oy - y * v.sc];
+  }
+  function screenToWorldX(px) {
+    return (px - state.view.ox) / state.view.sc;
+  }
+
+  function resizeCanvas() {
+    var rect = cv.parentNode.getBoundingClientRect();
+    cssW = Math.max(1, rect.width);
+    cssH = Math.max(1, rect.height);
+    dpr  = Math.min(window.devicePixelRatio || 1, 2.5);
+    cv.width  = Math.round(cssW * dpr);
+    cv.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!state.viewLocked) computeViewTarget(true);
+    render();
+  }
+
+  /* =========================================================
+     4. 视图
+     ========================================================= */
+  function computeViewTarget(snap) {
+    var t = state.viewTarget;
+    var b1 = state.balls[0], b2 = state.balls[1];
+
+    var minX = Math.min(b1.x - b1.r, b2.x - b2.r);
+    var maxX = Math.max(b1.x + b1.r, b2.x + b2.r);
+    var span = maxX - minX;
+
+    var want = Math.max(span + 0.9, MIN_VIEW_W);
+    var sc = Math.min(cssW / want, cssH / 3.0);
+
+    // 让地面下方的刻度尺完整可见
+    var maxScGround = (cssH * 0.26) / 0.36;
+    if (maxScGround > 20 && sc > maxScGround) sc = maxScGround;
+
+    if (!isFinite(sc) || sc <= 0) sc = 100;
+
+    var cx = (minX + maxX) * 0.5;
+
+    t.sc = sc;
+    t.ox = cssW * 0.5 - cx * sc;
+    t.oy = cssH * 0.72 - (-GROUND_Y) * sc;
+
+    if (snap) {
+      state.view.sc = t.sc;
+      state.view.ox = t.ox;
+      state.view.oy = t.oy;
+    }
+  }
+
+  function viewDiff() {
+    var v = state.view, t = state.viewTarget;
+    return Math.abs(v.sc - t.sc) + Math.abs(v.ox - t.ox) + Math.abs(v.oy - t.oy);
+  }
+  function lerpView(k) {
+    var v = state.view, t = state.viewTarget;
+    v.sc += (t.sc - v.sc) * k;
+    v.ox += (t.ox - v.ox) * k;
+    v.oy += (t.oy - v.oy) * k;
+  }
+  function snapView() {
+    state.view.sc = state.viewTarget.sc;
+    state.view.ox = state.viewTarget.ox;
+    state.view.oy = state.viewTarget.oy;
+  }
+
+  /* =========================================================
+     5. 物理：地面参考系下的平动 + 碰撞解析积分
+     ========================================================= */
+  function stepPhysics(dt) {
+    if (state.collision.active) {
+      stepCollision(dt);
+      return;
+    }
+
+    var b1 = state.balls[0], b2 = state.balls[1];
+
+    var px1 = b1.x, px2 = b2.x;
+    b1.x += b1.v * dt;
+    b2.x += b2.v * dt;
+
+    var r1e = b1.r - b1.perm;
+    var r2e = b2.r - b2.perm;
+    var sumR = r1e + r2e;
+
+    var gapPrev = (px2 - px1) - sumR;
+    var gapNow  = (b2.x - b1.x) - sumR;
+    var vRel = b1.v - b2.v;
+
+    if (gapPrev >= -1e-6 && gapNow < 0 && vRel > 0.0008) {
+      var f = gapPrev / (gapPrev - gapNow);
+      f = clamp(f, 0, 1);
+      b1.x = px1 + b1.v * dt * f;
+      b2.x = px2 + b2.v * dt * f;
+      beginCollision();
+    }
+
+    if (Math.abs(b1.x) > WORLD_LIMIT || Math.abs(b2.x) > WORLD_LIMIT) {
+      state.animating = false;
+      state.paused = false;
+      state.mode = 'idle';
+      updatePauseBtn();
+    }
+  }
+
+  function beginCollision() {
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var e  = state.e;
+
+    var r1e = b1.r - b1.perm;
+    var r2e = b2.r - b2.perm;
+    var u1 = b1.v, u2 = b2.v;
+    var m1 = b1.m, m2 = b2.m, mt = m1 + m2;
+    var mu = (m1 * m2) / mt;
+    var vRel0 = u1 - u2;
+    if (vRel0 < 0.0008) return;
+
+    var vcm = (m1 * u1 + m2 * u2) / mt;
+    var vp1 = (m1 * u1 + m2 * u2 + m2 * e * (u2 - u1)) / mt;
+    var vp2 = (m1 * u1 + m2 * u2 + m1 * e * (u1 - u2)) / mt;
+
+    var dStart = b2.x - b1.x;
+    var dMax = r1e + r2e;
+    if (dStart > dMax + 1e-4) dStart = dMax;
+    if (dStart < 0.1) dStart = 0.1;
+
+    // 压缩阶段时长：由等效刚度估算，并限制在可观察范围
+    var compEst = vRel0 * Math.sqrt(mu / K_CONTACT);
+    compEst = Math.max(compEst, 0.04);
+    compEst = Math.min(compEst, Math.min(r1e, r2e) * 0.80);
+
+    var T = 2 * compEst / vRel0;
+    T = clamp(T, 0.06, 0.22);
+    var maxComp = vRel0 * T / 2;
+
+    // 更夸张的压缩上限（相对半径 0.80）
+    var capComp = Math.min(r1e, r2e) * 0.80;
+    if (maxComp > capComp) {
+      maxComp = capComp;
+      T = 2 * maxComp / vRel0;
+      if (T < 0.04) T = 0.04;
+      maxComp = vRel0 * T / 2;
+    }
+
+    // 永久形变（e=0 时全部转为永久）
+    var permTotal = maxComp * (1 - e);
+
+    var p1max = Math.max(0, b1.r * PERM_MAX - b1.perm);
+    var p2max = Math.max(0, b2.r * PERM_MAX - b2.perm);
+    var pa1 = permTotal * (m2 / mt);
+    var pa2 = permTotal * (m1 / mt);
+    if (pa1 > p1max) pa1 = p1max;
+    if (pa2 > p2max) pa2 = p2max;
+    permTotal = pa1 + pa2;
+
+    state.collision = {
+      active: true,
+      phase: 'compress',
+      t: 0,
+      T: T,
+      maxComp: maxComp,
+      dStart: dStart,
+      dMin: dStart - maxComp,
+      dEnd: dStart - permTotal,
+      permAdd1: pa1,
+      permAdd2: pa2,
+      u1: u1, u2: u2,
+      vcm: vcm,
+      vp1: vp1, vp2: vp2,
+      x1_0: b1.x, x2_0: b2.x,
+      curComp: 0,
+      curDelta: 0
+    };
+
+    state.mode = 'contact';
+    state.animating = true;
+  }
+
+  function computeCollisionState(c, b1, b2) {
+    var T = c.T;
+    var t = Math.min(c.t, T);
+    var x1, x2, v1, v2;
+
+    if (c.phase === 'compress') {
+      var k = (1 - Math.cos(Math.PI * (t / T))) * 0.5;
+      v1 = c.u1 + (c.vcm - c.u1) * k;
+      v2 = c.u2 + (c.vcm - c.u2) * k;
+
+      var ph = t / 2 - (T / (2 * Math.PI)) * Math.sin(Math.PI * t / T);
+      x1 = c.x1_0 + c.u1 * t + (c.vcm - c.u1) * ph;
+      x2 = c.x2_0 + c.u2 * t + (c.vcm - c.u2) * ph;
+
+    } else {
+      var k2 = (1 - Math.cos(Math.PI * (t / T))) * 0.5;
+      v1 = c.vcm + (c.vp1 - c.vcm) * k2;
+      v2 = c.vcm + (c.vp2 - c.vcm) * k2;
+
+      var phT = T / 2;
+      var x1T = c.x1_0 + c.u1 * T + (c.vcm - c.u1) * phT;
+      var x2T = c.x2_0 + c.u2 * T + (c.vcm - c.u2) * phT;
+
+      var ph2 = t / 2 - (T / (2 * Math.PI)) * Math.sin(Math.PI * t / T);
+      x1 = x1T + c.vcm * t + (c.vp1 - c.vcm) * ph2;
+      x2 = x2T + c.vcm * t + (c.vp2 - c.vcm) * ph2;
+    }
+
+    b1.x = x1; b2.x = x2;
+    b1.v = v1; b2.v = v2;
+
+    var comp = c.dStart - (x2 - x1);
+    if (comp < 0) comp = 0;
+    c.curComp = comp;
+    c.curDelta = comp;
+  }
+
+  function stepCollision(dt) {
+    var c = state.collision;
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var remaining = dt;
+    var guard = 0;
+
+    while (remaining > 1e-9 && c.active && guard++ < 8) {
+      var T = c.T;
+      var left = T - c.t;
+      if (left < 1e-9) left = 1e-9;
+
+      var step = Math.min(remaining, left);
+      c.t += step;
+      remaining -= step;
+
+      computeCollisionState(c, b1, b2);
+
+      if (c.t >= T - 1e-9) {
+        if (c.phase === 'compress') {
+          if (c.dEnd - c.dMin < 0.002) {
+            finishCollision();
+            return;
+          }
+          c.phase = 'recover';
+          c.t = 0;
+        } else {
+          finishCollision();
+          return;
+        }
+      }
+    }
+  }
+
+  function finishCollision() {
+    var c = state.collision;
+    var b1 = state.balls[0], b2 = state.balls[1];
+
+    c.t = c.T;
+    computeCollisionState(c, b1, b2);
+
+    b1.perm = clamp(b1.perm + c.permAdd1, 0, b1.r * PERM_MAX);
+    b2.perm = clamp(b2.perm + c.permAdd2, 0, b2.r * PERM_MAX);
+
+    b1.v = c.vp1;
+    b2.v = c.vp2;
+
+    var dEnd = (b1.r - b1.perm) + (b2.r - b2.perm);
+    var dNow = b2.x - b1.x;
+    if (Math.abs(dNow - dEnd) > 0.01) {
+      var mt = b1.m + b2.m;
+      var xcm = (b1.m * b1.x + b2.m * b2.x) / mt;
+      b1.x = xcm - dEnd * (b2.m / mt);
+      b2.x = xcm + dEnd * (b1.m / mt);
+    }
+
+    state.collision = { active: false, phase: 'done', curComp: 0, curDelta: 0 };
+    state.mode = 'moving';
+  }
+
+  /* =========================================================
+     6. 渲染
+     ========================================================= */
+  function drawBackground() {
+    var W = cssW, H = cssH;
+    if (window.__gwSimBackground) { ctx.clearRect(0, 0, W, H); return; }
+    var g = ctx.createRadialGradient(
+      W * 0.5, H * 0.42, Math.min(W, H) * 0.04,
+      W * 0.5, H * 0.42, Math.max(W, H) * 0.85
+    );
+    g.addColorStop(0, '#151f33');
+    g.addColorStop(1, '#070b12');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* 地面 + 45° 斜线 + 高对比米制刻度尺 —— 全部按世界坐标缩放 */
+  function drawGround() {
+    var W = cssW;
+    var gy = P(0, GROUND_Y)[1];
+    var v = state.view;
+    var sc = v.sc;
+
+    ctx.save();
+
+    // ---------- 底部渐变压暗衬底 ----------
+    var bandH = cssH - gy;
+    if (bandH > 1) {
+      var band = ctx.createLinearGradient(0, gy, 0, gy + bandH);
+      band.addColorStop(0, 'rgba(8,13,22,0)');
+      band.addColorStop(0.25, 'rgba(8,13,22,.42)');
+      band.addColorStop(1, 'rgba(8,13,22,.88)');
+      ctx.fillStyle = band;
+      ctx.fillRect(0, gy, W, bandH);
+    }
+
+    // ---------- 地面主线 ----------
+    ctx.strokeStyle = '#31496b';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(0, gy + 0.5);
+    ctx.lineTo(W, gy + 0.5);
+    ctx.stroke();
+
+    // ---------- 45° 短斜线（世界坐标） ----------
+    var hGapW = 0.15;
+    var hLenW = 0.10;
+    var gapPx = hGapW * sc;
+    if (gapPx < 9) {
+      var mul = Math.ceil(9 / gapPx);
+      hGapW *= mul;
+      hLenW *= mul;
+      gapPx = hGapW * sc;
+    }
+    var lenPx = hLenW * sc;
+
+    var xMin = (0 - v.ox) / sc;
+    var xMax = (W - v.ox) / sc;
+    var startHatchW = Math.floor(xMin / hGapW) * hGapW;
+
+    ctx.strokeStyle = 'rgba(50,73,105,0.95)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var hx = startHatchW - hGapW; hx * sc + v.ox < W + gapPx; hx += hGapW) {
+      var hpx = v.ox + hx * sc;
+      ctx.moveTo(hpx, gy);
+      ctx.lineTo(hpx - lenPx, gy + lenPx);
+    }
+    ctx.stroke();
+
+    // ---------- 刻度尺 ----------
+    var step = 0.5;
+    if (sc < 30) step = 2;
+    else if (sc < 60) step = 1;
+
+    var tickBaseW  = 0.05;
+    var tickMajorW = 0.10;
+    var tickMinorW = 0.05;
+    var labelTopW  = 0.17;
+
+    var yBase = gy + tickBaseW * sc;
+
+    ctx.strokeStyle = 'rgba(64,94,138,.95)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, yBase + 0.5);
+    ctx.lineTo(W, yBase + 0.5);
+    ctx.stroke();
+
+    var startVal = Math.ceil(xMin / step) * step;
+    var majorPx = tickMajorW * sc;
+    var minorPx = tickMinorW * sc;
+
+    for (var xx = startVal; xx <= xMax + 1e-6; xx += step) {
+      var px = v.ox + xx * sc;
+      var isMajor = Math.abs(xx - Math.round(xx)) < 1e-6;
+
+      if (isMajor) {
+        ctx.strokeStyle = 'rgba(126,196,255,.96)';
+        ctx.lineWidth = 1.9;
+        ctx.beginPath();
+        ctx.moveTo(px, yBase);
+        ctx.lineTo(px, yBase + majorPx);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'rgba(124,160,208,.66)';
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(px, yBase);
+        ctx.lineTo(px, yBase + minorPx);
+        ctx.stroke();
+      }
+    }
+
+    var fontSize = clamp(sc * 0.11, 10, 18);
+    ctx.fillStyle = '#bcd6f4';
+    ctx.font = '600 ' + fontSize.toFixed(1) + 'px system-ui,-apple-system,"PingFang SC",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    var labelY = yBase + labelTopW * sc;
+
+    for (var xl = startVal; xl <= xMax + 1e-6; xl += step) {
+      if (Math.abs(xl - Math.round(xl)) < 1e-6) {
+        var pxl = v.ox + xl * sc;
+        ctx.fillText(Math.round(xl) + '', pxl, labelY);
+      }
+    }
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(168,200,238,.98)';
+    ctx.font = '600 ' + (fontSize * 0.95).toFixed(1) + 'px system-ui,-apple-system,"PingFang SC",sans-serif';
+    ctx.fillText('x / m', W - 12, labelY);
+
+    ctx.restore();
+  }
+
+  function drawTrails() {
+    for (var i = 0; i < 2; i++) {
+      var tr = state.trail[i];
+      if (tr.length < 2) continue;
+      var b = state.balls[i];
+
+      ctx.save();
+      ctx.setLineDash([6, 5]);
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = b.color;
+      ctx.globalAlpha = 0.42;
+
+      var p0 = P(tr[0].x, 0);
+      ctx.beginPath();
+      ctx.moveTo(p0[0], p0[1]);
+      for (var k = 1; k < tr.length; k++) {
+        var p = P(tr[k].x, 0);
+        ctx.lineTo(p[0], p[1]);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawContactFlash() {
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var intensity = 0;
+
+    if (state.collision.active) {
+      intensity = state.collision.curComp || 0;
+    } else {
+      var r1e = b1.r - b1.perm;
+      var r2e = b2.r - b2.perm;
+      var gap = (b2.x - b1.x) - (r1e + r2e);
+      if (Math.abs(gap) < 0.04 && (b1.perm > 0.02 || b2.perm > 0.02)) {
+        intensity = Math.min(b1.perm, b2.perm) * 0.75;
+      }
+    }
+    if (intensity < 0.008) return;
+
+    var cx = (b1.x + b2.x) * 0.5;
+    var p = P(cx, 0);
+    var rad = Math.max(10, intensity * 3.0 * state.view.sc);
+    var a = Math.min(0.6, intensity * 2.0);
+
+    var g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rad);
+    g.addColorStop(0, 'rgba(126,196,255,' + a + ')');
+    g.addColorStop(1, 'rgba(126,196,255,0)');
+
+    ctx.save();
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], rad, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* 单球：支持水平压扁（椭圆）+ 垂直拉伸，且球底保持与地面接触 */
+  function drawBall(b, idx) {
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var mt = (b1.m + b2.m) || 1;
+
+    var permComp = b.perm;
+    var elastic = 0;
+
+    if (state.collision.active) {
+      var cd = state.collision.curComp || 0;
+      elastic = (idx === 0) ? cd * (b2.m / mt) : cd * (b1.m / mt);
+    }
+
+    var totalComp = permComp + elastic;
+    var cap = b.r * 0.95;
+    if (totalComp > cap) totalComp = cap;
+    if (totalComp < 0) totalComp = 0;
+
+    var sc = state.view.sc;
+    var r = b.r;
+
+    // 水平收缩、垂直拉伸
+    var rxWorld = r - totalComp * SQUASH_X;
+    var ryWorld = r + totalComp * STRETCH_Y;
+    if (rxWorld < r * 0.15) rxWorld = r * 0.15;
+
+    var rx = rxWorld * sc;
+    var ry = ryWorld * sc;
+    if (rx < 1) rx = 1;
+    if (ry < 1) ry = 1;
+
+    var dir = (idx === 0) ? 1 : -1;
+    var cxW = b.x - dir * totalComp * 0.5;
+    var p = P(cxW, 0);
+    var sx = p[0], sy = p[1];
+
+    // 球体向上鼓出，底部保持在地面
+    var liftPx = ry - r * sc;
+    sy -= liftPx;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, rx, ry, 0, 0, Math.PI * 2);
+
+    var grd = ctx.createRadialGradient(
+      sx - rx * 0.34, sy - ry * 0.40, Math.max(1, Math.min(rx, ry) * 0.06),
+      sx, sy, Math.max(rx, ry) * 1.10
+    );
+    grd.addColorStop(0.00, mixColor(b.color, [255, 255, 255], 0.62));
+    grd.addColorStop(0.42, mixColor(b.color, [255, 255, 255], 0.10));
+    grd.addColorStop(1.00, mixColor(b.color, [0, 0, 0], 0.55));
+
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = mixColor(b.color, [255, 255, 255], 0.42);
+    ctx.globalAlpha = 0.85;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = '11px system-ui,-apple-system,"PingFang SC",sans-serif';
+    ctx.fillStyle = 'rgba(160,186,218,.85)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('m' + (b.tag === '1' ? '₁' : '₂') + ' = ' + b.m.toFixed(1) + ' kg',
+                 sx, sy - ry - 8);
+    ctx.restore();
+  }
+
+  function drawBalls() {
+    drawBall(state.balls[0], 0);
+    drawBall(state.balls[1], 1);
+  }
+
+  function arrow(x1, y1, x2, y2, color, label, dashed) {
+    var a = P(x1, y1), b = P(x2, y2);
+    var ax = a[0], ay = a[1], bx = b[0], by = b[1];
+    var dx = bx - ax, dy = by - ay;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 4) return;
+
+    var ux = dx / len, uy = dy / len;
+    var head = Math.min(11, len * 0.4);
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+
+    if (dashed) ctx.setLineDash([6, 5]);
+
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx - ux * head * 0.72, by - uy * head * 0.72);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx - ux * head + uy * head * 0.42, by - uy * head - ux * head * 0.42);
+    ctx.lineTo(bx - ux * head - uy * head * 0.42, by - uy * head + ux * head * 0.42);
+    ctx.closePath();
+    ctx.fill();
+
+    if (label) {
+      ctx.font = 'italic 13px "Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(label, (ax + bx) * 0.5, Math.min(ay, by) - 7);
+    }
+    ctx.restore();
+  }
+
+  function drawVelArrows() {
+    if (!state.showVel) return;
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var r1e = b1.r - b1.perm;
+    var r2e = b2.r - b2.perm;
+
+    if (Math.abs(b1.v) > 0.06) {
+      var L1 = Math.max(0.16, Math.abs(b1.v) * 0.34);
+      var s1 = sign(b1.v);
+      var e1 = (s1 > 0) ? b1.x + r1e : b1.x - r1e;
+      arrow(e1, 0, e1 + s1 * L1, 0, b1.color, 'v₁', false);
+    }
+    if (Math.abs(b2.v) > 0.06) {
+      var L2 = Math.max(0.16, Math.abs(b2.v) * 0.34);
+      var s2 = sign(b2.v);
+      var e2 = (s2 > 0) ? b2.x + r2e : b2.x - r2e;
+      arrow(e2, 0, e2 + s2 * L2, 0, b2.color, 'v₂', false);
+    }
+  }
+
+  function drawReferenceLabel() {
+    ctx.save();
+    ctx.font = '11px system-ui,-apple-system,"PingFang SC",sans-serif';
+    ctx.fillStyle = 'rgba(110,140,180,.7)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('参考系：地面（惯性系）', 14, 12);
+    ctx.restore();
+  }
+
+  function drawPausedBadge() {
+    if (!state.animating || !state.paused) return;
+    var W = cssW;
+    var label = '已暂停';
+    ctx.save();
+    ctx.font = '600 11px system-ui,-apple-system,"PingFang SC",sans-serif';
+    var tw = ctx.measureText(label).width;
+    var padX = 10;
+    var bw = tw + padX * 2 + 14;
+    var bh = 22;
+    var bx = W - 14 - bw;
+    var by = 12;
+
+    ctx.fillStyle = 'rgba(18,32,58,.92)';
+    ctx.strokeStyle = 'rgba(77,171,247,.55)';
+    ctx.lineWidth = 1;
+    var rr = 6;
+    ctx.beginPath();
+    ctx.moveTo(bx + rr, by);
+    ctx.lineTo(bx + bw - rr, by);
+    ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + rr);
+    ctx.lineTo(bx + bw, by + bh - rr);
+    ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - rr, by + bh);
+    ctx.lineTo(bx + rr, by + bh);
+    ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - rr);
+    ctx.lineTo(bx, by + rr);
+    ctx.quadraticCurveTo(bx, by, bx + rr, by);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#7ec4ff';
+    ctx.fillRect(bx + 10, by + 6, 3, 10);
+    ctx.fillRect(bx + 15, by + 6, 3, 10);
+
+    ctx.fillStyle = '#cfe4ff';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, bx + 24, by + bh / 2 + 0.5);
+
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    drawBackground();
+    drawGround();
+    drawTrails();
+    drawContactFlash();
+    drawBalls();
+    drawVelArrows();
+    drawReferenceLabel();
+    drawPausedBadge();
+  }
+  window.addEventListener('gw-sim-background', render);
+
+  /* =========================================================
+     7. 主循环
+     ========================================================= */
+  function pushTrail() {
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var t1 = state.trail[0], t2 = state.trail[1];
+
+    if (!t1.length || Math.abs(t1[t1.length - 1].x - b1.x) > 0.02) t1.push({ x: b1.x });
+    if (!t2.length || Math.abs(t2[t2.length - 1].x - b2.x) > 0.02) t2.push({ x: b2.x });
+
+    if (t1.length > 800) t1.shift();
+    if (t2.length > 800) t2.shift();
+  }
+
+  function tick(t) {
+    state.rafId = 0;
+
+    var rawDt = state.animLast ? Math.min((t - state.animLast) / 1000, 0.04) : 0.016;
+    state.animLast = t;
+    if (!isFinite(rawDt) || rawDt <= 0) rawDt = 0.016;
+
+    if (state.animating && !state.paused) {
+      var dt = rawDt * state.timeScale;
+      var sub = Math.max(1, Math.min(8, Math.ceil(dt / MAX_PHYS_DT)));
+      var h = dt / sub;
+      for (var i = 0; i < sub; i++) {
+        if (!state.animating) break;
+        stepPhysics(h);
+      }
+      pushTrail();
+      updateReadout();
+    }
+
+    if (!state.viewLocked) {
+      computeViewTarget(false);
+      if (viewDiff() > 0.4) lerpView(0.18);
+      else snapView();
+    }
+
+    render();
+
+    if (state.animating || (!state.viewLocked && viewDiff() > 0.4)) {
+      state.rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function startAnim() {
+    state.animLast = 0;
+    if (!state.rafId) state.rafId = requestAnimationFrame(tick);
+    updatePauseBtn();
+  }
+
+  function stopAnim() {
+    state.animating = false;
+    if (state.rafId) {
+      cancelAnimationFrame(state.rafId);
+      state.rafId = 0;
+    }
+    state.animLast = 0;
+    updatePauseBtn();
+  }
+
+  function updatePauseBtn() {
+    var btn = el('pause');
+    if (!btn) return;
+
+    if (!state.animating) {
+      btn.textContent = '暂 停';
+      btn.disabled = true;
+      btn.classList.remove('active');
+      return;
+    }
+
+    btn.disabled = false;
+    if (state.paused) {
+      btn.textContent = '继 续';
+      btn.classList.add('active');
+    } else {
+      btn.textContent = '暂 停';
+      btn.classList.remove('active');
+    }
+  }
+
+  function togglePause() {
+    if (!state.animating) return;
+
+    if (state.paused) {
+      state.paused = false;
+      state.animLast = 0;
+      updatePauseBtn();
+      startAnim();
+    } else {
+      state.paused = true;
+      if (state.rafId) {
+        cancelAnimationFrame(state.rafId);
+        state.rafId = 0;
+      }
+      state.animLast = 0;
+
+      if (!state.viewLocked) {
+        computeViewTarget(false);
+        snapView();
+      }
+      updatePauseBtn();
+      render();
+    }
+  }
+
+  /* =========================================================
+     8. 读数 / 参数
+     ========================================================= */
+  function syncParams() {
+    state.balls[0].m = parseFloat(el('m1').value);
+    state.balls[1].m = parseFloat(el('m2').value);
+    state.e = parseFloat(el('e').value);
+    state.showVel = el('showVel').checked;
+  }
+
+  function resetBalls() {
+    syncParams();
+    var b1 = state.balls[0], b2 = state.balls[1];
+    b1.x = -START_X;
+    b2.x =  START_X;
+    b1.v = parseFloat(el('v1').value);
+    b2.v = parseFloat(el('v2').value);
+    b1.perm = 0;
+    b2.perm = 0;
+    state.collision = { active: false, phase: 'done', curComp: 0, curDelta: 0 };
+    state.mode = 'idle';
+    state.trail[0] = [];
+    state.trail[1] = [];
+    state.viewLocked = false;
+  }
+
+  function updateReadout() {
+    var b1 = state.balls[0], b2 = state.balls[1];
+
+    var st = el('rState');
+    var txt, cls;
+
+    if (state.animating && state.paused) {
+      txt = '已暂停'; cls = 'warn';
+    } else if (state.mode === 'contact' && state.collision.active) {
+      txt = (state.collision.phase === 'compress') ? '压缩形变' : '弹性恢复';
+      cls = 'flying';
+    } else if (state.animating) {
+      if (Math.abs(b1.v - b2.v) < 0.02 && (b1.perm > 0.01 || b2.perm > 0.01)) {
+        txt = '黏着运动'; cls = 'flying';
+      } else {
+        txt = '运动'; cls = 'moving';
+      }
+    } else {
+      txt = '待发射'; cls = 'static';
+    }
+    st.textContent = txt;
+    st.className = cls;
+
+    var e = state.e;
+    var typeEl = el('rType');
+    if (e >= 0.99)      { typeEl.textContent = '弹性';       typeEl.className = 'static'; }
+    else if (e <= 0.01) { typeEl.textContent = '完全非弹性'; typeEl.className = 'flying'; }
+    else                { typeEl.textContent = '非弹性';     typeEl.className = 'moving'; }
+
+    el('rV1').textContent = b1.v.toFixed(2) + ' m/s';
+    el('rV2').textContent = b2.v.toFixed(2) + ' m/s';
+
+    var m1 = b1.m, m2 = b2.m;
+    var u1 = parseFloat(el('v1').value);
+    var u2 = parseFloat(el('v2').value);
+    var mt = m1 + m2;
+
+    var v1p = ((m1 - e * m2) * u1 + (1 + e) * m2 * u2) / mt;
+    var v2p = ((m2 - e * m1) * u2 + (1 + e) * m1 * u1) / mt;
+
+    el('rV1p').textContent = v1p.toFixed(2) + ' m/s';
+    el('rV2p').textContent = v2p.toFixed(2) + ' m/s';
+
+    var mu = (m1 * m2) / mt;
+    var dE = 0.5 * (1 - e * e) * mu * (u1 - u2) * (u1 - u2);
+    if (dE < 0) dE = 0;
+    el('rDE').textContent = dE.toFixed(2) + ' J';
+  }
+
+  /* =========================================================
+     9. 提示条
+     ========================================================= */
+  var hintTimer = 0;
+  function showHint(msg) {
+    var h = el('hint');
+    h.textContent = msg;
+    h.classList.add('show');
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () {
+      h.classList.remove('show');
+      hintTimer = 0;
+    }, 2300);
+  }
+
+  /* =========================================================
+     10. 交互
+     ========================================================= */
+  var labelRefreshers = {};
+
+  function bindSlider(id, fmt) {
+    var s = el(id);
+    var out = el(id + 'Val');
+
+    function refresh() { out.textContent = fmt(parseFloat(s.value)); }
+
+    labelRefreshers[id] = refresh;
+
+    s.addEventListener('input', function () {
+      stopAnim();
+      state.paused = false;
+      refresh();
+      resetBalls();
+      computeViewTarget(true);
+      updateReadout();
+      render();
+    });
+
+    refresh();
+  }
+
+  function refreshAllLabels() {
+    for (var k in labelRefreshers) {
+      if (labelRefreshers.hasOwnProperty(k)) labelRefreshers[k]();
+    }
+  }
+
+  function bindSpeedSeg() {
+    var seg = el('speedSeg');
+    var btns = seg.querySelectorAll('button');
+    var label = el('speedVal');
+
+    function apply(sp, btn) {
+      state.timeScale = sp;
+      label.textContent = String(sp) + '×';
+      for (var i = 0; i < btns.length; i++) btns[i].classList.remove('on');
+      if (btn) btn.classList.add('on');
+    }
+
+    for (var i = 0; i < btns.length; i++) {
+      (function (btn) {
+        btn.addEventListener('click', function () {
+          apply(parseFloat(btn.getAttribute('data-speed')), btn);
+        });
+      })(btns[i]);
+    }
+
+    apply(1, btns[btns.length - 1]);
+  }
+
+  function hitTest(px, py) {
+    var v = state.view;
+    for (var i = 0; i < state.balls.length; i++) {
+      var b = state.balls[i];
+      var p = P(b.x, 0);
+      var dx = px - p[0];
+      var dy = py - p[1];
+      var rr = b.r * v.sc + 10;
+      if (dx * dx + dy * dy <= rr * rr) return i;
+    }
+    return -1;
+  }
+
+  function clampBalls() {
+    var b1 = state.balls[0], b2 = state.balls[1];
+    var r1e = b1.r - b1.perm;
+    var r2e = b2.r - b2.perm;
+    var need = r1e + r2e + 0.02;
+
+    if (state.drag) {
+      if (state.drag.idx === 0) {
+        if (b1.x > b2.x - need) b1.x = b2.x - need;
+      } else {
+        if (b2.x < b1.x + need) b2.x = b1.x + need;
+      }
+    }
+  }
+
+  /* ---------- 复位：只恢复位置，不改参数 ---------- */
+  function resetAll() {
+    stopAnim();
+
+    // 保持当前滑块参数（不改动）
+    syncParams();
+
+    state.paused = false;
+    state.drag = null;
+    state.panning = null;
+    cv.style.cursor = 'grab';
+
+    var b1 = state.balls[0], b2 = state.balls[1];
+    b1.x = -START_X;
+    b2.x =  START_X;
+    b1.v = 0;
+    b2.v = 0;
+    b1.perm = 0;
+    b2.perm = 0;
+
+    state.collision = { active: false, phase: 'done', curComp: 0, curDelta: 0 };
+    state.mode = 'idle';
+    state.trail[0] = [];
+    state.trail[1] = [];
+    state.viewLocked = false;
+
+    computeViewTarget(true);
+    updateReadout();
+    updatePauseBtn();
+    render();
+  }
+
+  function bindCanvas() {
+    cv.addEventListener('pointerdown', function (ev) {
+      var rect = cv.getBoundingClientRect();
+      var px = ev.clientX - rect.left;
+      var py = ev.clientY - rect.top;
+
+      var idx = hitTest(px, py);
+
+      if (idx >= 0) {
+        stopAnim();
+        state.paused = false;
+
+        var b = state.balls[idx];
+        var wx = screenToWorldX(px);
+
+        state.drag = {
+          idx: idx,
+          pointerId: ev.pointerId,
+          offset: b.x - wx
+        };
+        state.panning = null;
+        state.viewLocked = false;
+
+        b.v = 0;
+        state.mode = 'idle';
+        state.collision = { active: false, phase: 'done', curComp: 0, curDelta: 0 };
+
+        cv.style.cursor = 'grabbing';
+        try { cv.setPointerCapture(ev.pointerId); } catch (err) {}
+
+        updateReadout();
+        render();
+        ev.preventDefault();
+
+      } else {
+        state.drag = null;
+        state.panning = {
+          pointerId: ev.pointerId,
+          sx: px, sy: py,
+          ox0: state.view.ox,
+          oy0: state.view.oy
+        };
+        state.viewLocked = true;
+        state.viewTarget.ox = state.view.ox;
+        state.viewTarget.oy = state.view.oy;
+        state.viewTarget.sc = state.view.sc;
+
+        cv.style.cursor = 'grabbing';
+        try { cv.setPointerCapture(ev.pointerId); } catch (err) {}
+
+        if (!state.pannedOnce) {
+          state.pannedOnce = true;
+          showHint('自由视角：拖动空白处平移画面，拖动小球可改变位置；点击「释放」恢复自动跟随，或点「复位」回到初始状态。');
+        }
+        ev.preventDefault();
+      }
+    });
+
+    cv.addEventListener('pointermove', function (ev) {
+      var rect = cv.getBoundingClientRect();
+      var px = ev.clientX - rect.left;
+      var py = ev.clientY - rect.top;
+
+      if (state.drag && ev.pointerId === state.drag.pointerId) {
+        var wx = screenToWorldX(px);
+        var b = state.balls[state.drag.idx];
+        b.x = wx + state.drag.offset;
+        b.v = 0;
+
+        clampBalls();
+
+        computeViewTarget(true);
+        updateReadout();
+        render();
+        ev.preventDefault();
+        return;
+      }
+
+      if (state.panning && ev.pointerId === state.panning.pointerId) {
+        state.view.ox = state.panning.ox0 + (px - state.panning.sx);
+        state.view.oy = state.panning.oy0 + (py - state.panning.sy);
+        state.viewTarget.ox = state.view.ox;
+        state.viewTarget.oy = state.view.oy;
+        state.viewTarget.sc = state.view.sc;
+        render();
+        ev.preventDefault();
+        return;
+      }
+
+      if (ev.pointerType !== 'touch') {
+        var hit = hitTest(px, py);
+        cv.style.cursor = hit >= 0 ? 'pointer' : 'grab';
+      }
+    });
+
+    function endDrag(ev) {
+      var released = false;
+
+      if (state.drag && ev.pointerId === state.drag.pointerId) {
+        try { cv.releasePointerCapture(ev.pointerId); } catch (err) {}
+        state.drag = null;
+        computeViewTarget(true);
+        render();
+        released = true;
+      }
+
+      if (state.panning && ev.pointerId === state.panning.pointerId) {
+        try { cv.releasePointerCapture(ev.pointerId); } catch (err) {}
+        state.panning = null;
+        released = true;
+      }
+
+      if (released) cv.style.cursor = 'grab';
+    }
+
+    cv.addEventListener('pointerup', endDrag);
+    cv.addEventListener('pointercancel', endDrag);
+    cv.addEventListener('pointerleave', function () {
+      if (!state.drag && !state.panning) cv.style.cursor = 'grab';
+    });
+  }
+
+  /* =========================================================
+     11. 初始化
+     ========================================================= */
+  function init() {
+    bindSlider('m1', function (v) { return v.toFixed(1) + ' kg'; });
+    bindSlider('m2', function (v) { return v.toFixed(1) + ' kg'; });
+    bindSlider('v1', function (v) { return v.toFixed(1) + ' m/s'; });
+    bindSlider('v2', function (v) { return v.toFixed(1) + ' m/s'; });
+    bindSlider('e',  function (v) { return v.toFixed(2); });
+
+    bindSpeedSeg();
+
+    el('showVel').addEventListener('change', function () {
+      state.showVel = el('showVel').checked;
+      render();
+    });
+
+    el('release').addEventListener('click', function () {
+      stopAnim();
+      state.paused = false;
+      syncParams();
+
+      state.viewLocked = false;
+      state.panning = null;
+
+      var b1 = state.balls[0], b2 = state.balls[1];
+      b1.v = parseFloat(el('v1').value);
+      b2.v = parseFloat(el('v2').value);
+
+      var r1e = b1.r - b1.perm;
+      var r2e = b2.r - b2.perm;
+      if (b2.x - b1.x < r1e + r2e) {
+        b2.x = b1.x + r1e + r2e + 0.02;
+      }
+
+      state.trail[0] = [];
+      state.trail[1] = [];
+      state.collision = { active: false, phase: 'done', curComp: 0, curDelta: 0 };
+      state.mode = 'moving';
+      state.animating = true;
+
+      computeViewTarget(true);
+      updateReadout();
+      startAnim();
+
+      if (Math.abs(b1.v) < 0.05 && Math.abs(b2.v) < 0.05) {
+        showHint('两球初速为零，请先调整速度再释放。');
+      } else if (state.e >= 0.99) {
+        showHint('完全弹性碰撞：接触时两球被压扁，形变完全弹性恢复，碰后速度按动量与能量守恒重新分配。');
+      } else if (state.e <= 0.01) {
+        showHint('完全非弹性碰撞：接触形变完全不可恢复，两球被永久压扁并黏在一起，以共同速度运动。');
+      } else {
+        showHint('非弹性碰撞：恢复系数 e 介于 0 与 1 之间，形变部分转为永久，部分弹性恢复，动能部分损失。');
+      }
+    });
+
+    el('pause').addEventListener('click', function () {
+      if (!state.animating) return;
+      togglePause();
+    });
+
+    el('reset').addEventListener('click', function () {
+      resetAll();
+      showHint('已复位：两球回到初始位置（形变与轨迹已清除），右侧参数保持不变。');
+    });
+
+    bindCanvas();
+
+    resetBalls();
+    resizeCanvas();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function () { resizeCanvas(); });
+      ro.observe(cv.parentNode);
+    } else {
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    updateReadout();
+    updatePauseBtn();
+    render();
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>斜面体 · 上滑/飞出/水平减速</title>
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#080c14;color:#c9d5e8;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  .m{
+    font-family:"Cambria Math","Latin Modern Math","STIX Two Math","Times New Roman",Georgia,serif;
+    font-style:italic;letter-spacing:.01em;
+  }
+  .m sub,.m sup{font-style:normal;font-size:.72em}
+
+  .app{display:flex;height:100vh;height:100dvh}
+  .stage{flex:1;position:relative;min-width:0;min-height:0}
+  .stage canvas{display:block;width:100%;height:100%;touch-action:none}
+
+  .panel{
+    width:312px;flex:none;background:#0f1522;border-left:1px solid #1c2740;
+    padding:20px 18px 32px;overflow-y:auto;
+  }
+  .panel h1{
+    font-size:15px;font-weight:600;color:#e6eefc;letter-spacing:.5px;
+    margin-bottom:20px;display:flex;align-items:center;gap:9px;
+  }
+  .panel h1::before{
+    content:'';width:4px;height:16px;border-radius:2px;
+    background:linear-gradient(#4dabf7,#9775fa);
+  }
+  .ctrl{margin-bottom:17px}
+  .ctrl .row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:13px;color:#8ea3c4;margin-bottom:9px;
+  }
+  .ctrl .row b{color:#7ec4ff;font-weight:600;font-variant-numeric:tabular-nums}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:4px;border-radius:2px;
+    background:#1e2a40;outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:15px;height:15px;border-radius:50%;
+    background:#4dabf7;border:2px solid #0f1522;
+    box-shadow:0 0 0 1px #4dabf7,0 0 10px rgba(77,171,247,.55);
+    cursor:grab;transition:transform .12s;
+  }
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.15)}
+  input[type=range]::-moz-range-thumb{
+    width:13px;height:13px;border-radius:50%;
+    background:#4dabf7;border:2px solid #0f1522;
+    box-shadow:0 0 0 1px #4dabf7;cursor:grab;
+  }
+
+  .switch{
+    display:flex;align-items:center;gap:10px;font-size:13px;
+    color:#8ea3c4;cursor:pointer;padding:7px 0;user-select:none;
+  }
+  .switch input{display:none}
+  .switch .box{
+    width:36px;height:20px;border-radius:10px;background:#1e2a40;
+    position:relative;transition:.22s;flex:none;
+  }
+  .switch .box::after{
+    content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;
+    border-radius:50%;background:#5b6e8c;transition:.22s;
+  }
+  .switch input:checked + .box{background:#1d4e7d}
+  .switch input:checked + .box::after{left:19px;background:#4dabf7}
+
+  #release{
+    width:100%;margin-top:16px;padding:11px;border-radius:9px;border:1px solid #2a6ea8;
+    background:linear-gradient(180deg,#1d4e7d,#16395c);color:#bfe0ff;
+    font-size:13.5px;font-weight:600;cursor:pointer;letter-spacing:.5px;
+    transition:.18s;font-family:inherit;
+  }
+  #release:hover{background:linear-gradient(180deg,#256090,#1a4570);color:#e2f2ff}
+  #release:active{transform:scale(.985)}
+
+  .hint{
+    font-size:12px;color:#ffb454;text-align:center;height:0;overflow:hidden;
+    opacity:0;transition:.25s;line-height:1.5;
+  }
+  .hint.show{height:22px;opacity:1;margin-top:8px}
+
+  .readout{margin-top:16px;border-top:1px solid #1c2740;padding-top:14px}
+  .readout .item{
+    display:flex;justify-content:space-between;font-size:12.5px;
+    padding:5.5px 0;color:#8195b5;
+  }
+  .readout .item b{color:#cfe0f7;font-weight:600;font-variant-numeric:tabular-nums}
+  .readout .item b.moving{color:#ff9f43}
+  .readout .item b.static{color:#51cf66}
+  .readout .item b.flying{color:#e599f7}
+
+  @media (max-width:760px){
+    .app{flex-direction:column}
+    .stage{height:52%;flex:none}
+    .panel{width:100%;height:48%;border-left:none;border-top:1px solid #1c2740}
+  }
+</style>
+<link rel="stylesheet" href="dark-fix.css">
+</head>
+<body>
+<div class="app">
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <aside class="panel">
+    <h1>斜面体参数</h1>
+
+    <div class="ctrl">
+      <div class="row"><span>倾角 <i class="m" data-tex="\theta">θ</i></span><b id="angleVal">30°</b></div>
+      <input type="range" id="angle" min="5" max="70" step="1" value="30">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>底边长度 <i class="m" data-tex="b">b</i></span><b id="baseVal">4.0 m</b></div>
+      <input type="range" id="base" min="2" max="6" step="0.1" value="4">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>摩擦系数 <i class="m" data-tex="\mu">μ</i></span><b id="muVal">0.30</b></div>
+      <input type="range" id="mu" min="0" max="1" step="0.01" value="0.3">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>质量 <i class="m" data-tex="m">m</i></span><b id="massVal">2.0 kg</b></div>
+      <input type="range" id="mass" min="0.5" max="8" step="0.1" value="2">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>物块边长 <i class="m" data-tex="d">d</i></span><b id="sizeVal">0.60 m</b></div>
+      <input type="range" id="size" min="0.3" max="1" step="0.05" value="0.6">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>物块位置 <i class="m" data-tex="k">k</i></span><b id="posVal">0%</b></div>
+      <input type="range" id="pos" min="0" max="100" step="1" value="0">
+    </div>
+    <div class="ctrl">
+      <div class="row"><span>初速度 <i class="m" data-tex="v_0">v₀</i></span><b id="v0Val">4.0 m/s</b></div>
+      <input type="range" id="v0" min="0" max="14" step="0.1" value="4">
+    </div>
+
+    <label class="switch"><input type="checkbox" id="showForces" checked><span class="box"></span>显示受力矢量</label>
+    <label class="switch"><input type="checkbox" id="showDecomp"><span class="box"></span>显示重力分解</label>
+
+    <button id="release">▶ 从底端上滑发射</button>
+    <div class="hint" id="hint"></div>
+
+    <div class="readout">
+      <div class="item"><span>斜面长度 <i class="m" data-tex="L">L</i></span><b id="rL">—</b></div>
+      <div class="item"><span>斜面高度 <i class="m" data-tex="h">h</i></span><b id="rh">—</b></div>
+      <div class="item"><span>重力 <i class="m" data-tex="G=mg">G = mg</i></span><b id="rG">—</b></div>
+      <div class="item"><span>支持力 <i class="m" data-tex="N">N</i></span><b id="rN">—</b></div>
+      <div class="item"><span>下滑分力 <i class="m" data-tex="G_{\parallel}">G∥</i></span><b id="rGp">—</b></div>
+      <div class="item"><span>最大静摩擦 <i class="m" data-tex="f_{\max}">f max</i></span><b id="rF">—</b></div>
+      <div class="item"><span>运动状态</span><b id="rState">—</b></div>
+    </div>
+  </aside>
+</div>
+
+<script src="../vendor/katex/katex.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const cv  = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const G_ACC = 9.8;
+
+  /* ---------------- 数学排版（KaTeX） ---------------- */
+  function setMath(el, tex, fb) {
+    if (!el) return;
+    if (window.katex) {
+      try { katex.render(tex, el, { throwOnError: false, displayMode: false }); return; } catch (_) {}
+    }
+    el.textContent = fb == null ? tex : fb;
+  }
+  function texOf(s) {
+    if (window.katex) { try { return katex.renderToString(s, { throwOnError: false }); } catch (_) {} }
+    return '<span class="m">' + s + '</span>';
+  }
+
+  /* ---------------- 状态 ---------------- */
+  const state = {
+    angle: 30, base: 4, mu: 0.3, mass: 2, size: 0.6, pos: 0, v0: 4,
+    showForces: true, showDecomp: false
+  };
+
+  /* 物块运行模式：
+     onRamp     —— 贴合斜面
+     flying     —— 空中斜抛
+     landed     —— 斜抛落地
+     horizontal —— 水平面匀减速滑行
+     stopped    —— 水平面停止
+  */
+  const block = {
+    mode: 'onRamp',
+    x: 0, y: 0, vx: 0, vy: 0, rot: 0,
+    trail: []
+  };
+
+  const view = { scale: 100, ox: 0, oy: 0 };
+  const viewCur = { sc: null, ox: null, oy: null };
+  const viewTarget = { sc: null, ox: null, oy: null };
+
+  let animating = false, animId = null, animLast = 0;
+  let animV = 0;
+  let dragging = false;
+
+  /* ---------------- 几何 ---------------- */
+  function geom() {
+    const th = state.angle * Math.PI / 180;
+    const h  = state.base * Math.tan(th);
+    const L  = state.base / Math.cos(th);
+    const s0 = state.size / 2;
+    const s1 = Math.max(s0 + 0.05, L - state.size / 2);
+    return { th, h, L, s0, s1 };
+  }
+
+  function groundLeft() {
+    return -Math.max(4, state.base * 1.2);
+  }
+
+  /* ---------------- 画布尺寸 ---------------- */
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const r = cv.getBoundingClientRect();
+    const w = Math.max(1, Math.round(r.width));
+    const h = Math.max(1, Math.round(r.height));
+    cv.width  = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  /* ---------------- 箭头 ---------------- */
+  function arrow(x1, y1, x2, y2, color, label, dashed) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 6) return;
+    const ux = dx / len, uy = dy / len;
+    const head = Math.min(13, len * 0.34);
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+    ctx.lineCap     = 'round';
+    ctx.lineWidth   = dashed ? 2 : 2.6;
+    if (dashed) ctx.setLineDash([7, 5]);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - ux * head * 0.85, y2 - uy * head * 0.85);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ux * head - uy * head * 0.42, y2 - uy * head + ux * head * 0.42);
+    ctx.lineTo(x2 - ux * head + uy * head * 0.42, y2 - uy * head - ux * head * 0.42);
+    ctx.closePath();
+    ctx.fill();
+
+    if (label) {
+      const lx = x2 + ux * 13, ly = y2 + uy * 13;
+      ctx.font = 'italic 600 14px "KaTeX_Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif';
+      ctx.textAlign    = ux > 0.35 ? 'left' : ux < -0.35 ? 'right' : 'center';
+      ctx.textBaseline = uy > 0.35 ? 'top'  : uy < -0.35 ? 'bottom' : 'middle';
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = 'rgba(8,12,20,.9)';
+      ctx.strokeText(label, lx, ly);
+      ctx.fillStyle = color;
+      ctx.fillText(label, lx, ly);
+    }
+    ctx.restore();
+  }
+
+  /* ---------------- 物块本体 ---------------- */
+  function drawBlockBody(cx, cy, rot, half) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-half, -half, half * 2, half * 2, Math.min(7, half * 0.3));
+    else ctx.rect(-half, -half, half * 2, half * 2);
+
+    const og = ctx.createLinearGradient(-half, -half, half, half);
+    og.addColorStop(0, '#ffc078');
+    og.addColorStop(1, '#f08c00');
+    ctx.fillStyle = og;
+    ctx.fill();
+    ctx.strokeStyle = '#ffe8cc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------------- 视野计算 ---------------- */
+  function computeTargetView(W, H) {
+    const { th, h } = geom();
+    const S = state.size, base = state.base;
+
+    let xMin = -0.4, xMax = base + 0.4;
+    let yMin = -0.5, yMax = h + S * 3;
+
+    // 水平面运动 / 停止：扩展左侧包围盒
+    if (block.mode === 'horizontal' || block.mode === 'stopped') {
+      xMin = Math.min(xMin, groundLeft() - 0.3);
+      xMax = Math.max(xMax, block.x + S / 2 + 0.3);
+    }
+
+    // 斜抛飞行 / 落地
+    if (block.mode === 'flying' || block.mode === 'landed') {
+      xMin = Math.min(xMin, block.x - S / 2 - 0.3);
+      xMax = Math.max(xMax, block.x + S / 2 + 0.3);
+      yMin = Math.min(yMin, block.y - S / 2 - 0.3);
+      yMax = Math.max(yMax, block.y + S / 2 + 0.3);
+    }
+
+    // 轨迹
+    for (let i = 0; i < block.trail.length; i++) {
+      const p = block.trail[i];
+      xMin = Math.min(xMin, p.x - S / 2 - 0.25);
+      xMax = Math.max(xMax, p.x + S / 2 + 0.25);
+      yMin = Math.min(yMin, p.y - S / 2 - 0.25);
+      yMax = Math.max(yMax, p.y + S / 2 + 0.25);
+    }
+
+    const wW = xMax - xMin, wH = yMax - yMin;
+    const sc = Math.min(W / wW, H / wH) * 0.9;
+    const ox = (W - wW * sc) / 2 - xMin * sc;
+    const oy = (H - wH * sc) / 2 + yMax * sc;
+
+    return { sc, ox, oy };
+  }
+
+  function viewDiff() {
+    if (viewCur.sc === null || viewTarget.sc === null) return Infinity;
+    return Math.abs(viewTarget.sc - viewCur.sc)
+         + Math.abs(viewTarget.ox - viewCur.ox)
+         + Math.abs(viewTarget.oy - viewCur.oy);
+  }
+
+  /* ---------------- 渲染 ---------------- */
+  function renderScene() {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+    ctx.clearRect(0, 0, W, H);
+
+    const sc = viewCur.sc, ox = viewCur.ox, oy = viewCur.oy;
+    view.scale = sc; view.ox = ox; view.oy = oy;
+
+    const { th, h, L, s0, s1 } = geom();
+    const S = state.size, base = state.base;
+    const P = (x, y) => [ox + x * sc, oy - y * sc];
+
+    /* --- 背景 --- */
+    const bg = ctx.createRadialGradient(W * .45, H * .32, 10, W * .45, H * .32, Math.max(W, H) * .85);
+    bg.addColorStop(0, '#000000');
+    bg.addColorStop(1, '#000000');
+    ctx.fillStyle = bg;
+    if (!window.__gwSimBackground) ctx.fillRect(0, 0, W, H);
+
+    /* --- 地面 --- */
+    const gy = oy;
+    ctx.strokeStyle = 'rgba(90,120,170,.22)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= W + 15; x += 15) {
+      ctx.beginPath();
+      ctx.moveTo(x, gy);
+      ctx.lineTo(x - 12, gy + 12);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = '#3b4d6d';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, gy);
+    ctx.lineTo(W, gy);
+    ctx.stroke();
+
+    /* --- 斜面三角形 --- */
+    const [p1x, p1y] = P(0, 0);
+    const [p2x, p2y] = P(base, 0);
+    const [p3x, p3y] = P(base, h);
+
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.lineTo(p3x, p3y);
+    ctx.closePath();
+
+    const grd = ctx.createLinearGradient(0, p3y, 0, p1y);
+    grd.addColorStop(0, '#33425f');
+    grd.addColorStop(1, '#171f30');
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.strokeStyle = '#4a6191';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p3x, p3y);
+    ctx.strokeStyle = '#7aa2e0';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    /* --- 角度弧 --- */
+    const arcR = Math.min(66, Math.max(34, L * sc * 0.28));
+    ctx.beginPath();
+    ctx.arc(p1x, p1y, arcR, -th, 0);
+    ctx.strokeStyle = '#6f8fc4';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    const midA = -th / 2;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const tx = p1x + Math.cos(midA) * (arcR + 30);
+    const ty = p1y + Math.sin(midA) * (arcR + 30);
+    ctx.font = 'italic 600 15px "KaTeX_Math","Cambria Math","Latin Modern Math","Times New Roman",Georgia,serif';
+    ctx.fillStyle = '#8fb3e8';
+    ctx.fillText('θ', tx - 16, ty);
+    ctx.font = '600 13px ui-sans-serif,system-ui,"PingFang SC",sans-serif';
+    ctx.fillText('= ' + state.angle.toFixed(0) + '°', tx + 8, ty);
+
+    /* --- 抛物线轨迹 --- */
+    if (block.trail.length > 1) {
+      ctx.beginPath();
+      const [tsx, tsy] = P(block.trail[0].x, block.trail[0].y);
+      ctx.moveTo(tsx, tsy);
+      for (let i = 1; i < block.trail.length; i++) {
+        const [qx, qy] = P(block.trail[i].x, block.trail[i].y);
+        ctx.lineTo(qx, qy);
+      }
+      ctx.strokeStyle = 'rgba(229,153,247,0.75)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    /* --- 物块位置 --- */
+    const u = [Math.cos(th), Math.sin(th)];
+    const n = [-Math.sin(th), Math.cos(th)];
+
+    let ccx, ccy, blockRot;
+    if (block.mode === 'onRamp') {
+      const s = s0 + state.pos * (s1 - s0);
+      const cwx = u[0] * s + n[0] * S / 2;
+      const cwy = u[1] * s + n[1] * S / 2;
+      [ccx, ccy] = P(cwx, cwy);
+      blockRot = -th;
+    } else {
+      [ccx, ccy] = P(block.x, block.y);
+      blockRot = block.rot;
+    }
+
+    const half = S * sc / 2;
+    drawBlockBody(ccx, ccy, blockRot, half);
+
+    /* --- 受力矢量 --- */
+    if (state.showForces) {
+      const Gmag = state.mass * G_ACC;
+      const maxLen = Math.min(W, H) * 0.23;
+      const fs = maxLen / Gmag;
+
+      if (block.mode === 'onRamp') {
+        const Nmag = Gmag * Math.cos(th);
+        const Gp   = Gmag * Math.sin(th);
+        const f    = Math.min(Gp, state.mu * Nmag);
+
+        arrow(ccx, ccy, ccx, ccy + Gmag * fs, '#ff6b6b', 'G');
+        arrow(ccx, ccy,
+              ccx + n[0] * Nmag * fs,
+              ccy - n[1] * Nmag * fs, '#4dabf7', 'N');
+
+        if (f > 1e-4) {
+          const up = (animV > 0.01) ? -1 : 1;
+          arrow(ccx, ccy,
+                ccx + u[0] * f * fs * up,
+                ccy - u[1] * f * fs * up, '#51cf66', 'f');
+        }
+
+        if (state.showDecomp) {
+          const Gn = Gmag * Math.cos(th);
+          arrow(ccx, ccy,
+                ccx - u[0] * Gp * fs,
+                ccy + u[1] * Gp * fs, '#ffd43b', 'G∥', true);
+          arrow(ccx, ccy,
+                ccx - n[0] * Gn * fs,
+                ccy + n[1] * Gn * fs, '#ffd43b', 'G⊥', true);
+        }
+      } else if (block.mode === 'flying') {
+        arrow(ccx, ccy, ccx, ccy + Gmag * fs, '#ff6b6b', 'G');
+      } else if (block.mode === 'horizontal' || block.mode === 'stopped') {
+        const Nmag = Gmag;
+        const fmax = state.mu * Nmag;
+        arrow(ccx, ccy, ccx, ccy + Gmag * fs, '#ff6b6b', 'G');
+        arrow(ccx, ccy, ccx, ccy - Nmag * fs, '#4dabf7', 'N');
+        if (Math.abs(block.vx) > 1e-4 && fmax > 1e-4) {
+          const dir = -Math.sign(block.vx);
+          arrow(ccx, ccy, ccx + dir * fmax * fs, ccy, '#51cf66', 'f');
+        }
+      }
+    }
+
+    /* --- 飞行提示 --- */
+    if (block.mode === 'flying') {
+      ctx.save();
+      ctx.font = '600 13px ui-sans-serif,system-ui,"PingFang SC",sans-serif';
+      ctx.fillStyle = '#e599f7';
+      ctx.textAlign = 'center';
+      ctx.fillText('✈ 斜抛飞行中', W / 2, 34);
+      ctx.restore();
+    }
+  }
+
+  function draw() {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+    const tv = computeTargetView(W, H);
+    viewTarget.sc = tv.sc; viewTarget.ox = tv.ox; viewTarget.oy = tv.oy;
+    viewCur.sc = tv.sc;    viewCur.ox = tv.ox;    viewCur.oy = tv.oy;
+    renderScene();
+  }
+
+  /* ---------------- 数据面板 ---------------- */
+  const el = id => document.getElementById(id);
+  const mvar = s => texOf(s);
+
+  function updateReadout() {
+    const { th, h, L } = geom();
+    const G    = state.mass * G_ACC;
+    const N    = G * Math.cos(th);
+    const Gp   = G * Math.sin(th);
+    const fmax = state.mu * N;
+    const canStay = state.mu * Math.cos(th) >= Math.sin(th);
+
+    el('rL').textContent  = L.toFixed(2) + ' m';
+    el('rh').textContent  = h.toFixed(2) + ' m';
+    el('rG').textContent  = G.toFixed(2) + ' N';
+    el('rN').textContent  = N.toFixed(2) + ' N';
+    el('rGp').textContent = Gp.toFixed(2) + ' N';
+    el('rF').textContent  = fmax.toFixed(2) + ' N';
+
+    const st = el('rState');
+
+    if (block.mode === 'flying') {
+      const v = Math.hypot(block.vx, block.vy);
+      st.innerHTML = '斜抛 · ' + mvar('v') + ' = ' + v.toFixed(2) + ' m/s';
+      st.className = 'flying';
+    } else if (block.mode === 'landed') {
+      st.innerHTML = '已落地';
+      st.className = 'static';
+    } else if (block.mode === 'horizontal') {
+      const v = Math.abs(block.vx);
+      const a = state.mu * G_ACC;
+      if (a > 1e-9) {
+        st.innerHTML = '水平减速 · ' + mvar('v') + ' = ' + v.toFixed(2) + ' m/s';
+      } else {
+        st.innerHTML = '水平匀速 · ' + mvar('v') + ' = ' + v.toFixed(2) + ' m/s';
+      }
+      st.className = 'moving';
+    } else if (block.mode === 'stopped') {
+      st.innerHTML = '水平面停止';
+      st.className = 'static';
+    } else if (animV > 0.01) {
+      st.innerHTML = '上滑减速 · ' + mvar('v') + ' = ' + Math.abs(animV).toFixed(2) + ' m/s';
+      st.className = 'moving';
+    } else if (animV < -0.01) {
+      st.innerHTML = '下滑 · ' + mvar('v') + ' = ' + Math.abs(animV).toFixed(2) + ' m/s';
+      st.className = 'moving';
+    } else if (canStay) {
+      st.innerHTML = '静止（' + mvar('f') + ' = ' + mvar('G') + '<sub>∥</sub>）';
+      st.className = 'static';
+    } else {
+      const a = G_ACC * (Math.sin(th) - state.mu * Math.cos(th));
+      st.innerHTML = '将下滑 · ' + mvar('a') + ' = ' + a.toFixed(2) + ' m/s²';
+      st.className = 'moving';
+    }
+  }
+
+  /* ---------------- 滑块绑定 ---------------- */
+  const binds = [
+    { id: 'angle', key: 'angle', fmt: v => v.toFixed(0) + '°' },
+    { id: 'base',  key: 'base',  fmt: v => v.toFixed(1) + ' m' },
+    { id: 'mu',    key: 'mu',    fmt: v => v.toFixed(2) },
+    { id: 'mass',  key: 'mass',  fmt: v => v.toFixed(1) + ' kg' },
+    { id: 'size',  key: 'size',  fmt: v => v.toFixed(2) + ' m' },
+    { id: 'pos',   key: 'pos',   fmt: v => Math.round(v * 100) + '%', tf: v => v / 100 },
+    { id: 'v0',    key: 'v0',    fmt: v => v.toFixed(1) + ' m/s' }
+  ];
+
+  binds.forEach(b => {
+    const input = el(b.id);
+    const out   = el(b.id + 'Val');
+    const tf    = b.tf || (v => v);
+
+    state[b.key] = tf(parseFloat(input.value));
+    out.textContent = b.fmt(state[b.key]);
+
+    input.addEventListener('input', () => {
+      stopAnim();
+      resetBlock();
+      state[b.key] = tf(parseFloat(input.value));
+      out.textContent = b.fmt(state[b.key]);
+      draw();
+      updateReadout();
+    });
+  });
+
+  function syncPosSlider() {
+    const v = Math.round(state.pos * 100);
+    el('pos').value = v;
+    el('posVal').textContent = v + '%';
+  }
+
+  el('showForces').addEventListener('change', e => {
+    state.showForces = e.target.checked; draw();
+  });
+  el('showDecomp').addEventListener('change', e => {
+    state.showDecomp = e.target.checked; draw();
+  });
+
+  /* ---------------- 物块重置 ---------------- */
+  function resetBlock() {
+    block.mode = 'onRamp';
+    block.vx = 0; block.vy = 0; block.rot = 0;
+    block.trail = [];
+    animV = 0;
+  }
+
+  /* ---------------- 发射 ---------------- */
+  function launch() {
+    const { th } = geom();
+    const canStay = state.mu * Math.cos(th) >= Math.sin(th);
+
+    stopAnim();
+    resetBlock();
+    state.pos = 0;
+    syncPosSlider();
+
+    if (state.v0 <= 0 && canStay) {
+      const hint = el('hint');
+      hint.innerHTML = mvar('v') + '<sub>0</sub> = 0 且 ' + mvar('μ') + ' 足够大，物块保持静止 ✋';
+      hint.classList.add('show');
+      clearTimeout(hint._t);
+      hint._t = setTimeout(() => hint.classList.remove('show'), 2400);
+      draw(); updateReadout();
+      return;
+    }
+
+    animV = state.v0;
+    animating = true;
+    animLast = performance.now();
+    cancelAnimationFrame(animId);
+    animId = requestAnimationFrame(tick);
+  }
+
+  /* ---------------- 物理步进 ---------------- */
+  function stepPhysics(dt) {
+    const { th, s0, s1 } = geom();
+    const S = state.size;
+    const sin = Math.sin(th), cos = Math.cos(th);
+    const g = G_ACC;
+
+    /* ===== 斜抛飞行 ===== */
+    if (block.mode === 'flying') {
+      block.x += block.vx * dt;
+      block.y += block.vy * dt;
+      block.vy -= g * dt;
+      block.trail.push({ x: block.x, y: block.y });
+
+      if (block.y <= S / 2) {
+        block.y = S / 2;
+        block.mode = 'landed';
+        block.vx = 0;
+        block.vy = 0;
+        block.trail.push({ x: block.x, y: S / 2 });
+        animating = false;
+        updateReadout();
+        return;
+      }
+      return;
+    }
+
+    /* ===== 水平面滑行（匀减速） ===== */
+    if (block.mode === 'horizontal') {
+      const dec = state.mu * g;
+
+      // 姿态归正（从斜面姿态平滑转为水平）
+      if (Math.abs(block.rot) > 0.004) {
+        block.rot += (0 - block.rot) * Math.min(1, dt * 10);
+      } else {
+        block.rot = 0;
+      }
+
+      if (Math.abs(block.vx) < 1e-4) {
+        block.vx = 0;
+        block.mode = 'stopped';
+        animating = false;
+        updateReadout();
+        return;
+      }
+
+      const dir = Math.sign(block.vx);
+      const newV = block.vx - dir * dec * dt;
+      if (dec > 1e-9 && Math.sign(newV) !== dir) {
+        // 减速到零，停止
+        block.vx = 0;
+        block.mode = 'stopped';
+        animating = false;
+        updateReadout();
+        return;
+      }
+      block.vx = newV;
+
+      const nx = block.x + block.vx * dt;
+      const xLeft = groundLeft();
+      if (nx < xLeft + S / 2) {
+        block.x = xLeft + S / 2;
+        block.vx = 0;
+        block.mode = 'stopped';
+        animating = false;
+        updateReadout();
+        return;
+      }
+      block.x = nx;
+      return;
+    }
+
+    /* ===== 已落地 / 已停止 ===== */
+    if (block.mode === 'landed' || block.mode === 'stopped') {
+      if (Math.abs(block.rot) > 0.005) {
+        block.rot += (0 - block.rot) * Math.min(1, dt * 12);
+      } else {
+        block.rot = 0;
+        animating = false;
+      }
+      return;
+    }
+
+    /* ===== 斜面运动 ===== */
+    const canStay = state.mu * cos >= sin - 1e-9;
+    let s = s0 + state.pos * (s1 - s0);
+
+    let a;
+    if (animV > 1e-5) {
+      a = -g * (sin + state.mu * cos);
+    } else if (animV < -1e-5) {
+      a = canStay ? 0 : -g * (sin - state.mu * cos);
+    } else {
+      if (canStay) {
+        animating = false; animV = 0;
+        updateReadout();
+        return;
+      }
+      a = -g * (sin - state.mu * cos);
+    }
+
+    const vOld = animV;
+    animV += a * dt;
+    if (vOld > 0 && animV <= 0) animV = 0;
+    s += animV * dt;
+
+    /* --- 顶端：仍有速度 → 斜抛飞出 --- */
+    if (s >= s1) {
+      if (animV > 1e-5) {
+        s = s1;
+        state.pos = 1;
+        syncPosSlider();
+
+        const nrm = [-sin, cos];
+        block.mode  = 'flying';
+        block.x     = cos * s1 + nrm[0] * S / 2;
+        block.y     = sin * s1 + nrm[1] * S / 2;
+        block.vx    = animV * cos;
+        block.vy    = animV * sin;
+        block.rot   = -th;
+        block.trail = [{ x: block.x, y: block.y }];
+        animV = 0;
+
+        const hint = el('hint');
+        hint.innerHTML = '初速度过大，物块飞出斜面 ✈';
+        hint.classList.add('show');
+        clearTimeout(hint._t);
+        hint._t = setTimeout(() => hint.classList.remove('show'), 2200);
+
+        updateReadout();
+        return;
+      }
+      s = s1;
+      if (animV > 0) animV = 0;
+    } else if (s <= s0) {
+      /* --- 底端：仍有下滑速度 → 进入水平面 --- */
+      if (animV < -1e-5) {
+        s = s0;
+        state.pos = 0;
+        syncPosSlider();
+
+        // 水平速度 = 沿斜面速度的水平分量（竖直分量被地面吸收）
+        block.mode  = 'horizontal';
+        block.x     = -S / 2;
+        block.y     = S / 2;
+        block.vx    = animV * cos;     // 负值，向左
+        block.vy    = 0;
+        block.rot   = -th;
+        block.trail = [];
+        animV = 0;
+
+        const hint = el('hint');
+        hint.innerHTML = '物块滑入水平面，开始匀减速 🛹';
+        hint.classList.add('show');
+        clearTimeout(hint._t);
+        hint._t = setTimeout(() => hint.classList.remove('show'), 2200);
+
+        updateReadout();
+        return;
+      }
+      s = s0;
+      animV = 0;
+    }
+
+    state.pos = (s - s0) / (s1 - s0);
+    syncPosSlider();
+
+    if (Math.abs(animV) < 1e-4) {
+      if (canStay) {
+        animating = false; animV = 0;
+        updateReadout();
+        return;
+      }
+      if (s <= s0 + 1e-6) {
+        animating = false; animV = 0;
+        updateReadout();
+        return;
+      }
+    }
+  }
+
+  /* ---------------- 主循环 ---------------- */
+  function tick(t) {
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+
+    const dt = Math.min((t - animLast) / 1000, 0.04);
+    animLast = t;
+
+    if (animating) stepPhysics(dt);
+
+    // 视野平滑跟随
+    const tv = computeTargetView(W, H);
+    viewTarget.sc = tv.sc; viewTarget.ox = tv.ox; viewTarget.oy = tv.oy;
+
+    if (viewCur.sc === null) {
+      viewCur.sc = tv.sc; viewCur.ox = tv.ox; viewCur.oy = tv.oy;
+    } else {
+      const k = 0.18;
+      viewCur.sc += (tv.sc - viewCur.sc) * k;
+      viewCur.ox += (tv.ox - viewCur.ox) * k;
+      viewCur.oy += (tv.oy - viewCur.oy) * k;
+    }
+
+    renderScene();
+    updateReadout();
+
+    if (animating || viewDiff() > 0.4) {
+      animId = requestAnimationFrame(tick);
+    }
+  }
+
+  function stopAnim() {
+    animating = false;
+    cancelAnimationFrame(animId);
+  }
+
+  el('release').addEventListener('click', launch);
+
+  /* ---------------- 拖拽物块 ---------------- */
+  function toWorld(sx, sy) {
+    return [(sx - view.ox) / view.scale, (view.oy - sy) / view.scale];
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    if (block.mode !== 'onRamp') return;
+
+    const r = cv.getBoundingClientRect();
+    const sx = e.clientX - r.left, sy = e.clientY - r.top;
+    const [wx, wy] = toWorld(sx, sy);
+
+    const { th, s0, s1 } = geom();
+    const u = [Math.cos(th), Math.sin(th)];
+    const n = [-Math.sin(th), Math.cos(th)];
+    const s = s0 + state.pos * (s1 - s0);
+    const cx = u[0] * s + n[0] * state.size / 2;
+    const cy = u[1] * s + n[1] * state.size / 2;
+
+    if (Math.hypot(wx - cx, wy - cy) < state.size * 1.1) {
+      dragging = true;
+      stopAnim();
+      animV = 0;
+      updateReadout();
+      cv.setPointerCapture(e.pointerId);
+    }
+  });
+
+  cv.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const r = cv.getBoundingClientRect();
+    const [wx, wy] = toWorld(e.clientX - r.left, e.clientY - r.top);
+    const { th, s0, s1 } = geom();
+    const proj = wx * Math.cos(th) + wy * Math.sin(th);
+    const s = Math.min(s1, Math.max(s0, proj));
+    state.pos = (s - s0) / (s1 - s0);
+    syncPosSlider();
+    draw();
+    updateReadout();
+  });
+
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    try { cv.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+
+  /* ---------------- 初始化 ---------------- */
+  new ResizeObserver(resize).observe(cv.parentElement);
+  window.addEventListener('resize', resize);
+  window.addEventListener('gw-sim-background', draw);
+
+  resize();
+  updateReadout();
+  syncPosSlider();
+  document.querySelectorAll('[data-tex]').forEach(el => setMath(el, el.dataset.tex, el.textContent));
+  requestAnimationFrame(resize);
+
+})();
+</script>
+<script src="panel-toggle.js" defer></script>
+</body>
+</html>
