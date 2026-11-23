@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>数理无限画布 · 设备自检</title>
+<style>
+  :root { --bg:#0f1115; --fg:#e8ecf2; --dim:#8b93a1; --ok:#2ecc71; --bad:#ff5252; --warn:#ffb020; --card:#171a21; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  body { margin:0; padding:16px 14px 40px; background:var(--bg); color:var(--fg);
+         font:16px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  h1 { font-size:19px; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:13px; margin-bottom:14px; }
+  .verdict { padding:14px 16px; border-radius:14px; font-size:17px; font-weight:600; margin-bottom:14px;
+             background:#1e2530; border-left:5px solid var(--dim); }
+  .verdict.ok { border-color:var(--ok); }
+  .verdict.bad { border-color:var(--bad); }
+  .verdict.warn { border-color:var(--warn); }
+  .verdict small { display:block; font-weight:400; font-size:13px; color:var(--dim); margin-top:6px; }
+  .card { background:var(--card); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .card h2 { font-size:14px; margin:0 0 8px; color:var(--dim); font-weight:600; letter-spacing:.02em; }
+  .row { display:flex; justify-content:space-between; gap:10px; padding:5px 0; font-size:14px;
+         border-bottom:1px solid rgba(255,255,255,.05); }
+  .row:last-child { border-bottom:0; }
+  .row .k { color:var(--dim); flex:0 0 auto; }
+  .row .v { text-align:right; word-break:break-all; font-variant-numeric:tabular-nums; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .warn { color:var(--warn); }
+  .bar { height:7px; background:#242a35; border-radius:6px; overflow:hidden; margin:8px 0 2px; }
+  .bar > i { display:block; height:100%; width:0; background:linear-gradient(90deg,#3b82f6,#22d3ee); transition:width .25s; }
+  button { width:100%; margin-top:14px; padding:14px; border:0; border-radius:12px; font-size:16px; font-weight:600;
+           background:#2f6ef0; color:#fff; }
+  button:active { opacity:.85; }
+  .tip { font-size:13px; color:var(--dim); margin-top:10px; line-height:1.6; }
+</style>
+</head>
+<body>
+<h1>跑个自检，10 秒出结果</h1>
+<div class="sub">这一步只读检测，不改任何东西。检查完把结果告诉我就行。</div>
+
+<div id="verdict" class="verdict">正在检测…<small>请保持当前网络，不要切后台</small></div>
+
+<div class="card">
+  <h2>设备信息</h2>
+  <div id="env"></div>
+</div>
+
+<div class="card">
+  <h2>资源下载（逐个实测）</h2>
+  <div class="row"><span class="k">进度</span><span class="v" id="prog">0 / 0</span></div>
+  <div class="bar"><i id="fill"></i></div>
+  <div id="files"></div>
+</div>
+
+<div class="card">
+  <h2>汇总</h2>
+  <div id="sum"></div>
+</div>
+
+<button id="again" onclick="run()">重新检测</button>
+<div class="tip" id="tip"></div>
+
+<script>
+(function () {
+  var BASE = location.pathname.replace(/[^\/]*$/, '');
+  // 抽样：入口 + 桥接 + 各层核心脚本 + 大件资源（GeoGebra、字体）
+  var TARGETS = [
+    ['index.html',               20000],
+    ['version.json',              1000],
+    ['mobile-shim.js',           20000],
+    ['core/kit.js',              50000],
+    ['core/app.js',             200000],
+    ['core/importer.js',        100000],
+    ['styles/app.css',          100000],
+    ['vendor/katex/katex.min.js',300000],
+    ['ggb/GeoGebra/HTML5/5.0/web3d/web3d.nocache.js', 200000]
+  ];
+
+  function iosInfo() {
+    var ua = navigator.userAgent;
+    var m = ua.match(/OS (\d+)[._](\d+)/);
+    var d = navigator.standalone === true ? '是（主屏幕应用）' : '否（Safari 标签页）';
+    return {
+      ios: m ? ('iOS ' + m[1] + '.' + m[2]) : '非 iOS / 未识别',
+      standalone: d,
+      sw: window.isSecureContext
+            ? (('serviceWorker' in navigator) ? '支持' : '不支持')
+            : '不启用（局域网 http 地址的浏览器限制，不影响使用）',
+      ua: ua
+    };
+  }
+
+  function row(k, v, cls) {
+    return '<div class="row"><span class="k">' + k + '</span><span class="v ' + (cls || '') + '">' + v + '</span></div>';
+  }
+
+  var env = iosInfo();
+  document.getElementById('env').innerHTML =
+    row('系统', env.ios) +
+    row('打开方式', env.standalone) +
+    row('离线缓存 API', env.sw) +
+    row('当前版本', '<span id="vjson">读取中…</span>') +
+    row('User-Agent', '<span style="font-size:11px;color:#8b93a1">' + env.ua.replace(/</g, '&lt;') + '</span>');
+
+  function probe(path) {
+    var url = BASE + path;
+    var t0 = performance.now();
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 15000);
+    return fetch(url, { cache: 'no-store', signal: ctl.signal })
+      .then(function (r) {
+        return r.arrayBuffer().then(function (buf) {
+          clearTimeout(timer);
+          return { path: path, ok: r.ok, status: r.status, size: buf.byteLength, ms: Math.round(performance.now() - t0) };
+        });
+      })
+      .catch(function (e) {
+        clearTimeout(timer);
+        return { path: path, ok: false, status: 0, size: 0,
+                 ms: Math.round(performance.now() - t0), err: (e && e.name) ? e.name : 'ERR' };
+      });
+  }
+
+  function run() {
+    var vd = document.getElementById('verdict');
+    var filesEl = document.getElementById('files');
+    var sumEl = document.getElementById('sum');
+    var fill = document.getElementById('fill');
+    var prog = document.getElementById('prog');
+    vd.className = 'verdict';
+    vd.innerHTML = '正在检测…<small>请保持当前网络，不要切后台</small>';
+    filesEl.innerHTML = '';
+    sumEl.innerHTML = '';
+    fill.style.width = '0%';
+    prog.textContent = '0 / ' + TARGETS.length;
+
+    var done = 0, results = [], tAll = performance.now();
+
+    TARGETS.forEach(function (t) {
+      probe(t[0]).then(function (r) {
+        r.key = t[0];
+        results.push(r);
+        done++;
+        prog.textContent = done + ' / ' + TARGETS.length;
+        fill.style.width = Math.round(done / TARGETS.length * 100) + '%';
+        var cls = r.ok ? 'ok' : 'bad';
+        var detail = r.ok
+          ? (r.ms + ' ms · ' + Math.round(r.size / 1024) + ' KB')
+          : ('失败 ' + (r.err || ('HTTP ' + r.status)) + ' · ' + r.ms + ' ms');
+        filesEl.innerHTML += row(r.path, detail, cls);
+        if (done === TARGETS.length) finish(results, Math.round(performance.now() - tAll));
+      });
+    });
+
+    // 版本文件单独读一次内容
+    fetch(BASE + 'version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var el = document.getElementById('vjson');
+        if (el) el.textContent = (j && j.version) ? j.version : '读取失败';
+      })
+      .catch(function () {
+        var el = document.getElementById('vjson');
+        if (el) { el.textContent = '读取失败'; el.className = 'bad'; }
+      });
+  }
+
+  function finish(results, totalMs) {
+    var vd = document.getElementById('verdict');
+    var bad = results.filter(function (r) { return !r.ok; });
+    var slow = results.filter(function (r) { return r.ok && r.ms > 4000; });
+    var kb = results.reduce(function (s, r) { return s + (r.size || 0); }, 0) / 1024;
+    var avg = results.length ? Math.round(results.reduce(function (s, r) { return s + r.ms; }, 0) / results.length) : 0;
+
+    document.getElementById('sum').innerHTML =
+      row('总耗时', totalMs + ' ms') +
+      row('平均单项耗时', avg + ' ms') +
+      row('抽样下载量', Math.round(kb) + ' KB') +
+      row('成功', results.length - bad.length + ' / ' + results.length, bad.length ? 'warn' : 'ok') +
+      row('失败', bad.length + ' 项', bad.length ? 'bad' : 'ok') +
+      row('超过 4 秒', slow.length + ' 项', slow.length ? 'warn' : 'ok');
+
+    if (bad.length) {
+      vd.className = 'verdict bad';
+      vd.innerHTML = '有 ' + bad.length + ' 个资源下载失败 → 这就是白屏的原因' +
+        '<small>失败项：' + bad.map(function (b) { return b.key; }).join('、') + '</small>';
+      document.getElementById('tip').textContent =
+        '说明这台 iPad 到服务器的连接被卡住了（常见于校园网/移动网络），换 Wi-Fi、或改用局域网连接可解决。';
+    } else if (slow.length || avg > 3000) {
+      vd.className = 'verdict warn';
+      vd.innerHTML = '能下载，但速度偏慢（平均 ' + avg + ' ms）' +
+        '<small>首次打开要拉上百个文件，慢到一定程度 Safari 会判定超时，页面就停在白屏</small>';
+      document.getElementById('tip').textContent =
+        '建议换到更快的 Wi-Fi，或直接用局域网连接（不依赖外网）。第二次打开会有缓存，会明显变快。';
+    } else {
+      vd.className = 'verdict ok';
+      vd.innerHTML = '网络完全正常（平均 ' + avg + ' ms）' +
+        '<small>资源和速度都没问题，白屏更可能是旧缓存或打开方式导致的</small>';
+      document.getElementById('tip').textContent =
+        '在 Safari 设置 → 高级 → 网站数据里删掉本站数据，然后重新打开 index.html。';
+    }
+  }
+
+  run();
+})();
+</script>
+</body>
+</html>

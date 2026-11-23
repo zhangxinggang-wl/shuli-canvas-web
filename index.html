@@ -10,6 +10,106 @@
 <link rel="stylesheet" href="styles/app.css">
 </head>
 <body data-tool="pen">
+<!-- 启动遮罩：本页有 92 个脚本同步加载，任何一环卡住，浏览器渲染出来就是一片空白，
+     老师分不清「在加载」还是「坏了」。这里先给一个可见的加载界面，就绪后自动淡出。
+     纯内联、无外部依赖，所以它一定比下面那 92 个脚本先出现在屏幕上。 -->
+<div id="boot-veil" role="status" aria-live="polite">
+  <div class="bv-mid">
+    <div class="bv-title">数理无限画布</div>
+    <div class="bv-bar"><i id="bv-fill"></i></div>
+    <div class="bv-txt" id="bv-txt">正在加载组件…</div>
+    <div class="bv-hint" id="bv-hint"></div>
+  </div>
+</div>
+<style>
+  #boot-veil { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483000; display: flex;
+    align-items: center; justify-content: center; background: #f6f7f9; color: #1c2026;
+    font: 16px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-transition: opacity .35s ease; transition: opacity .35s ease; }
+  #boot-veil.bv-out { opacity: 0; pointer-events: none; }
+  #boot-veil .bv-mid { width: 78vw; max-width: 420px; text-align: center; padding: 0 6px; }
+  #boot-veil .bv-title { font-size: 22px; font-weight: 600; letter-spacing: .02em; }
+  #boot-veil .bv-bar { height: 6px; border-radius: 6px; background: #e2e6ec;
+    overflow: hidden; margin: 18px 0 12px; }
+  #boot-veil .bv-bar > i { display: block; height: 100%; width: 0;
+    background: linear-gradient(90deg, #3b82f6, #22d3ee); transition: width .3s ease; }
+  #boot-veil .bv-txt { font-size: 15px; color: #55606f; font-variant-numeric: tabular-nums; }
+  #boot-veil .bv-hint { font-size: 13px; color: #8b93a1; margin-top: 14px; line-height: 1.7; }
+  #boot-veil .bv-box { margin-top: 16px; padding: 14px 16px; border-radius: 12px;
+    background: #fff; border: 1px solid #e2e6ec; text-align: left; font-size: 13.5px; color: #3c4655; }
+  #boot-veil .bv-box b { color: #c0392b; }
+  #boot-veil .bv-btn { display: inline-block; margin-top: 12px; padding: 11px 22px;
+    border-radius: 10px; background: #2f6ef0; color: #fff; font-weight: 600;
+    text-decoration: none; font-size: 15px; }
+</style>
+<script>
+(function () {
+  var TOTAL = 92;
+  var veil = document.getElementById('boot-veil');
+  var fill = document.getElementById('bv-fill');
+  var txt = document.getElementById('bv-txt');
+  var hint = document.getElementById('bv-hint');
+  var t0 = new Date().getTime();
+  var done = false;
+
+  function loadedJs() {
+    try {
+      var es = performance.getEntriesByType('resource');
+      var n = 0;
+      for (var i = 0; i < es.length; i++) {
+        var u = es[i].name || '';
+        if (u.slice(-3) === '.js' || u.indexOf('.js?') > -1) n++;
+      }
+      return n;
+    } catch (e) { return 0; }
+  }
+
+  function ready() {
+    return !!(window.GW && document.getElementById('stage') && document.getElementById('dock'));
+  }
+
+  function drop() {
+    if (done) return;
+    done = true;
+    veil.className = 'bv-out';
+    setTimeout(function () {
+      if (veil && veil.parentNode) veil.parentNode.removeChild(veil);
+    }, 420);
+  }
+
+  function fail(reason) {
+    if (done) return;
+    done = true;
+    txt.textContent = '加载没有完成';
+    fill.style.width = '100%';
+    fill.style.background = '#ff5252';
+    var sec = Math.round((new Date().getTime() - t0) / 1000);
+    hint.innerHTML =
+      '<div class="bv-box">已等待 ' + sec + ' 秒，原因：' + reason + '<br>' +
+      '多半是这台设备到服务器的连接不稳（校园网、移动网络常见）。<br>' +
+      '先做个自检，10 秒就能看出卡在哪一步。</div>' +
+      '<a class="bv-btn" href="diag.html">打开自检页面</a>' +
+      '<div style="margin-top:12px"><a href="index.html" style="color:#55606f">重新加载</a></div>';
+  }
+
+  var tick = setInterval(function () {
+    if (done) { clearInterval(tick); return; }
+    if (ready()) { clearInterval(tick); drop(); return; }
+    var n = Math.min(loadedJs(), TOTAL);
+    fill.style.width = Math.max(6, Math.round(n / TOTAL * 100)) + '%';
+    var sec = Math.round((new Date().getTime() - t0) / 1000);
+    if (sec >= 20) {
+      clearInterval(tick); fail('组件只加载了 ' + loadedJs() + ' / ' + TOTAL + ' 个');
+    } else {
+      txt.textContent = '正在加载组件 ' + n + ' / ' + TOTAL + '（' + sec + ' 秒）';
+    }
+  }, 250);
+
+  window.addEventListener('load', function () {
+    setTimeout(function () { if (!done && ready()) drop(); }, 300);
+  });
+})();
+</script>
 <script src="mobile-shim.js"></script>
 <div id="stage">
   <canvas id="bg-canvas"></canvas>
