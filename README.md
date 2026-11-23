@@ -11,6 +11,16 @@ AIGC:
 
 # 数理无限画布 · 网页版（2.2.9）
 
+## 在线地址（已部署 GitHub Pages）
+
+**<https://zhangxinggang-wl.github.io/shuli-canvas-web/>**
+
+平板 / 手机 / 任意电脑直接打开即可用，无需安装任何东西。iPad 上用 Safari 打开后点「分享 → 添加到主屏幕」，即可当 App 用，Apple Pencil 直接书写。
+
+> 首次打开需要下载约 15 MB 资源（GeoGebra 按需加载），建议在 Wi-Fi 下第一次打开；之后由 Service Worker 缓存，断网也能用。
+
+---
+
 由官方桌面安装包 `数理无限画布 Setup 2.2.9.exe` 解包重建的**纯静态网页版**，无需安装、双击即用，
 Windows / Mac / iPad / 安卓平板 / 教室一体机，只要能开浏览器就能跑。
 
