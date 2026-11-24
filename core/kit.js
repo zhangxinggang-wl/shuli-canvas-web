@@ -31,7 +31,7 @@
   GW.uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
   GW.clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   // 版本号只有这一处。打包脚本 / 关于对话框 / 启动自检都读它，避免三处手写对不上。
-  GW.APP_VERSION = '2.2.9';
+  GW.APP_VERSION = '2.3.0';
 
   // ---------- 渲染层异常留痕（1.6.5） ----------
   // 主进程的 console-message 只有一行文字（「[页面] xxx @app.js:1234」），没有调用栈；
