@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>数理无限画布 · 打不开时点这里</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; padding: 20px 16px 40px; background: #f6f7f9; color: #1c2026;
+    font: 17px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { font-size: 25px; margin: 0 0 6px; }
+  .sub { color: #6b7480; font-size: 15px; margin: 0 0 18px; }
+  #verdict { border-radius: 16px; padding: 18px 18px 16px; margin: 0 0 16px; font-size: 19px; font-weight: 700; line-height: 1.5; }
+  #verdict small { display: block; font-size: 15px; font-weight: 400; margin-top: 8px; line-height: 1.65; opacity: .92; }
+  .v-ok { background: #e8f7ee; color: #0f6b3a; border: 1px solid #b7e4c9; }
+  .v-bad { background: #fdeceb; color: #9b1c1c; border: 1px solid #f6c7c4; }
+  .v-warn { background: #fff6e6; color: #8a5200; border: 1px solid #f5dcb0; }
+  .btn { display: block; width: 100%; padding: 19px 16px; margin: 0 0 11px; border: 0; border-radius: 16px;
+    font-size: 20px; font-weight: 700; color: #fff; background: #2563eb; font-family: inherit; }
+  .btn:active { opacity: .86; }
+  .btn.ghost { background: #fff; color: #2563eb; border: 2px solid #c7d7f7; font-size: 18px; }
+  .btn.green { background: #16a34a; }
+  .btn[disabled] { opacity: .5; }
+  .card { background: #fff; border: 1px solid #e3e7ee; border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; }
+  .card h2 { font-size: 16px; margin: 0 0 8px; color: #33405a; }
+  .row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 15px; border-bottom: 1px dashed #edf0f5; }
+  .row:last-child { border-bottom: 0; }
+  .row b { font-weight: 500; color: #55606f; flex: 0 0 auto; }
+  .row span { text-align: right; word-break: break-all; }
+  .yes { color: #0f6b3a; font-weight: 700; }
+  .no { color: #c81e1e; font-weight: 700; }
+  #log { background: #0f172a; color: #c7f9d0; border-radius: 12px; padding: 12px 14px;
+    font: 13.5px/1.7 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; margin: 0 0 14px; min-height: 40px; }
+  .tip { font-size: 14.5px; color: #6b7480; line-height: 1.8; }
+  ul { margin: 6px 0 0; padding-left: 20px; }
+  li { margin: 5px 0; font-size: 15px; }
+  code { background: #eef1f6; padding: 1px 5px; border-radius: 5px; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>打不开？先在这里体检</h1>
+<p class="sub">本页不依赖正式版的任何脚本，正式版白屏时它照样能打开。</p>
+
+<div id="verdict" class="v-warn">正在体检这台设备…</div>
+
+<button class="btn green" id="lite">先进入应急白板（秒开）</button>
+<button class="btn" id="go">清理旧缓存，重开正式版</button>
+<button class="btn ghost" id="diag">测网络：能不能下载到正式版文件</button>
+
+<div id="log">等待操作…</div>
+
+<div class="card" id="compatCard">
+  <h2>设备能力体检</h2>
+  <div id="compat"></div>
+</div>
+
+<div class="card">
+  <h2>当前设备</h2>
+  <div id="env"></div>
+</div>
+
+<div class="card" style="background:#fff7ed;border-color:#fed7aa">
+  <h2 style="color:#b45309">三条通道，按顺序试</h2>
+  <ul>
+    <li><b>通道 1 · 应急白板：</b>点上面绿色按钮。单文件、零依赖、不加载那 92 个脚本，任何 iPad 都能秒开。上课先用它顶住。</li>
+    <li><b>通道 2 · 电脑热点：</b>iPad 连不上或很慢时，用电脑开移动热点，iPad 连这个热点，电脑上运行 <code>启动网页版.bat</code>，用窗口里打印的 <code>http://</code> 地址打开。不经过外网，最快最稳。</li>
+    <li><b>通道 3 · 正式版：</b>点蓝色按钮清缓存后重开。首次加载要下 8.8 MB、执行 92 个脚本，iPad 上可能等十几秒到一分钟，别中途退出。</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2>别在这些地方打开</h2>
+  <div class="tip">微信、QQ 内置浏览器会禁用离线缓存和下载，也常常限制内存，请复制链接到 <b>Safari</b> 打开。</div>
+</div>
+
+<script>
+(function () {
+  var logEl = document.getElementById('log');
+  var verdictEl = document.getElementById('verdict');
+  var compatEl = document.getElementById('compat');
+  var envEl = document.getElementById('env');
+
+  function log(s) { logEl.textContent += (logEl.textContent ? '\n' : '') + s; }
+  function addRow(box, k, v, cls) {
+    var d = document.createElement('div'); d.className = 'row';
+    var b = document.createElement('b'); b.textContent = k;
+    var s = document.createElement('span'); s.textContent = v;
+    if (cls) s.className = cls;
+    d.appendChild(b); d.appendChild(s); box.appendChild(d);
+  }
+
+  // ============ 1. 设备信息 ============
+  var ua = navigator.userAgent || '';
+  var ios = (ua.match(/OS (\d+[_.]\d+)/i) || [])[1];
+  var iosNum = ios ? parseFloat(ios.replace('_', '.')) : 0;
+  var isIPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+  addRow(envEl, '系统', ios ? ('iOS / iPadOS ' + ios.replace('_', '.')) : ua.slice(0, 40));
+  addRow(envEl, '设备', isIPad ? 'iPad' : (/iPhone/.test(ua) ? 'iPhone' : '电脑/其它'));
+  addRow(envEl, '打开方式', navigator.standalone ? '已添加到主屏幕' : 'Safari 标签页');
+  addRow(envEl, '屏幕', window.screen.width + ' × ' + window.screen.height +
+    '（可视 ' + Math.round(window.innerWidth) + ' × ' + Math.round(window.innerHeight) + '）');
+  addRow(envEl, '网络', navigator.onLine ? '已联网' : '离线');
+  addRow(envEl, '内核', /Safari/.test(ua) && !/Chrome/.test(ua) ? 'Safari / WebKit' : (/Chrome/.test(ua) ? 'Chrome 系' : (ua.match(/(Firefox|Edg)\/[\d.]+/) || ['其它'])[0]));
+
+  // ============ 2. 能力体检 ============
+  function syntaxOk(src) {
+    try { new Function(src); return true; } catch (e) { return false; }
+  }
+  var checks = [
+    { n: '可选链 a?.b',      ok: syntaxOk('var a={};return a?.b;'),        need: 'Safari 13.1 / iOS 13.4' },
+    { n: '空值合并 ??',       ok: syntaxOk('var a=null;return a??1;'),      need: 'Safari 13.1' },
+    { n: '逻辑赋值 ||=',      ok: syntaxOk('var a=0;a||=1;'),              need: 'Safari 14 / iOS 14' },
+    { n: '逻辑赋值 ??=',      ok: syntaxOk('var a=null;a??=1;'),           need: 'Safari 14' },
+    { n: 'structuredClone',  ok: typeof structuredClone === 'function',    need: 'Safari 15.4' },
+    { n: 'Array.at()',       ok: typeof [].at === 'function',              need: 'Safari 15.4' },
+    { n: 'Array.findLast()', ok: typeof [].findLast === 'function',        need: 'Safari 15.4' },
+    { n: 'Object.hasOwn()',  ok: typeof Object.hasOwn === 'function',      need: 'Safari 15.4' },
+    { n: 'String.replaceAll',ok: typeof ''.replaceAll === 'function',      need: 'Safari 13.1' },
+    { n: 'Array.toSorted()', ok: typeof [].toSorted === 'function',        need: 'Safari 17.4' }
+  ];
+  var missing = [], missingHard = [];
+  for (var i = 0; i < checks.length; i++) {
+    var c = checks[i];
+    addRow(compatEl, c.n, (c.ok ? '✓ 支持' : '✗ 缺少') + '（需 ' + c.need + '）', c.ok ? 'yes' : 'no');
+    if (!c.ok) { missing.push(c.n + '（需 ' + c.need + '）'); }
+    if (!c.ok && (c.n === '可选链 a?.b' || c.n === '空值合并 ??' || c.n === '逻辑赋值 ||=' || c.n === '逻辑赋值 ??=')) {
+      missingHard.push(c.n);
+    }
+  }
+
+  function setVerdict(cls, title, detail) {
+    verdictEl.className = cls;
+    verdictEl.innerHTML = '';
+    verdictEl.appendChild(document.createTextNode(title));
+    var s = document.createElement('small'); s.innerHTML = detail;
+    verdictEl.appendChild(s);
+  }
+
+  if (missingHard.length) {
+    setVerdict('v-bad', '这台设备的系统太老，跑不了正式版',
+      '缺少正式版必需的语法：' + missingHard.join('、') + '。<br>' +
+      '正式版脚本一解析就报错，所以会一直白屏或卡在"正在加载组件"。<br>' +
+      '<b>请点上方绿色按钮，用应急白板。</b>');
+  } else if (missing.length) {
+    setVerdict('v-warn', '系统偏旧，正式版可能部分功能报错',
+      '缺少：' + missing.join('、') + '。<br>' +
+      '页面能打开，但遇到这些接口时会报错。建议先用应急白板，或把 iPad 升级到最新系统。');
+  } else {
+    setVerdict('v-ok', '设备完全达标，问题在缓存或网络',
+      '这台设备能跑正式版。若仍白屏，请点上方蓝色按钮清理旧缓存后重试；<br>' +
+      '若清理后还不行，点灰色按钮测网络，看是不是下载不到文件。');
+  }
+
+  // ============ 3. 一键清缓存 ============
+  document.getElementById('go').addEventListener('click', function () {
+    var btn = this; btn.disabled = true;
+    logEl.textContent = '';
+    log('开始清理…');
+    var done = 0, total = 3;
+    function finish() {
+      done++;
+      if (done < total) return;
+      log('清理完成，带新参数重新打开正式版…');
+      setTimeout(function () { location.href = 'index.html?fresh=' + new Date().getTime(); }, 900);
+    }
+    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        log('离线服务：发现 ' + regs.length + ' 个');
+        var p = [];
+        for (var i = 0; i < regs.length; i++) { p.push(regs[i].unregister()); }
+        return Promise.all(p).then(function () { log('已全部注销'); });
+      }).then(finish, function (e) { log('注销失败：' + e.message); finish(); });
+    } else { log('不支持离线服务，跳过'); finish(); }
+
+    if (window.caches && caches.keys) {
+      caches.keys().then(function (ks) {
+        log('缓存空间：发现 ' + ks.length + ' 个');
+        var p = [];
+        for (var i = 0; i < ks.length; i++) { p.push(caches['delete'](ks[i])); }
+        return Promise.all(p).then(function () { log('已全部删除'); });
+      }).then(finish, function (e) { log('清缓存失败：' + e.message); finish(); });
+    } else { log('不支持缓存空间，跳过'); finish(); }
+
+    try {
+      var n = 0, k;
+      for (k in localStorage) { if (Object.prototype.hasOwnProperty.call(localStorage, k)) n++; }
+      localStorage.clear();
+      sessionStorage.clear();
+      log('已清空本地存储（' + n + ' 项，不含你下载的白板文件）');
+    } catch (e) { log('清存储失败：' + e.message); }
+    finish();
+  });
+
+  // ============ 4. 网络自检 ============
+  document.getElementById('diag').addEventListener('click', function () {
+    var btn = this; btn.disabled = true;
+    logEl.textContent = '';
+    if (!window.fetch) { log('这台设备太老，不支持 fetch，无法测速。请直接用应急白板。'); btn.disabled = false; return; }
+    var files = ['index.html', 'styles/app.css', 'styles/mobile.css', 'core/app.js', 'mobile-shim.js', 'sw.js', 'build/icon.png'];
+    var left = files.length, ok = 0, bad = 0, sum = 0;
+    log('开始抽样下载（' + files.length + ' 个文件）…');
+    for (var i = 0; i < files.length; i++) { probe(files[i]); }
+    function probe(f) {
+      var t0 = new Date().getTime();
+      fetch(f + '?probe=' + t0, { cache: 'no-store' }).then(function (r) {
+        var ms = new Date().getTime() - t0;
+        if (r.ok) { ok++; sum += ms; log('✓ ' + f + '  ' + ms + ' ms'); }
+        else { bad++; log('✗ ' + f + '  HTTP ' + r.status); }
+      })['catch'](function (e) {
+        bad++; log('✗ ' + f + '  失败（' + (e.message || '连不上') + '）');
+      }).then(function () {
+        if (--left === 0) {
+          log('');
+          if (bad === 0) log('结论：文件都能下载（平均 ' + Math.round(sum / ok) + ' ms）。白屏是缓存或系统版本问题，不是网。');
+          else log('结论：有 ' + bad + ' 个文件下载失败，这台设备访问该网址不通畅，请改用电脑热点方案。');
+          btn.disabled = false;
+        }
+      });
+    }
+  });
+
+  // ============ 5. 应急白板 ============
+  document.getElementById('lite').addEventListener('click', function () {
+    location.href = 'lite.html';
+  });
+})();
+</script>
+</body>
+</html>

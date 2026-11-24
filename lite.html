@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>应急白板 · 数理无限画布</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #f7f8fa;
+    font: 15px/1.4 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #1c2026;
+    -webkit-user-select: none; user-select: none; }
+  #wrap { position: fixed; inset: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+  #bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    display: flex; align-items: center; gap: 6px; padding: 7px 9px; border-radius: 16px; background: rgba(255,255,255,.96);
+    box-shadow: 0 8px 26px rgba(20,30,50,.16); z-index: 10; max-width: calc(100vw - 16px); overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  #bar::-webkit-scrollbar { display: none; }
+  .b { flex: 0 0 auto; height: 44px; min-width: 44px; padding: 0 12px; border: 0; border-radius: 11px;
+    background: #eef1f6; color: #22303f; font-size: 15px; font-weight: 600; display: inline-flex;
+    align-items: center; justify-content: center; gap: 5px; }
+  .b:active { background: #dfe5ef; }
+  .b.on { background: #2563eb; color: #fff; }
+  .b.danger:active { background: #fde2e1; }
+  .sep { flex: 0 0 auto; width: 1px; height: 26px; background: #dfe4ec; margin: 0 2px; }
+  .sw { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px #c9d2e0; }
+  .sw.on { box-shadow: 0 0 0 3px #2563eb; }
+  #toast { position: fixed; left: 50%; top: 16px; transform: translateX(-50%) translateY(-14px);
+    background: rgba(28,32,38,.9); color: #fff; padding: 9px 16px; border-radius: 11px; font-size: 14px;
+    opacity: 0; transition: opacity .22s, transform .22s; pointer-events: none; z-index: 20; max-width: 86vw; text-align: center; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #hint { position: fixed; left: 14px; top: calc(12px + env(safe-area-inset-top, 0px)); font-size: 13px;
+    color: #8a93a1; background: rgba(255,255,255,.86); padding: 6px 11px; border-radius: 9px; z-index: 5; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv"></canvas></div>
+<div id="hint">应急白板 · 第 <b id="pn">1</b> 页</div>
+<div id="bar">
+  <button class="b" id="pen">笔</button>
+  <button class="b" id="eraser">橡皮</button>
+  <button class="b" id="undo">撤销</button>
+  <button class="b danger" id="clear">清空</button>
+  <span class="sep"></span>
+  <button class="sw on" data-c="#1c2026" style="background:#1c2026"></button>
+  <button class="sw" data-c="#e11d48" style="background:#e11d48"></button>
+  <button class="sw" data-c="#2563eb" style="background:#2563eb"></button>
+  <button class="sw" data-c="#16a34a" style="background:#16a34a"></button>
+  <span class="sep"></span>
+  <button class="b" id="thin">细</button>
+  <button class="b" id="fat">粗</button>
+  <span class="sep"></span>
+  <button class="b" id="prev">上一页</button>
+  <button class="b" id="next">下一页</button>
+  <button class="b" id="save">存图</button>
+</div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var W = 0, H = 0, dpr = 1;
+  var pages = [];           // 每页：{ c: canvas, strokes: [...] }
+  var cur = 0;
+  var tool = 'pen', color = '#1c2026', width = 3;
+  var drawing = false, pts = [];
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  function newPageCanvas() {
+    var c = document.createElement('canvas');
+    c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+    var g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    return c;
+  }
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // 旧页按新尺寸重建（内容通过重绘 strokes 恢复）
+    var olds = pages;
+    pages = [];
+    for (var i = 0; i < Math.max(olds.length, 1); i++) {
+      var pg = { c: newPageCanvas(), strokes: olds[i] ? olds[i].strokes : [] };
+      pages.push(pg); redraw(pg);
+    }
+    cur = Math.min(cur, pages.length - 1);
+    blit();
+  }
+
+  function redraw(pg) {
+    var g = pg.c.getContext('2d');
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, pg.c.width, pg.c.height);
+    g.restore();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (var i = 0; i < pg.strokes.length; i++) stroke(g, pg.strokes[i]);
+  }
+
+  function stroke(g, s) {
+    if (s.e) {   // 橡皮：用白色沿原轨迹覆盖，重放结果与当时所见完全一致
+      g.strokeStyle = '#ffffff'; g.lineWidth = s.w * 8;
+      g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); g.moveTo(s.p[0][0], s.p[0][1]);
+      for (var k = 1; k < s.p.length; k++) g.lineTo(s.p[k][0], s.p[k][1]);
+      if (s.p.length === 1) g.lineTo(s.p[0][0] + .01, s.p[0][1] + .01);
+      g.stroke(); return;
+    }
+    // 起点圆点 + 折线：与 pointerdown/pointermove 的折线几何逐段一致
+    g.beginPath(); g.fillStyle = s.c;
+    g.arc(s.p[0][0], s.p[0][1], s.w / 2, 0, Math.PI * 2); g.fill();
+    if (s.p.length < 2) return;
+    g.beginPath(); g.strokeStyle = s.c; g.lineWidth = s.w;
+    g.moveTo(s.p[0][0], s.p[0][1]);
+    for (var i = 1; i < s.p.length; i++) g.lineTo(s.p[i][0], s.p[i][1]);
+    g.stroke();
+  }
+
+  function blit() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(pages[cur].c, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    document.getElementById('pn').textContent = cur + 1;
+  }
+
+  function pos(e) {
+    var r = cv.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+
+  cv.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'touch' && e.isPrimary === false) return;
+    cv.setPointerCapture(e.pointerId);
+    drawing = true; pts = [pos(e)];
+    var pg = pages[cur], g = ctx;
+    if (tool === 'eraser') {
+      var p = pts[0], rr = width * 4;
+      g.beginPath(); g.fillStyle = '#ffffff';
+      g.arc(p[0], p[1], rr, 0, Math.PI * 2); g.fill();
+      var pc = pg.c.getContext('2d');
+      pc.beginPath(); pc.fillStyle = '#ffffff';
+      pc.arc(p[0], p[1], rr, 0, Math.PI * 2); pc.fill();
+    } else {
+      g.beginPath(); g.fillStyle = color;
+      g.arc(pts[0][0], pts[0][1], width / 2, 0, Math.PI * 2); g.fill();
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  cv.addEventListener('pointermove', function (e) {
+    if (!drawing) return;
+    var p = pos(e), pg = pages[cur];
+    var last = pts[pts.length - 1];
+    if (Math.abs(p[0] - last[0]) + Math.abs(p[1] - last[1]) < 1.2) return;
+    pts.push(p);
+    var g = ctx;
+    if (tool === 'eraser') {
+      g.strokeStyle = '#ffffff'; g.lineWidth = width * 8; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke();
+      var pc = pg.c.getContext('2d');
+      pc.strokeStyle = '#ffffff'; pc.lineWidth = width * 8; pc.lineCap = 'round'; pc.lineJoin = 'round';
+      pc.beginPath(); pc.moveTo(last[0], last[1]); pc.lineTo(p[0], p[1]); pc.stroke();
+    } else {
+      g.strokeStyle = color; g.lineWidth = width; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke();
+      var pc2 = pg.c.getContext('2d');
+      pc2.strokeStyle = color; pc2.lineWidth = width; pc2.lineCap = 'round'; pc2.lineJoin = 'round';
+      pc2.beginPath(); pc2.moveTo(last[0], last[1]); pc2.lineTo(p[0], p[1]); pc2.stroke();
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  function end(e) {
+    if (!drawing) return;
+    drawing = false;
+    if (pts.length) {
+      pages[cur].strokes.push({ p: pts.slice(), c: color, w: width, e: tool === 'eraser' });
+    }
+    pts = [];
+    if (e) e.preventDefault();
+  }
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+  cv.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') end(e); });
+
+  // ---- 工具栏 ----
+  function setTool(t) {
+    tool = t;
+    document.getElementById('pen').classList.toggle('on', t === 'pen');
+    document.getElementById('eraser').classList.toggle('on', t === 'eraser');
+  }
+  document.getElementById('pen').onclick = function () { setTool('pen'); };
+  document.getElementById('eraser').onclick = function () { setTool('eraser'); };
+  document.getElementById('undo').onclick = function () {
+    var pg = pages[cur];
+    if (!pg.strokes.length) { toast('这页没有可撤销的笔画'); return; }
+    pg.strokes.pop(); redraw(pg); blit();
+  };
+  document.getElementById('clear').onclick = function () {
+    var pg = pages[cur];
+    if (!pg.strokes.length) { toast('这页已经是空的'); return; }
+    if (!confirm('清空第 ' + (cur + 1) + ' 页？')) return;
+    pg.strokes = []; redraw(pg); blit(); toast('已清空');
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('.sw'), function (el) {
+    el.onclick = function () {
+      color = el.getAttribute('data-c');
+      Array.prototype.forEach.call(document.querySelectorAll('.sw'), function (x) { x.classList.remove('on'); });
+      el.classList.add('on');
+      setTool('pen');
+    };
+  });
+  document.getElementById('thin').onclick = function () { width = 2; toast('细笔'); };
+  document.getElementById('fat').onclick = function () { width = 7; toast('粗笔'); };
+  document.getElementById('prev').onclick = function () {
+    if (cur === 0) { toast('已经是第一页'); return; }
+    cur--; blit();
+  };
+  document.getElementById('next').onclick = function () {
+    if (cur === pages.length - 1) { pages.push({ c: newPageCanvas(), strokes: [] }); }
+    cur++; blit();
+  };
+  document.getElementById('save').onclick = function () {
+    try {
+      var out = document.createElement('canvas');
+      out.width = pages[cur].c.width; out.height = pages[cur].c.height;
+      out.getContext('2d').drawImage(pages[cur].c, 0, 0);
+      var a = document.createElement('a');
+      a.download = '应急白板-第' + (cur + 1) + '页-' + Date.now() + '.png';
+      a.href = out.toDataURL('image/png');
+      document.body.appendChild(a); a.click(); a.remove();
+      toast('已导出第 ' + (cur + 1) + ' 页');
+    } catch (err) { toast('导出失败：' + err.message); }
+  };
+
+  window.addEventListener('resize', function () { clearTimeout(resize._t); resize._t = setTimeout(resize, 160); });
+  window.addEventListener('orientationchange', function () { setTimeout(resize, 320); });
+
+  resize(); setTool('pen');
+})();
+</script>
+</body>
+</html>
