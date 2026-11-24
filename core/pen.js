@@ -405,6 +405,7 @@
 
   let penSeen = 0;
   let penHeld = 0;   // 正在屏上的笔指针数（按下 +1、抬起 −1）
+  let penLostTip = 0; // 笔掉线自愈提示的节流时间戳（2.3.0）
 
   // 1.7.1：书写预设。
   // 老师反馈「参数太多，很难调到一个比较完美的状态」—— 十几项笔迹参数彼此耦合（关掉笔锋要同时
@@ -483,7 +484,15 @@
       const mode = (GW.settings && GW.settings.penFirst) || 'auto';
       if (mode === 'off') return false;             // 老师明确关掉：手指永远照常书写
       if (mode === 'on') return true;               // 老设备不给 pen 事件时的兜底：触摸一律平移
-      if (penHeld > 0) return true;                 // 笔还按在屏上：必须优先
+      // 2.3.0：笔还按在屏上 ⇒ 手指让位。但笔没电 / 蓝牙掉连时，笔尖的 pointerup 不会上报，
+      // penHeld 会一直卡在 >0，手指就被永久锁死（只能拖画布、写不了字，要刷新页面才恢复）。
+      // 加自愈：笔按着却连续 3s 收不到任何 pen 事件 ⇒ 判定为掉线，清掉计数；penSeen 保留不动，
+      // 下面那条 6s 窗口仍然生效，所以就算误判也不会让手掌/手指立刻画出墨来。
+      if (penHeld > 0) {
+        const idle = penSeen > 0 ? now() - penSeen : 1e9;
+        if (idle > 6000) { penHeld = 0; penSeen = 0; }  // 彻底解锁，与下面的 6s 窗口同阈值，不新增误判面
+        else return true;
+      }
       return penSeen > 0 && now() - penSeen < 6000; // 否则笔最近 6s 内动过就算（原来 2.5s 太短：
                                                     // 老师写完停一下再用手拖，2.5s 早过了，手指就变成画线）
     },
