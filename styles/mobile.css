@@ -1,0 +1,137 @@
+﻿/* ============================================================
+   手机适配补丁（在 app.css 之后加载，只作用于窄屏 / 矮屏横屏）
+   原则：
+   1. 只在 max-width: 520px 与横屏矮屏生效，桌面与 iPad 不受影响；
+   2. 不改变任何交互逻辑与工具栏顺序，只调整可读性、可点性和占屏比；
+   3. 触控目标尽量维持 44×44（iOS HIG / Android Material 下限）。
+   ============================================================ */
+
+/* ---------- 1. 顶栏：文档名不再被压成一条缝 ---------- */
+@media (max-width: 520px) {
+  /* 原来 max-width: calc(100vw - 150px)，右边空着 40 多像素，
+     左侧的文档名却被 flex 压到 8px（「未命名板书」一个字都看不见）。 */
+  #topbar {
+    max-width: calc(100vw - 118px);
+    padding: 3px 5px;
+  }
+  /* 与文档名重复的「未命名」保存状态胶囊、桌面端的品牌字标在手机上让出横向空间 */
+  #topbar #save-chip,
+  #topbar .brand { display: none; }
+  /* 文档名保住最小可读宽度，过长时省略号 */
+  #doc-name {
+    flex: 1 1 auto;
+    min-width: 76px;
+    max-width: 46vw;
+    font-size: 13.5px;
+  }
+}
+
+/* 常规手机（≥360px）：顶栏按钮保持 44px 触控下限 */
+@media (min-width: 360px) and (max-width: 520px) {
+  #topbar .tb-btn { width: 44px; height: 44px; }
+  #topbar .lesson-btn { min-width: 44px; padding: 0 8px; }
+  #winctl .tb-btn { width: 40px; height: 40px; }
+}
+
+/* 超窄屏（<360px，如 iPhone SE 一代 / 老安卓）：整体收一档，保证顶栏与右侧控件不打架 */
+@media (max-width: 359px) {
+  #topbar { max-width: calc(100vw - 96px); }
+  #doc-name { min-width: 60px; font-size: 13px; }
+  #topbar .tb-btn { width: 40px; height: 40px; }
+  #topbar .tb-btn svg { width: 19px; height: 19px; }
+  #topbar .lesson-btn { min-width: 40px; padding: 0 6px; }
+  #winctl { padding: 2px; }
+  #winctl .tb-btn { width: 34px; height: 34px; }
+}
+
+/* ---------- 2. 底部工具栏：等宽排布，末行按钮居中，不再孤零零挂一个 ---------- */
+@media (min-width: 360px) and (max-width: 520px) {
+  body.dock-compact #dock {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    /* 一行 7 个 44px：7×44 + 6×4 + 8 = 340 */
+    width: 340px;
+    max-width: calc(100vw - 12px);
+  }
+  body.dock-compact #dock .dk {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+  body.dock-compact #dock .dk svg { width: 21px; height: 21px; }
+  body.dock-compact #dock .dk-sep { display: none; }
+}
+
+@media (max-width: 359px) {
+  body.dock-compact #dock {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    /* 一行 6 个 44px：6×44 + 5×4 + 8 = 292 */
+    width: 292px;
+    max-width: calc(100vw - 12px);
+  }
+  body.dock-compact #dock .dk {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+  body.dock-compact #dock .dk svg { width: 21px; height: 21px; }
+  body.dock-compact #dock .dk-sep { display: none; }
+}
+
+/* ---------- 3. 横屏矮屏：把纵向空间还给画布，工具栏回归单行横滑 ---------- */
+@media (max-height: 460px) and (orientation: landscape) {
+  /* 横屏高度最紧张，重复信息先让位 */
+  #topbar #save-chip,
+  #topbar .brand { display: none; }
+  body.dock-compact #dock {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    padding: 4px;
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    scrollbar-width: none;
+  }
+  body.dock-compact #dock::-webkit-scrollbar { display: none; }
+  body.dock-compact #dock .dk {
+    flex: 0 0 auto;
+    width: 44px;
+    max-width: none;
+    height: 44px;
+  }
+  /* 缩放条、翻页条整档收小，别和工具栏抢同一条底线 */
+  #zoombar, #pagebar { transform: scale(.92); }
+}
+
+/* ---------- 4. 触摸手感：禁掉页面级别的橡皮筋与双击缩放 ---------- */
+@media (pointer: coarse) {
+  html, body { overscroll-behavior: none; }
+  /* 手机上按住按钮不该弹出「长按选择文字」气泡 */
+  #topbar, #winctl, #dock, #zoombar, #pagebar {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* ---------- 5. 弹层：窄屏贴边但不顶到屏幕边沿 ---------- */
+@media (max-width: 520px) {
+  .pop { max-width: calc(100vw - 10px); }
+  .dlg { width: 94vw !important; }
+  .dlg .dlg-actions { gap: 6px; flex-wrap: wrap; }
+  /* 工具栏底部那行提示文字在小屏上纯占地 */
+  .shape-tip { display: none; }
+}
